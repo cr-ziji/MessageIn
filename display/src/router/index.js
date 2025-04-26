@@ -1,10 +1,11 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 
 // 导入视图组件
 const Home = () => import('@/views/Home.vue')
 const MessageDisplay = () => import('@/views/MessageDisplay.vue')
 const NotFound = () => import('@/views/NotFound.vue')
 const DanmakuOverlayView = () => import('@/views/DanmakuOverlayView.vue')
+const DanmakuOnlyView = () => import('@/views/DanmakuOnlyView.vue')
 
 const routes = [
   {
@@ -33,6 +34,14 @@ const routes = [
     }
   },
   {
+    path: '/danmaku-only',
+    name: 'DanmakuOnly',
+    component: DanmakuOnlyView,
+    meta: {
+      title: '弹幕显示 - 独立窗口'
+    }
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: NotFound,
@@ -43,7 +52,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  history: createWebHashHistory(),
   routes
 })
 

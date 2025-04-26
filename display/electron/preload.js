@@ -6,7 +6,13 @@ contextBridge.exposeInMainWorld('electron', {
   // 发送消息到主进程
   send: (channel, data) => {
     // 白名单channels
-    const validChannels = ['message-event', 'app-event', 'update-danmaku-region']
+    const validChannels = [
+      'message-event', 
+      'app-event', 
+      'update-danmaku-region', 
+      'danmaku-clicked',
+      'danmaku-mouse-event'
+    ]
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data)
     }
@@ -30,6 +36,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // 更新弹幕区域
   updateDanmakuRegion: (region) => ipcRenderer.send('update-danmaku-region', region),
+  
+  // 通知主进程弹幕被点击
+  notifyDanmakuClicked: (isClickOnDanmaku) => {
+    ipcRenderer.send('danmaku-clicked', isClickOnDanmaku)
+  },
+  
+  // 发送鼠标事件
+  sendMouseEvent: (eventData) => {
+    ipcRenderer.send('danmaku-mouse-event', eventData)
+  },
+  
+  // 更新弹幕窗口样式
+  updateDanmakuStyle: (style) => ipcRenderer.send('update-danmaku-style', style),
   
   // 应用信息
   getAppInfo: () => {

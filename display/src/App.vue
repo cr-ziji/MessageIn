@@ -14,10 +14,11 @@
 </template>
 
 <script>
-import { defineComponent, onMounted, onBeforeUnmount } from 'vue';
+import { defineComponent, onMounted, onBeforeUnmount, watch } from 'vue';
 import { useDanmakuStore } from '@/store/modules/danmaku';
 import DanmakuManager from '@/components/Danmaku/DanmakuManager.vue';
 import danmakuService from '@/utils/danmakuService';
+import { useRoute } from 'vue-router';
 
 export default defineComponent({
   name: 'App',
@@ -26,6 +27,7 @@ export default defineComponent({
   },
   setup() {
     const danmakuStore = useDanmakuStore();
+    const route = useRoute();
     
     // 初始化弹幕服务
     const initializeDanmakuService = () => {
@@ -62,10 +64,31 @@ export default defineComponent({
       }
     };
 
+    // 设置透明背景（用于弹幕模式）
+    const setupTransparentMode = () => {
+      const isDanmakuMode = route.path === '/danmaku-only';
+      
+      if (isDanmakuMode) {
+        // 添加透明背景类
+        document.documentElement.classList.add('transparent-bg');
+        document.body.classList.add('transparent-bg');
+      } else {
+        // 移除透明背景类
+        document.documentElement.classList.remove('transparent-bg');
+        document.body.classList.remove('transparent-bg');
+      }
+    };
+
     onMounted(() => {
       console.log('App组件已挂载');
       // 在组件挂载后初始化
       initializeDanmakuService();
+      setupTransparentMode();
+    });
+
+    // 监听路由变化，更新透明模式
+    watch(() => route.path, () => {
+      setupTransparentMode();
     });
 
     onBeforeUnmount(() => {

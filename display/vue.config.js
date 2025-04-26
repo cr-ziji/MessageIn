@@ -4,8 +4,8 @@ module.exports = defineConfig({
   transpileDependencies: true,
   // 生产环境不生成sourcemap
   productionSourceMap: false,
-  // 设置保持嵌套的路由路径
-  publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
+  // 设置为相对路径，确保Electron环境能正确加载资源
+  publicPath: './',
   // Electron配置
   pluginOptions: {
     electronBuilder: {

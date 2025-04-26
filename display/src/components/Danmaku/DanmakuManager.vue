@@ -1,25 +1,44 @@
 <template>
   <div class="danmaku-manager">
     <!-- 弹幕覆盖层 -->
-    <DanmakuOverlay 
-      :visible="danmakuStore.isVisible" 
-      :messages="danmakuStore.unprocessedMessages"
-      :speed="danmakuStore.speed"
-      @message-read="handleMessageRead"
-    />
+    <DanmakuOverlay v-if="!externalWindowActive" />
     
     <!-- 弹幕控制按钮 -->
-    <DanmakuControl />
+    <DanmakuControl 
+      @toggle-visibility="toggleVisibility"
+      @change-speed="changeSpeed"
+      @change-opacity="changeOpacity"
+      @clear-messages="clearMessages"
+      @add-demo-messages="addDemoMessages"
+      @toggle-external-window="toggleExternalWindow"
+    />
+    
+    <!-- 外部窗口状态显示 -->
+    <div v-if="externalWindowActive && isElectron" class="external-window-indicator">
+      <el-alert
+        title="弹幕在独立窗口中显示中"
+        type="success"
+        :closable="false"
+        show-icon
+      >
+        <template #default>
+          <p>弹幕已经在独立窗口中显示，可以通过控制面板调整设置。</p>
+          <el-button size="small" @click="toggleExternalWindow(false)">关闭独立窗口</el-button>
+        </template>
+      </el-alert>
+    </div>
   </div>
 </template>
 
 <script>
-import { useDanmakuStore } from '@/store/modules/danmaku';
+import { defineComponent, computed, onMounted, ref } from 'vue';
 import DanmakuOverlay from './DanmakuOverlay.vue';
 import DanmakuControl from './DanmakuControl.vue';
-import { ref, onMounted, watch } from 'vue';
+import { useDanmakuStore } from '@/stores/danmaku';
+import { storeToRefs } from 'pinia';
+import { v4 as uuidv4 } from 'uuid';
 
-export default {
+export default defineComponent({
   name: 'DanmakuManager',
   components: {
     DanmakuOverlay,
@@ -27,71 +46,117 @@ export default {
   },
   setup() {
     const danmakuStore = useDanmakuStore();
-    const isElectron = ref(window.electronAPI !== undefined);
+    const { isVisible } = storeToRefs(danmakuStore);
+    const isElectron = computed(() => window.electronAPI !== undefined);
+    const externalWindowActive = ref(false);
     
-    // 处理消息的已读状态变化
-    const handleMessageRead = (data) => {
-      danmakuStore.updateMessageReadStatus(data.id, data.read);
+    // 切换弹幕可见性
+    const toggleVisibility = (visible) => {
+      danmakuStore.setVisibility(visible);
       
-      // 如果标记为已读，可以在这里执行其他操作
-      if (data.read) {
-        // 例如：记录已读状态、同步到服务器等
-        console.log(`消息 ${data.id} 已标记为已读`);
+      // 如果有外部窗口，同步更新
+      if (externalWindowActive.value && isElectron.value) {
+        window.electronAPI.toggleDanmakuOverlay(visible);
       }
     };
     
-    // 监控弹幕可见性，在Electron环境中通知主进程
-    watch(() => danmakuStore.isVisible, (visible) => {
-      if (isElectron.value) {
-        window.electronAPI.toggleDanmakuOverlay(visible);
-      }
-    });
+    // 更改滚动速度
+    const changeSpeed = (newSpeed) => {
+      danmakuStore.setSpeed(newSpeed);
+    };
     
-    // 在Electron环境中，组件挂载时通知主进程弹幕的可见性
-    onMounted(() => {
-      if (isElectron.value) {
-        window.electronAPI.toggleDanmakuOverlay(danmakuStore.isVisible);
-      }
+    // 更改透明度
+    const changeOpacity = (newOpacity) => {
+      danmakuStore.setOpacity(newOpacity);
+    };
+    
+    // 清除所有消息
+    const clearMessages = () => {
+      danmakuStore.clearMessages();
+    };
+    
+    // 添加演示消息
+    const addDemoMessages = () => {
+      const demoMessages = [
+        {
+          id: uuidv4(),
+          content: '欢迎使用弹幕系统！',
+          bgColor: 'rgba(25, 118, 210, 0.85)'
+        },
+        {
+          id: uuidv4(),
+          content: '您可以调整弹幕的速度和透明度',
+          bgColor: 'rgba(211, 47, 47, 0.85)'
+        },
+        {
+          id: uuidv4(),
+          content: '点击右下角按钮可以控制弹幕',
+          bgColor: 'rgba(56, 142, 60, 0.85)'
+        }
+      ];
       
-      // 定时添加测试弹幕
-      if (process.env.NODE_ENV === 'development') {
-        // 每隔5秒添加一条随机测试弹幕
-        const messages = [
-          "这是顶部单行弹幕测试"
-        ];
-        
-        const colors = [
-          'rgba(25, 118, 210, 0.85)',
-          'rgba(33, 150, 243, 0.85)',
-          'rgba(66, 165, 245, 0.85)',
-          'rgba(13, 71, 161, 0.85)',
-          'rgba(21, 101, 192, 0.85)'
-        ];
-        
-        let index = 0;
-        setInterval(() => {
-          if (danmakuStore.isVisible && index < messages.length) {
-            danmakuStore.addMessage({
-              content: messages[index],
-              bgColor: colors[index % colors.length]
-            });
-            index = (index + 1) % messages.length;
-          }
-        }, 5000);
+      demoMessages.forEach(msg => danmakuStore.addMessage(msg));
+    };
+    
+    // 切换外部弹幕窗口
+    const toggleExternalWindow = (active) => {
+      if (!isElectron.value) return;
+      
+      externalWindowActive.value = active;
+      window.electronAPI.toggleDanmakuOverlay(active);
+      
+      // 如果启用外部窗口，发送消息
+      if (active) {
+        // 稍后发送一条测试消息
+        setTimeout(() => {
+          danmakuStore.addMessage({
+            id: uuidv4(),
+            content: '独立弹幕窗口已启动',
+            bgColor: 'rgba(25, 118, 210, 0.85)'
+          });
+        }, 1000);
       }
+    };
+    
+    // 组件挂载时初始化
+    onMounted(() => {
+      // 自动添加一条欢迎消息
+      setTimeout(() => {
+        danmakuStore.addMessage({
+          id: uuidv4(),
+          content: '弹幕系统已启动',
+          bgColor: 'rgba(25, 118, 210, 0.85)'
+        });
+      }, 1000);
     });
     
     return {
-      danmakuStore,
-      handleMessageRead,
+      toggleVisibility,
+      changeSpeed,
+      changeOpacity,
+      clearMessages,
+      addDemoMessages,
+      toggleExternalWindow,
+      externalWindowActive,
       isElectron
     };
   }
-}
+});
 </script>
 
 <style scoped>
 .danmaku-manager {
-  /* 这个组件不需要特殊样式，它只是一个容器 */
+  position: relative;
+  z-index: 9990;
+}
+
+.external-window-indicator {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  max-width: 500px;
+  z-index: 9995;
 }
 </style> 

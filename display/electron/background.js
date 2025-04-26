@@ -38,7 +38,9 @@ async function createWindow() {
     // 启用窗口的阴影
     hasShadow: true,
     // 窗口背景色
-    backgroundColor: '#121212'
+    backgroundColor: '#121212',
+    // 设置应用图标
+    icon: path.join(__dirname, '../public/favicon.png')
   })
 
   // 窗口准备好后显示，避免白屏
@@ -56,8 +58,8 @@ async function createWindow() {
     if (!process.env.IS_TEST) win.webContents.openDevTools()
   } else {
     createProtocol('app')
-    // 加载 index.html
-    win.loadURL('app://./index.html')
+    // 加载 index.html 并确保使用哈希路由
+    win.loadURL('app://./index.html/#/')
   }
 
   win.on('closed', () => {
@@ -72,104 +74,108 @@ async function createWindow() {
 
 // 创建透明弹幕窗口
 async function createDanmakuWindow() {
-  // 获取屏幕尺寸
-  const { width, height } = screen.getPrimaryDisplay().bounds
+  // 获取主显示器尺寸
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
-  try {
-    console.log('创建弹幕窗口...')
-    // 创建透明窗口
-    danmakuWin = new BrowserWindow({
-      width: width,
-      height: 60, // 弹幕区域高度(仅顶部)
-      x: 0,
-      y: 0,
-      frame: false, // 无边框
-      transparent: true, // 透明背景
-      alwaysOnTop: true, // 始终置顶
-      skipTaskbar: true, // 不在任务栏显示
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js'),
-        // 允许透明度
-        backgroundColor: '#00000000'
-      },
-      // 窗口设置
-      resizable: false,
-      movable: false,
-      minimizable: false,
-      maximizable: false,
-      fullscreenable: false,
-      focusable: false, // 使窗口不接收键盘焦点
-      show: false,
-      // 使整个窗口背景透明
-      backgroundColor: '#00000000',
-      // 确保没有阴影
-      hasShadow: false
-    })
+  console.log('创建弹幕窗口...');
+  // 创建透明窗口
+  danmakuWin = new BrowserWindow({
+    width: width, // 使用整个屏幕宽度
+    height: 40, // 调整为单行弹幕高度
+    x: 0,
+    y: 0,
+    frame: false, // 无边框
+    transparent: true, // 透明背景
+    alwaysOnTop: true, // 始终置顶
+    skipTaskbar: true, // 不在任务栏显示
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      backgroundColor: '#00000000', // 确保背景透明
+      devTools: false, // 只在开发环境启用调试工具
+    },
+    // 窗口设置
+    resizable: false,
+    movable: false,
+    minimizable: false,
+    maximizable: false,
+    fullscreenable: false,
+    focusable: false, // 使窗口不接收键盘焦点
+    show: false, // 先不显示，等待准备好后再显示
+    hasShadow: false, // 确保没有阴影
+  });
 
-    // 在Windows上设置为工具窗口，确保在切换应用时依然保持在最前面
-    if (process.platform === 'win32') {
-      // 设置为工具窗口（总在最前）
-      danmakuWin.setAlwaysOnTop(true, 'screen-saver')
-      // 设置为穿透类型模式
-      danmakuWin.setIgnoreMouseEvents(true, { forward: true })
-    }
-    
-    // 在MacOS上设置窗口级别为最高
-    if (process.platform === 'darwin') {
-      danmakuWin.setAlwaysOnTop(true, 'screen-saver')
-      danmakuWin.setIgnoreMouseEvents(true, { forward: true })
-    }
+  // 设置窗口级别为最高级别，确保始终保持在最顶层
+  if (process.platform === 'win32') {
+    // Windows平台设置
+    danmakuWin.setAlwaysOnTop(true, 'screen-saver', 1);
+    // 设置完全点击穿透
+    danmakuWin.setIgnoreMouseEvents(true, { forward: true });
+  } else if (process.platform === 'darwin') {
+    // macOS平台设置
+    danmakuWin.setAlwaysOnTop(true, 'screen-saver', 1);
+    danmakuWin.setIgnoreMouseEvents(true, { forward: true });
+  } else {
+    // Linux平台设置
+    danmakuWin.setAlwaysOnTop(true, 'screen-saver');
+    danmakuWin.setIgnoreMouseEvents(true, { forward: true });
+  }
 
-    // 允许点击穿透，但弹幕区域可以接收点击
-    setDanmakuClickRegion({ width: 0, height: 0 }); // 初始化为完全穿透
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    // 加载开发服务器URL
+    await danmakuWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}#/danmaku-only`);
+    console.log('弹幕窗口URL已加载:', `${process.env.WEBPACK_DEV_SERVER_URL}#/danmaku-only`);
+  } else {
+    // 加载生产环境URL
+    await danmakuWin.loadURL('app://./index.html#/danmaku-only');
+    console.log('弹幕窗口URL已加载: app://./index.html#/danmaku-only');
+  }
 
-    if (process.env.WEBPACK_DEV_SERVER_URL) {
-      // 加载弹幕组件URL（开发环境）
-      await danmakuWin.loadURL(`${process.env.WEBPACK_DEV_SERVER_URL}#/danmaku-overlay`)
-      console.log('弹幕窗口URL已加载:', `${process.env.WEBPACK_DEV_SERVER_URL}#/danmaku-overlay`)
+  // 窗口准备好后显示
+  danmakuWin.once('ready-to-show', () => {
+    console.log('弹幕窗口准备显示');
+    danmakuWin.show();
+  });
+
+  // 禁用调试工具，仅在开发环境中需要时才打开
+  if (isDevelopment && false) { // 设置为false禁用调试工具
+    danmakuWin.webContents.openDevTools({ mode: 'detach' });
+  }
+}
+
+// 监听来自渲染进程的弹幕控制指令
+ipcMain.on('toggle-danmaku-overlay', (event, visible) => {
+  console.log('收到切换弹幕窗口指令:', visible);
+  if (danmakuWin) {
+    if (visible) {
+      danmakuWin.show();
     } else {
-      // 加载弹幕组件（生产环境）
-      await danmakuWin.loadURL('app://./index.html#/danmaku-overlay')
-      console.log('弹幕窗口URL已加载: app://./index.html#/danmaku-overlay')
+      danmakuWin.hide();
     }
+  }
+});
 
-    // 窗口准备好后显示
-    danmakuWin.once('ready-to-show', () => {
-      console.log('弹幕窗口准备显示')
-      danmakuWin.show()
-    })
-    
-    // 调试用
-    if (isDevelopment) {
-      danmakuWin.webContents.openDevTools({ mode: 'detach' })
+// 更新弹幕窗口样式
+ipcMain.on('update-danmaku-style', (event, style) => {
+  console.log('更新弹幕样式:', style);
+  if (danmakuWin && style) {
+    // 如果有高度信息，则调整窗口高度
+    if (style.height) {
+      const { width } = screen.getPrimaryDisplay().workAreaSize;
+      danmakuWin.setBounds({ 
+        width: width, 
+        height: style.height, 
+        x: 0, 
+        y: 0 
+      });
     }
-  } catch (error) {
-    console.error('创建弹幕窗口失败:', error)
   }
-}
-
-// 设置弹幕窗口点击区域
-function setDanmakuClickRegion(region) {
-  if (!danmakuWin) return;
-  
-  try {
-    // 设置只有弹幕区域可以点击，其他区域点击穿透
-    danmakuWin.setIgnoreMouseEvents(true, { forward: true })
-  } catch (error) {
-    console.error('设置弹幕点击区域失败:', error)
-  }
-}
-
-// 监听渲染进程的弹幕区域变更
-ipcMain.on('update-danmaku-region', (event, region) => {
-  setDanmakuClickRegion(region)
-})
+});
 
 // 在应用程序初始化完成并准备创建浏览器窗口时调用此方法
 app.on('ready', async () => {
-  if (isDevelopment && !process.env.IS_TEST) {
+  if (isDevelopment && !process.env.IS_TEST && false) { // 设置为false禁用Vue Devtools
     // 安装Vue Devtools
     try {
       await installExtension(VUEJS3_DEVTOOLS)
@@ -192,18 +198,6 @@ app.on('activate', () => {
   // 在macOS上，当点击dock图标且没有其他窗口打开时，通常会重新创建应用程序窗口
   if (win === null) {
     createWindow()
-  }
-})
-
-// 监听来自渲染进程的弹幕控制指令
-ipcMain.on('toggle-danmaku-overlay', (event, visible) => {
-  console.log('收到切换弹幕窗口指令:', visible)
-  if (danmakuWin) {
-    if (visible) {
-      danmakuWin.show()
-    } else {
-      danmakuWin.hide()
-    }
   }
 })
 

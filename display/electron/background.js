@@ -31,7 +31,9 @@ async function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       // 添加预加载脚本
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      // 禁用web安全性，允许跨域请求
+      webSecurity: false
     },
     // 启动时显示
     show: false,
@@ -42,6 +44,21 @@ async function createWindow() {
     // 设置应用图标
     icon: path.join(__dirname, '../public/favicon.png')
   })
+
+  // 禁用同源策略，允许跨域请求
+  win.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+    callback({ requestHeaders: { Origin: '*', ...details.requestHeaders } });
+  });
+
+  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        'Access-Control-Allow-Origin': ['*'],
+        'Access-Control-Allow-Headers': ['*'],
+        ...details.responseHeaders,
+      },
+    });
+  });
 
   // 窗口准备好后显示，避免白屏
   win.once('ready-to-show', () => {
@@ -94,6 +111,7 @@ async function createDanmakuWindow() {
       preload: path.join(__dirname, 'preload.js'),
       backgroundColor: '#00000000', // 确保背景透明
       devTools: false, // 只在开发环境启用调试工具
+      webSecurity: false // 禁用web安全性，允许跨域请求
     },
     // 窗口设置
     resizable: false,
@@ -104,6 +122,21 @@ async function createDanmakuWindow() {
     focusable: false, // 使窗口不接收键盘焦点
     show: false, // 先不显示，等待准备好后再显示
     hasShadow: false, // 确保没有阴影
+  });
+
+  // 设置透明窗口允许跨域请求
+  danmakuWin.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+    callback({ requestHeaders: { Origin: '*', ...details.requestHeaders } });
+  });
+
+  danmakuWin.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        'Access-Control-Allow-Origin': ['*'],
+        'Access-Control-Allow-Headers': ['*'],
+        ...details.responseHeaders,
+      },
+    });
   });
 
   // 设置窗口级别为最高级别，确保始终保持在最顶层

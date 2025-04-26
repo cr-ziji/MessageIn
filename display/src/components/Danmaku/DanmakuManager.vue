@@ -82,16 +82,6 @@ export default defineComponent({
           id: uuidv4(),
           content: '欢迎使用弹幕系统！',
           bgColor: 'rgba(25, 118, 210, 0.85)'
-        },
-        {
-          id: uuidv4(),
-          content: '您可以调整弹幕的速度和透明度',
-          bgColor: 'rgba(211, 47, 47, 0.85)'
-        },
-        {
-          id: uuidv4(),
-          content: '点击右下角按钮可以控制弹幕',
-          bgColor: 'rgba(56, 142, 60, 0.85)'
         }
       ];
       

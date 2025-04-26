@@ -15,9 +15,9 @@
 
 <script>
 import { defineComponent, onMounted, onBeforeUnmount, watch } from 'vue';
-import { useDanmakuStore } from '@/store/modules/danmaku';
+import { useDanmakuStore } from '@/stores/danmaku';
 import DanmakuManager from '@/components/Danmaku/DanmakuManager.vue';
-import danmakuService from '@/utils/danmakuService';
+import messageService from '@/utils/messageService';
 import { useRoute } from 'vue-router';
 
 export default defineComponent({
@@ -29,41 +29,6 @@ export default defineComponent({
     const danmakuStore = useDanmakuStore();
     const route = useRoute();
     
-    // 初始化弹幕服务
-    const initializeDanmakuService = () => {
-      try {
-        console.log('初始化弹幕服务...');
-        
-        // 仅在生产环境尝试连接WebSocket
-        if (process.env.NODE_ENV === 'production') {
-          danmakuService.initialize();
-        } else {
-          console.log('开发环境：弹幕服务使用模拟数据');
-          // 确保初始化已完成
-          danmakuService.initialize();
-          
-          // 开发环境下添加一些测试弹幕
-          setTimeout(() => {
-            try {
-              danmakuService.addMockDanmaku('欢迎使用MessageIn弹幕功能', { color: '#ff7777' });
-              
-              setTimeout(() => {
-                danmakuService.addMockDanmaku('您可以发送实时消息到显示端', { color: '#77ff77' });
-              }, 3000);
-              
-              setTimeout(() => {
-                danmakuService.addMockDanmaku('消息将在顶部以弹幕形式滚动显示', { color: '#7777ff' });
-              }, 6000);
-            } catch (error) {
-              console.error('添加测试弹幕失败:', error);
-            }
-          }, 2000);
-        }
-      } catch (error) {
-        console.error('初始化弹幕服务失败:', error);
-      }
-    };
-
     // 设置透明背景（用于弹幕模式）
     const setupTransparentMode = () => {
       const isDanmakuMode = route.path === '/danmaku-only';
@@ -82,18 +47,31 @@ export default defineComponent({
     onMounted(() => {
       console.log('App组件已挂载');
       // 在组件挂载后初始化
-      initializeDanmakuService();
       setupTransparentMode();
+      
+      // 初始化消息服务
+      if (!route.path.includes('danmaku-only')) {
+        messageService.initialize();
+      }
     });
 
     // 监听路由变化，更新透明模式
-    watch(() => route.path, () => {
+    watch(() => route.path, (newPath) => {
       setupTransparentMode();
+      
+      // 路由切换时处理消息服务
+      if (newPath.includes('danmaku-only')) {
+        // 在弹幕专用页面停止消息轮询
+        messageService.stopPolling();
+      } else {
+        // 在其他页面启动消息轮询
+        messageService.initialize();
+      }
     });
 
     onBeforeUnmount(() => {
-      // 组件卸载前关闭WebSocket连接
-      danmakuService.close();
+      // 组件卸载前关闭消息服务
+      messageService.destroy();
     });
 
     return {

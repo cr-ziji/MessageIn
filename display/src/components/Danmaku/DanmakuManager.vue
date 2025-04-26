@@ -110,14 +110,6 @@ export default defineComponent({
     
     // 组件挂载时初始化
     onMounted(() => {
-      // 自动添加一条欢迎消息
-      setTimeout(() => {
-        danmakuStore.addMessage({
-          id: uuidv4(),
-          content: '弹幕系统已启动',
-          bgColor: 'rgba(25, 118, 210, 0.85)'
-        });
-      }, 1000);
     });
     
     return {

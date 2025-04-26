@@ -45,13 +45,14 @@ async function createWindow() {
     icon: path.join(__dirname, '../public/favicon.png')
   })
 
-  // 完全禁用同源策略，允许跨域请求
+  // 禁用同源策略，允许CORS请求
   win.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
     callback({
       requestHeaders: {
         ...details.requestHeaders,
         'Origin': '*',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Request-Method': '*',
+        'Access-Control-Request-Headers': '*'
       }
     });
   });
@@ -61,15 +62,10 @@ async function createWindow() {
       responseHeaders: {
         ...details.responseHeaders,
         'Access-Control-Allow-Origin': ['*'],
-        'Access-Control-Allow-Headers': ['*'],
-        'Access-Control-Allow-Methods': ['*']
+        'Access-Control-Allow-Methods': ['*'],
+        'Access-Control-Allow-Headers': ['*']
       }
     });
-  });
-  
-  // 允许所有网络请求
-  win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
-    callback(true);
   });
 
   // 窗口准备好后显示，避免白屏
@@ -138,16 +134,24 @@ async function createDanmakuWindow() {
 
   // 设置透明窗口允许跨域请求
   danmakuWin.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
-    callback({ requestHeaders: { Origin: '*', ...details.requestHeaders } });
+    callback({
+      requestHeaders: {
+        ...details.requestHeaders,
+        'Origin': '*',
+        'Access-Control-Request-Method': '*',
+        'Access-Control-Request-Headers': '*'
+      }
+    });
   });
 
   danmakuWin.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
-        'Access-Control-Allow-Origin': ['*'],
-        'Access-Control-Allow-Headers': ['*'],
         ...details.responseHeaders,
-      },
+        'Access-Control-Allow-Origin': ['*'],
+        'Access-Control-Allow-Methods': ['*'],
+        'Access-Control-Allow-Headers': ['*']
+      }
     });
   });
 

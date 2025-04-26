@@ -1,12 +1,14 @@
 import axios from 'axios';
 import { useDanmakuStore } from '@/stores/danmaku';
+import { fetchWithProxy } from './corsProxy';
 
 class MessageService {
   constructor() {
     this.apiBaseUrl = 'http://www.cyupeng.com/message';
     this.danmakuStore = null;
     this.pollingInterval = null;
-    this.pollingDelay = 2000; // 2秒轮询一次，确保及时获取消息
+    this.pollingDelay = 1000; // 1秒轮询一次，更快速地获取消息
+    this.lastContentHash = null; // 用于跟踪最后一次消息内容，避免重复添加
     
     try {
       this.danmakuStore = useDanmakuStore();
@@ -59,61 +61,99 @@ class MessageService {
     }
   }
   
+  // 计算内容哈希，用于去重
+  getContentHash(content) {
+    // 简单的哈希算法，实际项目可使用更复杂的算法
+    let hash = 0;
+    if (!content) return hash;
+    for (let i = 0; i < content.length; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // 转换为32位整数
+    }
+    return hash;
+  }
+  
+  // 从文本中提取可能的消息内容
+  extractContentFromText(text) {
+    if (!text || typeof text !== 'string') {
+      return null;
+    }
+    
+    // 去除首尾空白
+    const trimmed = text.trim();
+    
+    // 测试几种可能的格式
+    
+    // 1. 尝试作为JSON解析
+    try {
+      const json = JSON.parse(trimmed);
+      if (json.content) {
+        return json.content;
+      }
+      // 如果没有content字段但是有其他字段，可能整个对象就是有用信息
+      return JSON.stringify(json);
+    } catch (e) {
+      // 不是有效的JSON，继续尝试
+    }
+    
+    // 2. 尝试匹配类似 {'content':'大乐子'} 这样的格式
+    const contentMatch = trimmed.match(/['"]content['"]:\s*['"](.+?)['"]/);
+    if (contentMatch && contentMatch[1]) {
+      return contentMatch[1];
+    }
+    
+    // 3. 如果文本很短（小于100个字符），可能整个就是消息内容
+    if (trimmed.length < 100) {
+      return trimmed;
+    }
+    
+    // 4. 否则尝试找到看起来像内容的部分
+    const simpleContentMatch = trimmed.match(/{(.+?)}/);
+    if (simpleContentMatch && simpleContentMatch[1]) {
+      return simpleContentMatch[1];
+    }
+    
+    // 5. 检查是否包含"大乐子"
+    if (trimmed.includes('大乐子')) {
+      return '大乐子';
+    }
+    
+    // 如果以上都不匹配，返回原始文本
+    return trimmed;
+  }
+  
   // 获取消息
   async fetchMessages() {
     try {
-      console.log('开始请求API:', this.apiBaseUrl);
+      // 使用CORS代理获取消息
+      const response = await fetchWithProxy(this.apiBaseUrl);
       
-      let responseData;
-      
-      // 检查是否在Electron环境中
-      if (window.electronAPI && window.electronAPI.httpGet) {
-        // 使用Electron的net模块进行请求
-        try {
-          responseData = await window.electronAPI.httpGet(this.apiBaseUrl);
-          console.log('Electron API响应数据:', responseData);
-        } catch (electronError) {
-          console.error('Electron HTTP请求失败:', electronError);
-          // 如果Electron请求失败，回退到普通请求
-          const response = await axios.get(this.apiBaseUrl);
-          responseData = response.data;
-        }
-      } else {
-        // 普通浏览器环境
-        const response = await axios.get(this.apiBaseUrl, {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          // 添加时间戳防止缓存
-          params: {
-            t: new Date().getTime()
-          }
-        });
-        responseData = response.data;
-        console.log('Axios响应数据:', responseData);
+      if (!response.ok) {
+        throw new Error(`API请求失败: ${response.status}`);
       }
       
-      // 处理响应数据
-      let messageContent = '';
+      // 先获取原始文本
+      const rawText = await response.text();
+      console.log('API原始响应:', rawText);
       
-      if (responseData) {
-        // 处理不同可能的响应格式
-        if (typeof responseData === 'string') {
-          messageContent = responseData;
-        } else if (responseData.content) {
-          messageContent = responseData.content;
-        } else {
-          messageContent = JSON.stringify(responseData);
+      // 从原始文本中提取内容
+      const content = this.extractContentFromText(rawText);
+      console.log('提取的消息内容:', content);
+      
+      if (content) {
+        // 计算内容哈希
+        const contentHash = this.getContentHash(content);
+        
+        // 如果内容与上次不同，则处理新消息
+        if (contentHash !== this.lastContentHash) {
+          console.log('发现新消息:', content);
+          this.lastContentHash = contentHash;
+          this.processMessage(content);
         }
-      }
-      
-      if (messageContent) {
-        console.log('处理消息内容:', messageContent);
-        this.processMessage(messageContent);
       }
     } catch (error) {
-      console.error('获取消息最终失败:', error);
+      console.error('获取消息失败:', error);
     }
   }
   
@@ -126,7 +166,6 @@ class MessageService {
     
     // 创建一个新的弹幕消息
     const message = {
-      id: Date.now() + '-' + Math.floor(Math.random() * 1000),
       content: content,
       color: this.getRandomColor(),
       fontSize: 18 + Math.floor(Math.random() * 4) * 2, // 随机字体大小: 18, 20, 22, 24

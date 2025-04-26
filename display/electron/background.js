@@ -45,19 +45,31 @@ async function createWindow() {
     icon: path.join(__dirname, '../public/favicon.png')
   })
 
-  // 禁用同源策略，允许跨域请求
+  // 完全禁用同源策略，允许跨域请求
   win.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
-    callback({ requestHeaders: { Origin: '*', ...details.requestHeaders } });
+    callback({
+      requestHeaders: {
+        ...details.requestHeaders,
+        'Origin': '*',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
   });
 
   win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
+        ...details.responseHeaders,
         'Access-Control-Allow-Origin': ['*'],
         'Access-Control-Allow-Headers': ['*'],
-        ...details.responseHeaders,
-      },
+        'Access-Control-Allow-Methods': ['*']
+      }
     });
+  });
+  
+  // 允许所有网络请求
+  win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
+    callback(true);
   });
 
   // 窗口准备好后显示，避免白屏

@@ -50,6 +50,42 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 更新弹幕窗口样式
   updateDanmakuStyle: (style) => ipcRenderer.send('update-danmaku-style', style),
   
+  // HTTP请求辅助函数 - 使用Node.js的http/https模块直接请求
+  httpGet: async (url) => {
+    const { net } = require('electron');
+    return new Promise((resolve, reject) => {
+      const request = net.request(url);
+      let responseData = '';
+      
+      request.on('response', (response) => {
+        response.on('data', (chunk) => {
+          responseData += chunk.toString();
+        });
+        
+        response.on('end', () => {
+          try {
+            // 尝试解析为JSON
+            const jsonData = JSON.parse(responseData);
+            resolve(jsonData);
+          } catch (e) {
+            // 如果不是JSON，则返回原始数据
+            resolve(responseData);
+          }
+        });
+        
+        response.on('error', (error) => {
+          reject(error);
+        });
+      });
+      
+      request.on('error', (error) => {
+        reject(error);
+      });
+      
+      request.end();
+    });
+  },
+  
   // 应用信息
   getAppInfo: () => {
     return {

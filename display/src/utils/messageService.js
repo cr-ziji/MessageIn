@@ -6,9 +6,7 @@ class MessageService {
     this.apiBaseUrl = 'http://www.cyupeng.com/message';
     this.danmakuStore = null;
     this.pollingInterval = null;
-    this.pollingDelay = 2000; // 2秒轮询一次，加快刷新率
-    this.lastMessageTime = 0; // 上次消息时间戳
-    this.useSimulatedData = true; // 使用模拟数据模式
+    this.pollingDelay = 2000; // 2秒轮询一次，确保及时获取消息
     
     try {
       this.danmakuStore = useDanmakuStore();
@@ -64,59 +62,58 @@ class MessageService {
   // 获取消息
   async fetchMessages() {
     try {
-      let messageContent = '';
+      console.log('开始请求API:', this.apiBaseUrl);
       
-      if (this.useSimulatedData) {
-        // 使用模拟数据替代HTTP请求，以避免CORS问题
-        const now = Date.now();
-        // 每5秒生成一次消息
-        if (now - this.lastMessageTime > 5000) {
-          this.lastMessageTime = now;
-          messageContent = '大乐子';
-          console.log('模拟数据:', { content: messageContent });
+      let responseData;
+      
+      // 检查是否在Electron环境中
+      if (window.electronAPI && window.electronAPI.httpGet) {
+        // 使用Electron的net模块进行请求
+        try {
+          responseData = await window.electronAPI.httpGet(this.apiBaseUrl);
+          console.log('Electron API响应数据:', responseData);
+        } catch (electronError) {
+          console.error('Electron HTTP请求失败:', electronError);
+          // 如果Electron请求失败，回退到普通请求
+          const response = await axios.get(this.apiBaseUrl);
+          responseData = response.data;
         }
       } else {
-        // 正常的HTTP请求方式 - 由于CORS问题可能会失败
-        try {
-          const response = await axios.get(this.apiBaseUrl);
-          console.log('获取到原始消息:', response.data);
-          
-          // 检查响应格式并提取消息内容
-          if (response.data) {
-            // 处理可能的不同响应格式
-            if (typeof response.data === 'string') {
-              // 直接是字符串
-              messageContent = response.data;
-            } else if (response.data.content) {
-              // 如果是 { content: "消息内容" } 格式
-              if (response.data.content === 'string') {
-                // 如果内容就是字符串 "string"，可能是示例格式，我们改用"大乐子"
-                messageContent = '大乐子';
-              } else {
-                // 正常使用content字段的值
-                messageContent = response.data.content;
-              }
-            } else {
-              // 尝试将整个响应转为字符串作为消息内容
-              messageContent = JSON.stringify(response.data);
-            }
+        // 普通浏览器环境
+        const response = await axios.get(this.apiBaseUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          // 添加时间戳防止缓存
+          params: {
+            t: new Date().getTime()
           }
-        } catch (error) {
-          console.error('HTTP请求失败，将使用模拟数据:', error);
-          // 当HTTP请求失败时，切换到模拟数据模式
-          this.useSimulatedData = true;
-          messageContent = '大乐子'; // 使用固定内容
+        });
+        responseData = response.data;
+        console.log('Axios响应数据:', responseData);
+      }
+      
+      // 处理响应数据
+      let messageContent = '';
+      
+      if (responseData) {
+        // 处理不同可能的响应格式
+        if (typeof responseData === 'string') {
+          messageContent = responseData;
+        } else if (responseData.content) {
+          messageContent = responseData.content;
+        } else {
+          messageContent = JSON.stringify(responseData);
         }
       }
       
-      console.log('处理后的消息内容:', messageContent);
-      
       if (messageContent) {
-        // 将消息添加到弹幕存储
+        console.log('处理消息内容:', messageContent);
         this.processMessage(messageContent);
       }
     } catch (error) {
-      console.error('获取消息失败:', error);
+      console.error('获取消息最终失败:', error);
     }
   }
   
@@ -129,6 +126,7 @@ class MessageService {
     
     // 创建一个新的弹幕消息
     const message = {
+      id: Date.now() + '-' + Math.floor(Math.random() * 1000),
       content: content,
       color: this.getRandomColor(),
       fontSize: 18 + Math.floor(Math.random() * 4) * 2, // 随机字体大小: 18, 20, 22, 24

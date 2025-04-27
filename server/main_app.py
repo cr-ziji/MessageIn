@@ -12,6 +12,10 @@ app = Flask(__name__)
 app.secret_key = '123456'
 
 
+@app.route('/')
+def _():
+    return redirect("/login")
+
 @app.route('/login')
 def login():
     if 'alert' not in request.args:

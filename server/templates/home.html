@@ -7,8 +7,8 @@
 <body>
 	<div>
 		<span>{{t_name}}</span>
-		<button>更改个人信息</button>
-		<button>退出登录</button>
+		<a href="/change">更改个人信息</a>
+		<a href="/logout">退出登录</a>
 	</div>
 	{% for i in t_class %}
 	<div class="class {{i}}">{{i}}</div>

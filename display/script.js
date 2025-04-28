@@ -284,11 +284,11 @@ class DanmakuSystem {
           this.messageCount++;
           this.updateDebugInfo();
           
+          this.updateStatus('已收到新消息', 'success');
           $('.danmaku-item').last()[0].textContent = content.length > 20 ? content.substring(0, 20) + '...' : content;
 		  $('.danmaku-item').last().attr('id', obj.new.uuid)
 		  $('.danmaku-item').last()[0].innerHTML += '<button>√</button>'
 		  $('#'+obj.back.uuid)[0].innerHTML = '此消息已撤回'
-          this.updateStatus('已收到新消息', 'success');
         }
       }
     } catch (error) {

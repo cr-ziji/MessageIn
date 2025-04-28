@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>主页</title>
+</head>
+<body>
+	<div>
+		<span>{{t_name}}</span>
+		<button>更改个人信息</button>
+		<button>退出登录</button>
+	</div>
+	{% for i in t_class %}
+	<div class="class {{i}}">{{i}}</div>
+	{% endfor %}
+	<script src="../static/js/jquery-3.3.1.min.js"></script>
+	<script>
+		$('.class').on('click', function(){
+			s = $(this).attr('class')
+			s = s.substring(6, s.length)
+			window.location.href = '/class?class='+s
+		})
+	</script>
+</body>
+</html>

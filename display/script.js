@@ -282,6 +282,7 @@ class DanmakuSystem {
           }
 		  
 		  $('.danmaku-item').last().attr('id', obj.new.uuid)
+		  $('.danmaku-item').last()[0].innerHTML += '<button>√</button>'
 		  $('#'+obj.back.uuid)[0].innerHTML = '此消息已撤回'
           this.updateStatus('已收到新消息', 'success');
         }

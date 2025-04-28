@@ -462,3 +462,9 @@ body.transparent-mode .wave-container {
   visibility: visible;
   opacity: 1;
 }
+
+.danmaku-item button{
+	border: none;
+	background-color: transparent;
+	color: white;
+}

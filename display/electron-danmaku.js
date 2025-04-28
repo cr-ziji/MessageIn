@@ -77,7 +77,7 @@ function createDanmakuWindow() {
 
   // 加载弹幕专用模式的HTML
   danmakuWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'simple-danmaku.html'),
+    pathname: path.join(__dirname, 'index.html'),
     protocol: 'file:',
     slashes: true,
     search: '?mode=overlay'

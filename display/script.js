@@ -263,14 +263,14 @@ class DanmakuSystem {
       const rawText = await response.text();
       console.log('API原始响应:', rawText);
       
-      const content = this.extractContentFromText(rawText);
-      console.log('提取的消息内容:', content);
+      const a = this.extractContentFromText(rawText);
+	  const obj = JSON.parse(a)
+	  const content = obj.new.content
       
       if (content) {
         const contentHash = this.getContentHash(content);
         
         if (contentHash !== this.lastContentHash) {
-          console.log('发现新消息:', content);
           this.lastContentHash = contentHash;
           this.addDanmaku(content);
           this.messageCount++;
@@ -280,7 +280,9 @@ class DanmakuSystem {
             document.getElementById('lastMessage').textContent = 
               content.length > 20 ? content.substring(0, 20) + '...' : content;
           }
-          
+		  
+		  $('.danmaku-item').last().attr('id', obj.new.uuid)
+		  $('#'+obj.back.uuid)[0].innerHTML = '此消息已撤回'
           this.updateStatus('已收到新消息', 'success');
         }
       }

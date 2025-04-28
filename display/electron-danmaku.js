@@ -33,6 +33,14 @@ function createWindow() {
   // 打开开发者工具（可选）
   // mainWindow.webContents.openDevTools();
 
+  // 主窗口加载完成后自动创建弹幕窗口
+  mainWindow.webContents.on('did-finish-load', () => {
+    // 延迟创建弹幕窗口，确保主窗口已完全加载
+    setTimeout(() => {
+      createDanmakuWindow();
+    }, 500);
+  });
+
   // 窗口关闭时触发
   mainWindow.on('closed', () => {
     // 取消引用 window 对象
@@ -48,6 +56,12 @@ function createWindow() {
 
 // 创建弹幕窗口
 function createDanmakuWindow() {
+  // 如果已经存在弹幕窗口则不再创建
+  if (danmakuWindow) {
+    danmakuWindow.show();
+    return;
+  }
+
   // 获取主显示器尺寸
   const { width } = screen.getPrimaryDisplay().workAreaSize;
 
@@ -72,7 +86,8 @@ function createDanmakuWindow() {
     maximizable: false,
     fullscreenable: false,
     focusable: false,
-    show: false
+    show: false,
+    type: 'panel' // 添加panel类型以提高在某些系统上的置顶能力
   });
 
   // 加载弹幕专用模式的HTML
@@ -85,6 +100,15 @@ function createDanmakuWindow() {
 
   // 设置点击穿透
   danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
+  
+  // 设置为在所有工作区可见（包括全屏应用）
+  danmakuWindow.setVisibleOnAllWorkspaces(true, {visibleOnFullScreen: true});
+  
+  // 使用screen-saver级别确保最高置顶效果
+  danmakuWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+  
+  // 设置不可全屏以防止在macOS上全屏时被其他应用遮挡
+  danmakuWindow.setFullScreenable(false);
 
   // 窗口准备好后显示
   danmakuWindow.once('ready-to-show', () => {
@@ -126,6 +150,10 @@ ipcMain.on('update-danmaku-style', (event, style) => {
         x: 0,
         y: 0
       });
+      
+      // 更新窗口后重新设置始终置顶和点击穿透
+      danmakuWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+      danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
     }
   }
 });

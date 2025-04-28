@@ -3,15 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: http: https:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: http: https: fonts.googleapis.com fonts.gstatic.com;">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>MessageIn显示端</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: 'Noto Sans SC', 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+    
+    /* 确保在overlay模式下的样式 */
+    @media screen and (max-height: 60px) {
+      .danmaku-area {
+        height: 50px !important;
+      }
+      .danmaku-item {
+        top: 8px !important;
+      }
+    }
+    
+    /* 弹幕内容淡入效果 */
+    .danmaku-item {
+      animation-name: danmaku-move, danmaku-fade;
+    }
+    
+    @keyframes danmaku-fade {
+      0% { opacity: 0; }
+      5% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
 </head>
 <body>
   <div class="container" id="mainContainer">
     <div class="danmaku-area" id="danmakuArea"></div>
     
     <div class="background"></div>
+    <div class="wave-container">
+      <div class="wave"></div>
+      <div class="wave"></div>
+    </div>
     
     <div class="debug-panel" id="debugPanel">
       <h3>调试信息</h3>
@@ -44,7 +81,8 @@
       </div>
       <div class="electron-info">
         <p>Electron模式已启用</p>
-        <button id="createExternalBtn">创建外部窗口</button>
+        <p class="small-note">已自动创建外部弹幕窗口</p>
+        <button id="createExternalBtn" class="electron-btn">重新创建外部窗口</button>
       </div>
     </div>
     
@@ -71,7 +109,7 @@
       
       <div class="control-row">
         <label>
-          <input type="checkbox" id="topMostCheck">
+          <input type="checkbox" id="topMostCheck" checked>
           始终置顶
         </label>
         

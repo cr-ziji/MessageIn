@@ -18,6 +18,16 @@ class DanmakuSystem {
     this.messageCount = 0;
     this.isDebugMode = false;
     
+    // 检查是否是overlay模式
+    const urlParams = new URLSearchParams(window.location.search);
+    this.isOverlayMode = urlParams.get('mode') === 'overlay';
+    
+    // 在overlay模式下，强制使用透明背景
+    if (this.isOverlayMode) {
+      document.body.classList.add('transparent-mode');
+      document.getElementById('mainContainer').classList.add('external-window-mode');
+    }
+    
     this.statusDot = document.getElementById('statusDot');
     this.statusText = document.getElementById('statusText');
     this.speedRange = document.getElementById('speedRange');
@@ -31,45 +41,48 @@ class DanmakuSystem {
       document.body.classList.add('electron-active');
     }
     
-    document.getElementById('toggleBtn').addEventListener('click', () => this.toggleRunning());
-    document.getElementById('testBtn').addEventListener('click', () => this.sendTestDanmaku());
-    document.getElementById('clearBtn').addEventListener('click', () => this.clearDanmaku());
-    
-    if (this.isElectronMode && document.getElementById('createExternalBtn')) {
-      document.getElementById('createExternalBtn').addEventListener('click', () => this.createExternalWindow());
-    }
-    
-    this.setupSpeedControl();
-    
-    this.opacityRange.addEventListener('input', (e) => {
-      this.opacity = parseFloat(e.target.value) / 10;
-      this.updateDanmakuOpacity();
-      this.updateDebugInfo();
-    });
-    
-    if (this.isElectronMode) {
-      this.topMostCheck.addEventListener('change', (e) => {
-        this.setAlwaysOnTop(e.target.checked);
-      });
-    }
-    
-    this.transparentCheck.addEventListener('change', (e) => {
-      this.setTransparentBackground(e.target.checked);
-    });
-    
-    this.debugBtn.addEventListener('click', () => {
-      this.toggleDebugMode();
-    });
-    
-    document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-        this.toggleDebugMode();
+    // 只在非overlay模式下添加控制面板事件监听
+    if (!this.isOverlayMode) {
+      document.getElementById('toggleBtn').addEventListener('click', () => this.toggleRunning());
+      document.getElementById('testBtn').addEventListener('click', () => this.sendTestDanmaku());
+      document.getElementById('clearBtn').addEventListener('click', () => this.clearDanmaku());
+      
+      if (this.isElectronMode && document.getElementById('createExternalBtn')) {
+        document.getElementById('createExternalBtn').addEventListener('click', () => this.createExternalWindow());
       }
       
-      if (e.ctrlKey && e.shiftKey && e.key === 'I' && this.isElectronMode && window.electronAPI) {
-        window.electronAPI.toggleDevTools();
+      this.setupSpeedControl();
+      
+      this.opacityRange.addEventListener('input', (e) => {
+        this.opacity = parseFloat(e.target.value) / 10;
+        this.updateDanmakuOpacity();
+        this.updateDebugInfo();
+      });
+      
+      if (this.isElectronMode) {
+        this.topMostCheck.addEventListener('change', (e) => {
+          this.setAlwaysOnTop(e.target.checked);
+        });
       }
-    });
+      
+      this.transparentCheck.addEventListener('change', (e) => {
+        this.setTransparentBackground(e.target.checked);
+      });
+      
+      this.debugBtn.addEventListener('click', () => {
+        this.toggleDebugMode();
+      });
+      
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+          this.toggleDebugMode();
+        }
+        
+        if (e.ctrlKey && e.shiftKey && e.key === 'I' && this.isElectronMode && window.electronAPI) {
+          window.electronAPI.toggleDevTools();
+        }
+      });
+    }
     
     this.initCorsProxy();
     this.initDebugInfo();
@@ -380,10 +393,6 @@ class DanmakuSystem {
       return simpleContentMatch[1];
     }
     
-    if (trimmed.includes('大乐子')) {
-      return '大乐子';
-    }
-    
     return trimmed;
   }
   
@@ -403,43 +412,39 @@ class DanmakuSystem {
     danmaku.className = 'danmaku-item';
     danmaku.textContent = content;
     
-    danmaku.style.color = this.getRandomColor();
-    danmaku.style.fontSize = `${18 + Math.floor(Math.random() * 4) * 2}px`;
+    // 统一使用固定样式，不再使用随机颜色
+    if (this.isOverlayMode) {
+      // overlay模式下的样式已在CSS中定义，这里不再添加额外样式
+    } else {
+      // 普通模式下也使用固定的样式设置
+      danmaku.style.fontSize = '18px';
+    }
     
     this.danmakuArea.appendChild(danmaku);
     
     danmaku.addEventListener('animationend', () => {
       danmaku.remove();
     });
+    
+    // 在overlay模式下，限制只显示一条弹幕
+    if (this.isOverlayMode && this.danmakuArea.children.length > 1) {
+      // 移除最旧的弹幕
+      this.danmakuArea.removeChild(this.danmakuArea.firstChild);
+    }
   }
   
   sendTestDanmaku() {
     const testMessages = [
       'MessageIn测试消息',
-      '欢迎使用MessageIn显示端',
-      '实时消息系统已启动',
-      '这是一条测试消息',
-      '这是一条长一点的MessageIn测试消息，用于测试显示效果'
+      '这是一条测试弹幕',
+      '欢迎使用MessageIn弹幕系统',
+      '这是一个美化后的弹幕效果'
     ];
     
     const randomIndex = Math.floor(Math.random() * testMessages.length);
     this.addDanmaku(testMessages[randomIndex]);
     this.messageCount++;
     this.updateDebugInfo();
-  }
-  
-  getRandomColor() {
-    const colors = [
-      '#ffffff',
-      '#ff4757',
-      '#2ed573',
-      '#1e90ff',
-      '#f1c40f',
-      '#e84393',
-      '#00cec9'
-    ];
-    
-    return colors[Math.floor(Math.random() * colors.length)];
   }
 }
 
@@ -482,14 +487,6 @@ class ElectronBridge {
 document.addEventListener('DOMContentLoaded', () => {
   window.electronBridge = new ElectronBridge();
   window.danmakuSystem = new DanmakuSystem();
-  
-  const urlParams = new URLSearchParams(window.location.search);
-  const mode = urlParams.get('mode');
-  
-  if (mode === 'external' || mode === 'overlay') {
-    document.getElementById('mainContainer').classList.add('external-window-mode');
-    document.body.classList.add('transparent-mode');
-  }
 });
 
 if (typeof window.electronAPI === 'undefined' && isElectron()) {

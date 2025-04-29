@@ -197,7 +197,7 @@ class DanmakuSystem {
   }
   
   updateDanmakuSpeed() {
-    const duration = 5 + (this.speed - 1) * (10 / 9);
+    const duration = 7 + (this.speed - 1) * (10 / 9);
     
     let style = document.getElementById('danmakuSpeedStyle');
     if (!style) {

@@ -18,6 +18,7 @@ body, html {
 }
 
 .danmaku-area {
+  background-color: rgba(0, 0, 0, 0);
   position: fixed;
   top: 0;
   left: 0;
@@ -37,16 +38,16 @@ body, html {
   height: 30px;
   line-height: 30px;
   border-radius: 15px;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.85);
   color: #ffffff;
   font-weight: 500;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
   animation: danmaku-move 8s linear forwards;
   pointer-events: none;
   transform: translateZ(0);
   will-change: transform;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
   font-size: 18px;
   font-family: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   letter-spacing: 0.5px;
@@ -343,16 +344,16 @@ body.transparent-mode .wave-container {
   display: none;
 }
 
-/* 为overlay模式下的弹幕添加特殊样式 */
+/* 在overlay模式下的样式 */
 .external-window-mode .danmaku-item {
-  background-color: rgba(0, 0, 0, 0.65); /* 稍微加深的半透明黑色背景 */
+  background-color: rgba(0, 0, 0, 0.9); /* 更不透明的背景 */
   color: white !important; /* 强制白色文字 */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); /* 增强文字阴影 */
-  font-weight: 500; /* 调整文字粗细 */
-  border: none; /* 移除边框 */
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); /* 更深的阴影 */
+  text-shadow: 0 2px 3px rgba(0, 0, 0, 0.8); /* 增强文字阴影 */
+  font-weight: 600; /* 略粗的文字 */
+  border: 1px solid rgba(255, 255, 255, 0.25); /* 细边框增加边界清晰度 */
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5); /* 更深的阴影 */
   font-family: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-size: 22px;
+  font-size: 20px;
   padding: 5px 14px;
   border-radius: 16px;
   backdrop-filter: blur(5px); /* 添加模糊效果，增加现代感 */

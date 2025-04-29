@@ -73,6 +73,7 @@ function createDanmakuWindow() {
     y: 0,
     frame: false,
     transparent: true,
+    opacity: 1.0,
     alwaysOnTop: true,
     skipTaskbar: true,
     webPreferences: {
@@ -139,7 +140,9 @@ ipcMain.on('create-external-window', () => {
 ipcMain.on('update-danmaku-style', (event, style) => {
   if (danmakuWindow) {
     if (style.transparent !== undefined) {
-      danmakuWindow.setOpacity(style.transparent ? 1.0 : 0.9);
+      const opacity = style.transparent ? 1.0 : 0.9;
+      danmakuWindow.setOpacity(opacity);
+      console.log('设置弹幕窗口透明度:', opacity);
     }
     
     if (style.height !== undefined) {

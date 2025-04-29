@@ -289,6 +289,11 @@ class DanmakuSystem {
 		  $('.danmaku-item').last().attr('id', obj.new.uuid)
 		  $('.danmaku-item').last()[0].innerHTML += '<button>√</button>'
 		  if ($('#'+obj.back.uuid).length > 0) $('#'+obj.back.uuid)[0].innerHTML = '此消息已撤回'
+		  $('.danmaku-item button').on('click',function(){
+			$.ajax('www.cyupeng.com/updata?uuid='+$(this).parent().attr('id'))
+			// $(this).parent()[0].outerHTML = ''
+			$(this).parent().addClass('ok')
+		  })
         }
       }
     } catch (error) {

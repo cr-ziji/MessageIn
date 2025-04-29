@@ -439,10 +439,7 @@ class DanmakuSystem {
   
   sendTestDanmaku() {
     const testMessages = [
-      'MessageIn测试消息',
-      '这是一条测试弹幕',
-      '欢迎使用MessageIn弹幕系统',
-      '这是一个美化后的弹幕效果'
+      'MessageIn测试消息'
     ];
     
     const randomIndex = Math.floor(Math.random() * testMessages.length);

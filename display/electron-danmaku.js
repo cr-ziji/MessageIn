@@ -73,7 +73,9 @@ function createDanmakuWindow() {
     y: 0,
     frame: false,
     transparent: true,
-    opacity: 1.0,
+    backgroundColor: '#00000000',
+    opacity: 0.6,
+    resizable: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     webPreferences: {
@@ -113,7 +115,12 @@ function createDanmakuWindow() {
 
   // 窗口准备好后显示
   danmakuWindow.once('ready-to-show', () => {
+    // 确保窗口显示前再次设置背景透明
+    danmakuWindow.setBackgroundColor('#00000000');
     danmakuWindow.show();
+    
+    // 添加调试代码，检查窗口是否成功创建和显示
+    console.log('弹幕窗口已创建并显示');
   });
 
   // 窗口关闭时取消引用
@@ -140,7 +147,8 @@ ipcMain.on('create-external-window', () => {
 ipcMain.on('update-danmaku-style', (event, style) => {
   if (danmakuWindow) {
     if (style.transparent !== undefined) {
-      const opacity = style.transparent ? 1.0 : 0.9;
+      // 修改透明度控制逻辑
+      const opacity = style.transparent ? 1.0 : 1.0; // 始终保持1.0以便背景透明
       danmakuWindow.setOpacity(opacity);
       console.log('设置弹幕窗口透明度:', opacity);
     }
@@ -157,6 +165,9 @@ ipcMain.on('update-danmaku-style', (event, style) => {
       // 更新窗口后重新设置始终置顶和点击穿透
       danmakuWindow.setAlwaysOnTop(true, 'screen-saver', 1);
       danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
+      
+      // 确保窗口背景仍然透明
+      danmakuWindow.setBackgroundColor('#00000000');
     }
   }
 });

@@ -9,6 +9,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('create-external-window');
   },
 
+  testTransparentWindow: () => {
+    console.log('调用测试透明背景API');
+    ipcRenderer.send('test-transparent-window');
+  },
+
   updateDanmakuStyle: (style) => {
     ipcRenderer.send('update-danmaku-style', style);
   },

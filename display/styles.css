@@ -26,6 +26,7 @@ body, html {
   overflow: hidden;
   z-index: 9999;
   pointer-events: none;
+  background: transparent;
 }
 
 .danmaku-item {

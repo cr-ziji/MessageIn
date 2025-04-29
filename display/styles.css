@@ -50,6 +50,7 @@ body, html {
   font-size: 18px;
   font-family: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   letter-spacing: 0.5px;
+  pointer-events: auto;
 }
 
 @keyframes danmaku-move {
@@ -467,4 +468,9 @@ body.transparent-mode .wave-container {
 	border: none;
 	background-color: transparent;
 	color: white;
+}
+
+.ok{
+	text-decoration: line-through;
+	color: blue;
 }

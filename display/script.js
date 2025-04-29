@@ -492,6 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.electronBridge = new ElectronBridge();
   window.danmakuSystem = new DanmakuSystem();
 });
+
 if (typeof window.electronAPI === 'undefined' && isElectron()) {
   window.electronAPI = {
     setAlwaysOnTop: (value) => console.log('需要实现 setAlwaysOnTop:', value),
@@ -500,4 +501,3 @@ if (typeof window.electronAPI === 'undefined' && isElectron()) {
     toggleDevTools: () => console.log('需要实现 toggleDevTools')
   };
 }
-

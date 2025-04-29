@@ -41,8 +41,8 @@ body, html {
   background-color: rgba(0, 0, 0, 0.85);
   color: #ffffff;
   font-weight: 500;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-  animation: danmaku-move 8s linear forwards;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  animation: danmaku-move 80s linear forwards;
   pointer-events: none;
   transform: translateZ(0);
   will-change: transform;
@@ -57,9 +57,11 @@ body, html {
 @keyframes danmaku-move {
   from {
     transform: translateX(0);
+	left: 100%;
   }
   to {
-    transform: translateX(-200%);
+    transform: translateX(-100%);
+	left: 0%;
   }
 }
 
@@ -474,4 +476,30 @@ body.transparent-mode .wave-container {
 .ok{
 	text-decoration: line-through;
 	color: blue;
+}
+
+body {
+	font-family: 'Noto Sans SC', 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+}
+    
+/* 确保在overlay模式下的样式 */
+@media screen and (max-height: 60px) {
+	.danmaku-area {
+		height: 50px !important;
+	}
+	.danmaku-item {
+		top: 8px !important;
+	}
+}
+
+/* 弹幕内容淡入效果 */
+.danmaku-item {
+	animation-name: danmaku-move, danmaku-fade;
+}
+
+@keyframes danmaku-fade {
+	0% { opacity: 0; }
+	5% { opacity: 1; }
+	95% { opacity: 1; }
+	100% { opacity: 0; }
 }

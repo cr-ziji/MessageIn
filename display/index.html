@@ -11,34 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <style>
-    body {
-      font-family: 'Noto Sans SC', 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    }
-    
-    /* 确保在overlay模式下的样式 */
-    @media screen and (max-height: 60px) {
-      .danmaku-area {
-        height: 50px !important;
-      }
-      .danmaku-item {
-        top: 8px !important;
-      }
-    }
-    
-    /* 弹幕内容淡入效果 */
-    .danmaku-item {
-      animation-name: danmaku-move, danmaku-fade;
-    }
-    
-    @keyframes danmaku-fade {
-      0% { opacity: 0; }
-      5% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { opacity: 0; }
-    }
-  </style>
+  <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <div class="container" id="mainContainer">
@@ -123,6 +96,7 @@
     </div>
   </div>
   
-  <script src="script.js"></script>
+  <script src="/script.js"></script>
+  <script src="/jquery-3.3.1.min.js"></script>
 </body>
 </html> 

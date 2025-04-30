@@ -476,7 +476,7 @@ body.transparent-mode .wave-container {
 
 .ok{
 	text-decoration: line-through;
-	color: blue;
+	color: rgb(135,206,250);
 }
 
 body {

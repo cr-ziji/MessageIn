@@ -431,15 +431,18 @@ class DanmakuSystem {
     });
     
     // 在overlay模式下，限制只显示一条弹幕
-    if (this.isOverlayMode && this.danmakuArea.children.length > 1) {
-      // 移除最旧的弹幕
-      this.danmakuArea.removeChild(this.danmakuArea.firstChild);
-    }
+    // if (this.isOverlayMode && this.danmakuArea.children.length > 1) {
+    //   // 移除最旧的弹幕
+    //   this.danmakuArea.removeChild(this.danmakuArea.firstChild);
+    // }
   }
   
   sendTestDanmaku() {
     const testMessages = [
-      'MessageIn测试消息'
+      'MessageIn测试消息',
+      '这是一条测试弹幕',
+      '欢迎使用MessageIn弹幕系统',
+      '这是一个美化后的弹幕效果'
     ];
     
     const randomIndex = Math.floor(Math.random() * testMessages.length);

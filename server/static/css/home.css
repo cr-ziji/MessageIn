@@ -1,0 +1,18 @@
+.big_title{
+    font-size: 40px;
+    color: #1a9ae2;
+    display: inline;
+    position:fixed;
+    background-color: white;
+
+    z-index: 999;
+}
+
+div{
+    display: inline;
+    float: right;
+
+    background-color: white;
+    height: 100px;
+
+}

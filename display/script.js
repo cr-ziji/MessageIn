@@ -290,12 +290,27 @@ class DanmakuSystem {
           this.updateStatus('已收到新消息', 'success');
           $('.danmaku-item').last()[0].textContent = content.length > 20 ? content.substring(0, 20) + '...' : content;
 		  $('.danmaku-item').last().attr('id', obj.new.uuid)
-		  $('.danmaku-item').last()[0].innerHTML += '<button>√</button>'
+		  $('.danmaku-item').last()[0].innerHTML += '<button title="标记为已读">✓</button>'
 		  if ($('#'+obj.back.uuid).length > 0) $('#'+obj.back.uuid)[0].innerHTML = '此消息已撤回'
 		  $('.danmaku-item button').on('click',function(){
 			$.ajax('www.cyupeng.com/updata?uuid='+$(this).parent().attr('id'))
-			// $(this).parent()[0].outerHTML = ''
-			$(this).parent().addClass('ok')
+            const danmakuEl = $(this).parent()[0];
+            
+            // 获取当前弹幕的位置
+            const currentPosition = danmakuEl.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            // 计算当前弹幕的X位置相对于动画开始位置的百分比
+            const currentX = (currentPosition.left / viewportWidth) * 100;
+            
+            // 设置自定义属性，用于动画计算
+            danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
+            
+			$(this).parent().addClass('ok');
+            
+            // 打勾按钮点击后隐藏
+            $(this).css('display', 'none');
+            
+            // 弹幕在动画结束后自动删除，不再需要setTimeout
 		  })
         }
       }
@@ -442,8 +457,15 @@ class DanmakuSystem {
     
     this.danmakuArea.appendChild(danmaku);
     
-    danmaku.addEventListener('animationend', () => {
-      danmaku.remove();
+    danmaku.addEventListener('animationend', (event) => {
+      // 只在danmaku-move或danmaku-move-fast动画结束时移除元素
+      if (event.animationName === 'danmaku-move' || event.animationName === 'danmaku-move-fast') {
+        // 检查是否打了勾（包含ok类）或已经离开屏幕
+        if (danmaku.classList.contains('ok') || 
+            danmaku.getBoundingClientRect().right < 0) {
+          danmaku.remove();
+        }
+      }
     });
   }
   

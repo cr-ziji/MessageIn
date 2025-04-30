@@ -480,11 +480,63 @@ body.transparent-mode .wave-container {
 	border: none;
 	background-color: transparent;
 	color: white;
+	cursor: pointer;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-left: 8px;
+	transition: all 0.2s ease;
+	opacity: 0.6;
+	font-size: 16px;
+}
+
+.danmaku-item button:hover {
+	background-color: rgba(255, 255, 255, 0.2);
+	opacity: 1;
+	transform: scale(1.1);
+}
+
+.danmaku-item button:active {
+	transform: scale(0.95);
 }
 
 .ok{
 	text-decoration: line-through;
-	color: rgb(135,206,250);
+	color: rgba(135, 206, 250, 0.6) !important;
+	animation: strikethrough 0.3s ease-in-out forwards, fadeout 1s ease-in-out 0.5s forwards, danmaku-move-fast 5s linear forwards !important;
+	opacity: 0.7;
+	transition: all 0.3s ease;
+}
+
+@keyframes strikethrough {
+	from {
+		text-decoration-color: transparent;
+	}
+	to {
+		text-decoration-color: rgba(255, 255, 255, 0.8);
+		text-decoration-thickness: 2px;
+	}
+}
+
+@keyframes fadeout {
+	from {
+		opacity: 0.7;
+	}
+	to {
+		opacity: 0.4;
+	}
+}
+
+@keyframes danmaku-move-fast {
+	from {
+		transform: translateX(var(--current-x, 0)) translateZ(0);
+	}
+	to {
+		transform: translateX(-100%) translateZ(0);
+	}
 }
 
 body {

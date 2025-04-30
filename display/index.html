@@ -9,6 +9,21 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>MessageIn显示端</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* 确保背景透明相关的内联样式 */
+    html, body {
+      background-color: transparent !important;
+      background: transparent !important;
+    }
+    
+    /* 针对overlay模式优化透明度 */
+    @media (query: overlay) {
+      html, body, .container, .danmaku-area {
+        background-color: transparent !important;
+        background: transparent !important;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="container" id="mainContainer">

@@ -189,7 +189,18 @@ class DanmakuSystem {
   }
   
   updateDanmakuSpeed() {
-    const duration = 7 + (this.speed - 1) * (10 / 9);
+    // 优化速度计算逻辑，使弹幕移动更平滑
+    // 速度范围从1到10，对应不同的动画时间
+    // 速度1最慢，速度10最快
+    
+    // 使用非线性映射，使速度变化更自然
+    // 速度1对应15秒，速度10对应3秒
+    const minDuration = 3;  // 最快速度下的动画时间（秒）
+    const maxDuration = 15; // 最慢速度下的动画时间（秒）
+    
+    // 使用指数函数来计算动画时间，使速度变化更自然
+    const normalizedSpeed = (11 - this.speed) / 10; // 反转速度，使速度10映射到最短时间
+    const duration = minDuration + (maxDuration - minDuration) * Math.pow(normalizedSpeed, 1.5);
     
     let style = document.getElementById('danmakuSpeedStyle');
     if (!style) {
@@ -204,7 +215,7 @@ class DanmakuSystem {
       }
     `;
     
-    console.log('弹幕速度已更新:', duration + 's');
+    console.log('弹幕速度已更新:', duration.toFixed(2) + 's');
   }
   
   updateDanmakuOpacity() {
@@ -424,25 +435,21 @@ class DanmakuSystem {
       danmaku.style.fontSize = '18px';
     }
     
+    // 添加硬件加速支持，使动画更平滑
+    danmaku.style.transform = 'translateX(100vw) translateZ(0)';
+    danmaku.style.webkitFontSmoothing = 'antialiased';
+    danmaku.style.backfaceVisibility = 'hidden';
+    
     this.danmakuArea.appendChild(danmaku);
     
     danmaku.addEventListener('animationend', () => {
       danmaku.remove();
     });
-    
-    // 在overlay模式下，限制只显示一条弹幕
-    // if (this.isOverlayMode && this.danmakuArea.children.length > 1) {
-    //   // 移除最旧的弹幕
-    //   this.danmakuArea.removeChild(this.danmakuArea.firstChild);
-    // }
   }
   
   sendTestDanmaku() {
     const testMessages = [
       'MessageIn测试消息',
-      '这是一条测试弹幕',
-      '欢迎使用MessageIn弹幕系统',
-      '这是一个美化后的弹幕效果'
     ];
     
     const randomIndex = Math.floor(Math.random() * testMessages.length);

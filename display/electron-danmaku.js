@@ -73,15 +73,17 @@ function createDanmakuWindow() {
     y: 0,
     frame: false,
     transparent: true,
-    backgroundColor: '#00000000',
-    opacity: 0.6,
+    hasShadow: false, // 禁用阴影
+    backgroundColor: '#00000000', // 完全透明的背景色
+    opacity: 1.0, // 设置为完全不透明，由CSS控制内容的透明度
     resizable: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'electron-preload.js')
+      preload: path.join(__dirname, 'electron-preload.js'),
+      experimentalFeatures: true, // 启用实验性功能
     },
     resizable: false,
     movable: false,
@@ -90,7 +92,9 @@ function createDanmakuWindow() {
     fullscreenable: false,
     focusable: false,
     show: false,
-    type: 'panel' // 添加panel类型以提高在某些系统上的置顶能力
+    type: 'panel', // 添加panel类型以提高在某些系统上的置顶能力
+    titleBarStyle: 'hidden', // 隐藏标题栏
+    visualEffectState: 'active' // 在macOS上启用活动视觉效果
   });
 
   // 加载弹幕专用模式的HTML
@@ -117,10 +121,24 @@ function createDanmakuWindow() {
   danmakuWindow.once('ready-to-show', () => {
     // 确保窗口显示前再次设置背景透明
     danmakuWindow.setBackgroundColor('#00000000');
+    
+    // 在Windows上使用特殊API设置透明度
+    if (process.platform === 'win32') {
+      try {
+        // 尝试使用Windows特有的DWM API设置透明度
+        danmakuWindow.setOpacity(1.0);
+      } catch (e) {
+        console.error('设置Windows透明度失败:', e);
+      }
+    }
+    
     danmakuWindow.show();
     
     // 添加调试代码，检查窗口是否成功创建和显示
     console.log('弹幕窗口已创建并显示');
+    
+    // 打开开发者工具用于调试
+    // danmakuWindow.webContents.openDevTools({ mode: 'detach' });
   });
 
   // 窗口关闭时取消引用

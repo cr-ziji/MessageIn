@@ -11,7 +11,7 @@ class DanmakuSystem {
     this.lastContentHash = null;
     this.isRunning = true;
     this.danmakuArea = document.getElementById('danmakuArea');
-    this.speed = 5;
+    this.speed = 2;
     this.opacity = 0.8;
     this.isElectronMode = isElectron();
     this.externalWindow = null;

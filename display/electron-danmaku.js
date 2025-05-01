@@ -1,10 +1,22 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu } = require('electron');
 const path = require('path');
 const url = require('url');
 
 // 保持对窗口对象的全局引用，避免JavaScript对象被垃圾回收时窗口关闭
 let mainWindow;
 let danmakuWindow;
+let tray = null;
+
+// 设置开机自启动
+function setAutoLaunch(enable) {
+  if (process.platform === 'win32') {
+    app.setLoginItemSettings({
+      openAtLogin: enable,
+      path: process.execPath,
+      args: ['--hidden'] // 添加启动参数，用于标识是否隐藏主窗口
+    });
+  }
+}
 
 // 创建主窗口
 function createWindow() {
@@ -20,7 +32,8 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'electron-preload.js')
     },
-    icon: path.join(__dirname, 'favicon.ico')
+    icon: path.join(__dirname, 'icon.png'),
+    show: false // 默认不显示主窗口
   });
 
   // 加载HTML文件
@@ -30,8 +43,23 @@ function createWindow() {
     slashes: true
   }));
 
-  // 打开开发者工具（可选）
-  // mainWindow.webContents.openDevTools();
+  // 创建系统托盘
+  createTray();
+
+  // 监听窗口最小化事件
+  mainWindow.on('minimize', (event) => {
+    event.preventDefault();
+    mainWindow.hide();
+  });
+
+  // 监听窗口关闭事件
+  mainWindow.on('close', (event) => {
+    if (!app.isQuiting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+    return false;
+  });
 
   // 主窗口加载完成后自动创建弹幕窗口
   mainWindow.webContents.on('did-finish-load', () => {
@@ -51,6 +79,39 @@ function createWindow() {
       danmakuWindow.close();
       danmakuWindow = null;
     }
+  });
+}
+
+// 创建系统托盘
+function createTray() {
+  const iconPath = path.join(__dirname, 'icon.png');
+  tray = new Tray(iconPath);
+  
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '显示主窗口',
+      click: () => {
+        mainWindow.show();
+      }
+    },
+    {
+      type: 'separator'
+    },
+    {
+      label: '退出',
+      click: () => {
+        app.isQuiting = true;
+        app.quit();
+      }
+    }
+  ]);
+  
+  tray.setToolTip('MessageIn');
+  tray.setContextMenu(contextMenu);
+  
+  // 双击托盘图标显示主窗口
+  tray.on('double-click', () => {
+    mainWindow.show();
   });
 }
 
@@ -162,6 +223,18 @@ ipcMain.on('create-external-window', () => {
   }
 });
 
+ipcMain.on('minimize-to-tray', () => {
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+});
+
+ipcMain.on('show-main-window', () => {
+  if (mainWindow) {
+    mainWindow.show();
+  }
+});
+
 ipcMain.on('update-danmaku-style', (event, style) => {
   if (danmakuWindow) {
     if (style.transparent !== undefined) {
@@ -191,7 +264,18 @@ ipcMain.on('update-danmaku-style', (event, style) => {
 });
 
 // 当Electron完成初始化并准备创建浏览器窗口时调用此方法
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  // 强制启用开机自启动
+  setAutoLaunch(true);
+  
+  // 创建窗口
+  createWindow();
+  
+  // 创建完窗口后立即隐藏主窗口
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+});
 
 // 所有窗口关闭时退出应用
 app.on('window-all-closed', () => {

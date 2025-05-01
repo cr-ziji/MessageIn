@@ -24,5 +24,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
       version: process.env.npm_package_version || '1.0.0',
       platform: process.platform
     }
+  },
+
+  minimizeToTray: () => {
+    ipcRenderer.send('minimize-to-tray');
+  },
+
+  showMainWindow: () => {
+    ipcRenderer.send('show-main-window');
   }
 }); 

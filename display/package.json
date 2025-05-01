@@ -1,6 +1,6 @@
 {
-  "name": "messagein-display",
-  "version": "1.0.0",
+  "name": "MmessageIn-Display",
+  "version": "1.3.2",
   "description": "MessageIn显示端 - 实时消息展示系统",
   "main": "electron-danmaku.js",
   "scripts": {

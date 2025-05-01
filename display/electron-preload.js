@@ -32,5 +32,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   showMainWindow: () => {
     ipcRenderer.send('show-main-window');
+  },
+
+  handleDanmakuMouseEvent: (type, isOverDanmaku) => {
+    ipcRenderer.send('danmaku-mouse-event', { type, isOverDanmaku });
   }
 }); 

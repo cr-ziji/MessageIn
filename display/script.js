@@ -27,6 +27,18 @@ class DanmakuSystem {
     if (this.isOverlayMode) {
       document.body.classList.add('transparent-mode');
       document.getElementById('mainContainer').classList.add('external-window-mode');
+      
+      this.danmakuArea.addEventListener('mouseover', () => {
+        if (window.electronAPI) {
+          window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
+        }
+      });
+      
+      this.danmakuArea.addEventListener('mouseout', () => {
+        if (window.electronAPI) {
+          window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
+        }
+      });
     }
     
     this.statusDot = document.getElementById('statusDot');
@@ -507,6 +519,18 @@ class DanmakuSystem {
             this.messageCache.delete(uuid);
           }
         }
+      }
+    });
+
+    danmaku.addEventListener('mouseover', () => {
+      if (this.isOverlayMode && window.electronAPI) {
+        window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
+      }
+    });
+    
+    danmaku.addEventListener('mouseout', () => {
+      if (this.isOverlayMode && window.electronAPI) {
+        window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
       }
     });
 

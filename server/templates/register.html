@@ -3,12 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <title>注册</title>
+    <link rel="stylesheet" href="../static/css/register.css">
 </head>
 <body>
-	<a href="/login">登录</a>
-	<a href="/register">注册</a>
+	<a class='download_button' href="../static/file/messagein-display Setup 1.0.0.exe"><img src="../static/image/download_ico.jpg" height="23" width="23"></a>
+	<p class="big_title">北大附中北医分校消息管理系统</p>
+	<hr>
 	<form action="/handle" method="post">
-		用户名：<select name="subject">
+		<a href="/login">登录</a>
+		<a href="/register">注册</a>
+		<br>
+		用户名：
+		<select name="subject">
 			<option value="语文">语文</option>
 			<option value="数学‌">数学‌</option>
 			<option value="英语‌">英语‌</option>
@@ -24,46 +30,57 @@
 			<option value="‌信息">‌信息</option>
 			<option value="劳技">劳技</option>
 		</select>
-		<input type="name">
+		<input type="name" required maxlength="1" style="width: 30px;">
 		老师
 		<br>
-		手机号：<input type="tel" name="tel">
+		手机号：<input type="tel" name="tel" required>
 		<br>
-		密码：<input type="password" name="password">
+		密码：<input type="password" name="password" required>
 		<br>
 		管理班级：
-		<div>
-			<div class="grade">
-				<div class="choose">初一</div>
-				<!-- .choose是选中样式，别忘了在css里写，如果是蓝色调就是未选中白色，选中蓝色 -->
-				<div>初二</div>
-				<div>初三</div>
-				<div>高一</div>
-				<div>高二</div>
-				<div>高三</div>
-			</div>
-			<div class="class">
-				<div class="choose">一班</div>
-				<div>二班</div>
-				<div>三班</div>
-				<div>四班</div>
-				<div>五班</div>
-				<div>六班</div>
-				<div>联培班</div>
-			</div>
-			<div></div>
-		</div>
+		<select class="grade">
+			<option>初一</option>
+			<option>初二</option>
+			<option>初三</option>
+			<option>高一</option>
+			<option>高二</option>
+			<option>高三</option>
+		</select>
+		<select class="class">
+			<option>一班</option>
+			<option>二班</option>
+			<option>三班</option>
+			<option>四班</option>
+			<option>五班</option>
+			<option>六班</option>
+			<option>联培班</option>
+		</select>
+		<div class="add">十</div>
+		<div class="choose"></div>
 		<input type="hidden" name="type" value="注册">
-		<input type="submit">
+		<input type="submit" value="注册">
+		<div style="display: none;" class="hidden"></div>
 	</form>
 	{% if t_alert %}
 	<!-- <script>alert('该用户名已被使用')</script> -->
 	{% endif %}
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
 	<script>
-		t = '初一一班'
-		$('.grade').on('click', function(){
-			
+		l = {}
+		$('.add').on('click', function(){
+			choose = $('.grade').val() + $('.class').val()
+			if (!(choose in l) || l[choose] == 0){
+				$('.choose')[0].innerHTML += '<div>' + choose + '<button>×</button></div>'
+				$('.hidden')[0].innerHTML += '<input type="hidden" name="class" value="' + choose + '">'
+				l[choose] = 1
+				$('.choose button').on('click', function(){
+					$(this).parent()[0].outerHTML = ''
+					choose = $(this).parent()[0].innerText
+					choose = choose.substring(0, choose.length - 1)
+					l[choose] = 0
+					$('input[value="' + choose + '"]')[0].outerHTML = ''
+				})
+			}
 		})
 	</script>
 </body>

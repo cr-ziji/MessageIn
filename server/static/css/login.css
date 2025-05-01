@@ -1,82 +1,56 @@
 body{
-    background-image: url("../image/1.jpg");
-    background-size: cover;
+	background: url("../images/1.jpg") repeat-y;
+	background-size: cover;
 }
-button{
+a{
+	display: inline-block;
     background-color: white;
     color: black;
     border: 2px solid #008CBA;
     border-radius: 8px;
     font-size: 16px;
-    text-align: center ;
-    position: relative;
+    text-align: center;
     width: 100px;
-    cursor: pointer;
-    float: right;
-
-
+    text-decoration: none;
 }
-button:hover {
-    background-color: #008CBA;
-    color: white;
+a:hover {
+	background-color: #008CBA;
+	color: white;
 }
 .big_title{
-    text-align: center;
-    text-decoration:none;
-    font-size: 40px;
-    color: #008CBA;
-    display: inline;
+	text-align: center;
+	text-decoration:none;
+	font-size: 40px;
+	color: #008CBA;
+	display: inline;
 }
 input[type=text] {
-    background-color:  #008CBA;
-    color: white;
+	background-color:  #008CBA;
+	color: white;
 }
 form{
-    position: relative;
-
-
-    top: 100px;
-
+	position: absolute;
+    top: 50%;
     background-color: white;
-    left: 300px;
-
-    padding: 50px;
-    width:250px;
-
-
+    left: 25%;
+    padding: 30px;
+    width: 250px;
+    transform: translateX(-50%) translateY(-50%);
+	text-align: center;
+	border-radius: 20px;
 }
 .download_button{
-    float:right;
-    cursor: pointer;
-
+	float:right;
 }
-input[type=text] {
-    width: 100%;
-    padding: 12px 20px;
-    margin: 8px 0;
-    box-sizing: border-box;
-    border: 1px solid #555;
-    outline: none;
+input {
+    margin: 5px 0;
 }
-input[type=text]:focus {
-    background-color: lightblue;
-}
-input[type=submit] {
-    background-color: white;
-    color: black;
-    border: 2px solid #008CBA;
-    border-radius: 8px;
-    font-size: 16px;
-    text-align: center ;
-    position: relative;
-    width: 60px;
-    cursor: pointer;
-
-
-
-}
-input[type=submit]:hover {
-    background-color: #008CBA;
+input[type='submit']{
+	background-color: #008cba;
+    border: none;
     color: white;
-
+    font-size: 15px;
+    border-radius: 5px;
+    width: 150px;
+    height: 25px;
 }

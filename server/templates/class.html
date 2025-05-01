@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>班级</title>
+    <link rel="stylesheet" href="../static/css/class.css">
+</head>
+<body>
+	<p class="big_title">北大附中北医分校消息管理系统</p>
+	<hr>
+	<div class="container">
+	    <div class="content">
+			{% for i in t_data %}
+			{% if i['name'] == t_name %}
+			<div class="item item-right">
+				<div class="bubble">{{i['content']}}</div>
+				<div class="avatar">{{i['name']}}</div>
+			</div>
+			{% else %}
+			<div class="item item-left">
+				<div class="avatar">{{i['name']}}</div>
+				<div class="bubble">{{i['content']}}</div>
+			</div>
+			{% endif %}
+			{% endfor %}
+		</div>
+	    <div class="input-area">
+	        <textarea name="text" id="textarea"></textarea>
+	        <div class="button-area">
+	            <button id="send-btn" onclick="send()">发 送</button>
+	        </div>
+	    </div>
+	</div>
+	<script src="../static/js/jquery-3.3.1.min.js"></script>
+	<script>
+		function send(){
+		    let text = $('#textarea').val();
+		    if(!text){
+		        alert('请输入内容');
+		        return;
+		    }
+		    let item = document.createElement('div');
+		    item.className = 'item item-right';
+		    item.innerHTML = `<div class="bubble">${text}</div><div class="avatar">{{t_name}}</div>`;
+			$.ajax(`/send?class={{t_class}}&&content=${text}`)
+		    $('.content')[0].appendChild(item);
+		    $('#textarea')[0].value = '';
+		    $('#textarea')[0].focus();
+		    // //滚动条置底
+		    // document.querySelector(".content").scrollTop = document.querySelector('.content').scrollHeight;
+		}
+		$('textarea')[0].addEventListener('keydown', function(event) {
+		    if (event.key === "Enter") {
+		        send()
+		    }
+		});
+	</script>
+</body>
+</html>

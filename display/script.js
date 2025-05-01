@@ -17,12 +17,10 @@ class DanmakuSystem {
     this.externalWindow = null;
     this.messageCount = 0;
     this.isDebugMode = false;
-    
-    // 检查是否是overlay模式
+
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
-    
-    // 在overlay模式下，强制使用透明背景
+
     if (this.isOverlayMode) {
       document.body.classList.add('transparent-mode');
       document.getElementById('mainContainer').classList.add('external-window-mode');
@@ -40,8 +38,7 @@ class DanmakuSystem {
     if (this.isElectronMode) {
       document.body.classList.add('electron-active');
     }
-    
-    // 只在非overlay模式下添加控制面板事件监听
+
     if (!this.isOverlayMode) {
       document.getElementById('toggleBtn').addEventListener('click', () => this.toggleRunning());
       document.getElementById('testBtn').addEventListener('click', () => this.sendTestDanmaku());
@@ -189,17 +186,10 @@ class DanmakuSystem {
   }
   
   updateDanmakuSpeed() {
-    // 优化速度计算逻辑，使弹幕移动更平滑
-    // 速度范围从1到10，对应不同的动画时间
-    // 速度1最慢，速度10最快
-    
-    // 使用非线性映射，使速度变化更自然
-    // 速度1对应15秒，速度10对应3秒
-    const minDuration = 3;  // 最快速度下的动画时间（秒）
-    const maxDuration = 15; // 最慢速度下的动画时间（秒）
-    
-    // 使用指数函数来计算动画时间，使速度变化更自然
-    const normalizedSpeed = (11 - this.speed) / 10; // 反转速度，使速度10映射到最短时间
+    const minDuration = 3; 
+    const maxDuration = 15;
+
+    const normalizedSpeed = (11 - this.speed) / 10;
     const duration = minDuration + (maxDuration - minDuration) * Math.pow(normalizedSpeed, 1.5);
     
     let style = document.getElementById('danmakuSpeedStyle');
@@ -295,22 +285,18 @@ class DanmakuSystem {
 		  $('.danmaku-item button').on('click',function(){
 			$.ajax('www.cyupeng.com/updata?uuid='+$(this).parent().attr('id'))
             const danmakuEl = $(this).parent()[0];
-            
-            // 获取当前弹幕的位置
+
             const currentPosition = danmakuEl.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
-            // 计算当前弹幕的X位置相对于动画开始位置的百分比
+
             const currentX = (currentPosition.left / viewportWidth) * 100;
-            
-            // 设置自定义属性，用于动画计算
+
             danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
             
 			$(this).parent().addClass('ok');
-            
-            // 打勾按钮点击后隐藏
+
             $(this).css('display', 'none');
-            
-            // 弹幕在动画结束后自动删除，不再需要setTimeout
+
 		  })
         }
       }
@@ -441,26 +427,24 @@ class DanmakuSystem {
     const danmaku = document.createElement('div');
     danmaku.className = 'danmaku-item';
     danmaku.textContent = content;
-    
-    // 统一使用固定样式，不再使用随机颜色
+
     if (this.isOverlayMode) {
-      // overlay模式下的样式已在CSS中定义，这里不再添加额外样式
     } else {
-      // 普通模式下也使用固定的样式设置
       danmaku.style.fontSize = '18px';
     }
-    
-    // 添加硬件加速支持，使动画更平滑
+
     danmaku.style.transform = 'translateX(100vw) translateZ(0)';
     danmaku.style.webkitFontSmoothing = 'antialiased';
     danmaku.style.backfaceVisibility = 'hidden';
     
+    danmaku.addEventListener('click', () => {
+      danmaku.classList.toggle('ok');
+    });
+
     this.danmakuArea.appendChild(danmaku);
     
     danmaku.addEventListener('animationend', (event) => {
-      // 只在danmaku-move或danmaku-move-fast动画结束时移除元素
       if (event.animationName === 'danmaku-move' || event.animationName === 'danmaku-move-fast') {
-        // 检查是否打了勾（包含ok类）或已经离开屏幕
         if (danmaku.classList.contains('ok') || 
             danmaku.getBoundingClientRect().right < 0) {
           danmaku.remove();

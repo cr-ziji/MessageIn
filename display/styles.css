@@ -355,20 +355,19 @@ body.transparent-mode .wave-container {
   display: none !important;
 }
 
-/* 为overlay模式下的弹幕添加特殊样式 */
 .external-window-mode .danmaku-item {
-  background-color: rgba(0, 0, 0, 0.65); /* 稍微加深的半透明黑色背景 */
-  color: white !important; /* 强制白色文字 */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); /* 增强文字阴影 */
-  font-weight: 500; /* 调整文字粗细 */
-  border: none; /* 移除边框 */
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3); /* 更深的阴影 */
+  background-color: rgba(0, 0, 0, 0.65); 
+  color: white !important; 
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); 
+  font-weight: 500;
+  border: none; 
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
   font-family: 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-size: 22px;
   padding: 5px 14px;
   border-radius: 16px;
-  backdrop-filter: blur(5px); /* 添加模糊效果，增加现代感 */
-  -webkit-backdrop-filter: blur(5px); /* Safari 兼容 */
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 .electron-info {
@@ -511,6 +510,19 @@ body.transparent-mode .wave-container {
 	transition: all 0.3s ease;
 }
 
+@keyframes danmaku-move {
+  from {
+      transform: translateX(100vw);
+  }
+  to {
+      transform: translateX(-100%);
+  }
+
+  .danmaku-item {
+      animation: danmaku-move 8s linear forwards; 
+  }
+}
+
 @keyframes strikethrough {
 	from {
 		text-decoration-color: transparent;
@@ -543,8 +555,7 @@ body {
   background-color: transparent;
 	font-family: 'Noto Sans SC', 'HarmonyOS Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
-    
-/* 确保在overlay模式下的样式 */
+
 @media screen and (max-height: 60px) {
 	.danmaku-area {
 		height: 50px !important;
@@ -554,7 +565,6 @@ body {
 	}
 }
 
-/* 弹幕内容淡入效果 */
 .danmaku-item {
   animation-name: danmaku-move, danmaku-fade;
   animation-timing-function: linear, ease-in-out;

@@ -17,6 +17,9 @@ class DanmakuSystem {
     this.externalWindow = null;
     this.messageCount = 0;
     this.isDebugMode = false;
+    this.messageCache = new Map();
+    this.cacheDuration = 3;
+    this.processedMessages = new Set();
 
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
@@ -265,44 +268,94 @@ class DanmakuSystem {
       console.log('API原始响应:', rawText);
       
       const a = this.extractContentFromText(rawText);
-	  const obj = JSON.parse(a)
-	  const content = obj.new.content
-      
-      if (content) {
-        const contentHash = this.getContentHash(content);
+      let responseObj;
+      try {
+        responseObj = JSON.parse(a);
+      } catch (error) {
+        console.error('解析API响应失败:', error);
+        return;
+      }
+
+      if (responseObj.new && responseObj.new.content && responseObj.new.uuid) {
+        this.processMessage(responseObj.new.content, responseObj.new.uuid);
         
-        if (contentHash !== this.lastContentHash) {
-          this.lastContentHash = contentHash;
-          this.addDanmaku(content);
-          this.messageCount++;
-          this.updateDebugInfo();
-          
-          this.updateStatus('已收到新消息', 'success');
-          $('.danmaku-item').last()[0].textContent = content.length > 20 ? content.substring(0, 20) + '...' : content;
-		  $('.danmaku-item').last().attr('id', obj.new.uuid)
-		  $('.danmaku-item').last()[0].innerHTML += '<button title="标记为已读">✓</button>'
-		  if ($('#'+obj.back.uuid).length > 0) $('#'+obj.back.uuid)[0].innerHTML = '此消息已撤回'
-		  $('.danmaku-item button').on('click',function(){
-			$.ajax('www.cyupeng.com/updata?uuid='+$(this).parent().attr('id'))
-            const danmakuEl = $(this).parent()[0];
-
-            const currentPosition = danmakuEl.getBoundingClientRect();
-            const viewportWidth = window.innerWidth;
-
-            const currentX = (currentPosition.left / viewportWidth) * 100;
-
-            danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
-            
-			$(this).parent().addClass('ok');
-
-            $(this).css('display', 'none');
-
-		  })
+        if (responseObj.back && responseObj.back.uuid) {
+          if ($('#'+responseObj.back.uuid).length > 0) {
+            $('#'+responseObj.back.uuid)[0].innerHTML = '此消息已撤回';
+          }
         }
       }
+      
+      else if (Array.isArray(responseObj)) {
+        for (const msg of responseObj) {
+          if (msg.content && msg.uuid) {
+            this.processMessage(msg.content, msg.uuid);
+          }
+        }
+      }
+      
+      this.playFromCache();
+      
     } catch (error) {
       console.error('获取消息失败:', error);
       this.updateStatus('获取消息失败', 'error');
+    }
+  }
+  
+  processMessage(content, uuid) {
+    const contentHash = this.getContentHash(content + uuid);
+    
+    if (this.processedMessages.has(contentHash)) {
+      return;
+    }
+    
+    this.processedMessages.add(contentHash);
+    
+    if (!this.messageCache.has(uuid)) {
+      this.messageCache.set(uuid, {
+        content: content,
+        playCount: 0
+      });
+    }
+    
+    this.addDanmaku(content, uuid, this.messageCache.get(uuid).playCount);
+    this.messageCount++;
+    this.updateDebugInfo();
+    
+    this.updateStatus('已收到新消息', 'success');
+    
+    const lastDanmaku = $('.danmaku-item').last()[0];
+    lastDanmaku.textContent = content.length > 20 ? content.substring(0, 20) + '...' : content;
+    
+    $(lastDanmaku).attr('id', uuid);
+    
+    if (!lastDanmaku.querySelector('button')) {
+      const button = document.createElement('button');
+      button.title = "标记为已读";
+      button.textContent = "✓";
+      lastDanmaku.appendChild(button);
+      
+      $(button).on('click', function(e){
+        e.stopPropagation();
+        
+        $.ajax('www.cyupeng.com/updata?uuid='+$(this).parent().attr('id'));
+        const danmakuEl = $(this).parent()[0];
+        
+        const currentPosition = danmakuEl.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const currentX = (currentPosition.left / viewportWidth) * 100;
+        
+        danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
+        
+        $(this).parent().addClass('ok');
+        
+        const uuid = $(this).parent().attr('id');
+        if (uuid && window.danmakuSystem.messageCache.has(uuid)) {
+          window.danmakuSystem.messageCache.delete(uuid);
+        }
+        
+        $(this).css('display', 'none');
+      });
     }
   }
   
@@ -423,10 +476,15 @@ class DanmakuSystem {
     return hash;
   }
   
-  addDanmaku(content) {
+  addDanmaku(content, uuid = null, playCount = 0) {
     const danmaku = document.createElement('div');
     danmaku.className = 'danmaku-item';
     danmaku.textContent = content;
+    
+    if (uuid) {
+      danmaku.setAttribute('id', uuid);
+      danmaku.setAttribute('data-play-count', playCount);
+    }
 
     if (this.isOverlayMode) {
     } else {
@@ -438,15 +496,38 @@ class DanmakuSystem {
     danmaku.style.backfaceVisibility = 'hidden';
     
     danmaku.addEventListener('click', () => {
-      danmaku.classList.toggle('ok');
+      if (!danmaku.classList.contains('ok')) {
+        const button = danmaku.querySelector('button');
+        if (button) {
+          button.click();
+        } else {
+          danmaku.classList.add('ok');
+          const uuid = danmaku.getAttribute('id');
+          if (uuid && this.messageCache.has(uuid)) {
+            this.messageCache.delete(uuid);
+          }
+        }
+      }
     });
 
     this.danmakuArea.appendChild(danmaku);
     
     danmaku.addEventListener('animationend', (event) => {
       if (event.animationName === 'danmaku-move' || event.animationName === 'danmaku-move-fast') {
-        if (danmaku.classList.contains('ok') || 
-            danmaku.getBoundingClientRect().right < 0) {
+        const uuid = danmaku.getAttribute('id');
+        const playCount = parseInt(danmaku.getAttribute('data-play-count') || '0');
+        
+        if (danmaku.classList.contains('ok') || !uuid) {
+          danmaku.remove();
+          return;
+        }
+        
+        if (playCount >= this.cacheDuration) {
+          if (uuid && this.messageCache.has(uuid)) {
+            this.messageCache.delete(uuid);
+          }
+          danmaku.remove();
+        } else {
           danmaku.remove();
         }
       }
@@ -462,6 +543,100 @@ class DanmakuSystem {
     this.addDanmaku(testMessages[randomIndex]);
     this.messageCount++;
     this.updateDebugInfo();
+  }
+  
+  playFromCache() {
+    const maxConcurrentMessages = 3;
+    let playedCount = 0;
+    
+    const visibleDanmaku = new Set();
+    document.querySelectorAll('.danmaku-item').forEach(el => {
+      const id = el.getAttribute('id');
+      if (id) visibleDanmaku.add(id);
+    });
+    
+    const pendingMessages = [];
+    for (const [uuid, messageData] of this.messageCache.entries()) {
+      if (!visibleDanmaku.has(uuid) && messageData.playCount < this.cacheDuration) {
+        pendingMessages.push({ uuid, messageData });
+      }
+    }
+    
+    pendingMessages.sort(() => Math.random() - 0.5);
+    
+    for (const { uuid, messageData } of pendingMessages) {
+      if (playedCount >= maxConcurrentMessages) break;
+      
+      if (document.getElementById(uuid)) continue;
+      
+      const newCount = messageData.playCount + 1;
+      this.messageCache.set(uuid, {
+        content: messageData.content,
+        playCount: newCount
+      });
+      
+      this.addDanmaku(messageData.content, uuid, newCount);
+      
+      const newDanmaku = document.getElementById(uuid);
+      if (newDanmaku) {
+        newDanmaku.textContent = messageData.content.length > 20 ? 
+                                 messageData.content.substring(0, 20) + '...' : 
+                                 messageData.content;
+        
+        if (!newDanmaku.querySelector('button')) {
+          const button = document.createElement('button');
+          button.title = "标记为已读";
+          button.textContent = "✓";
+          
+          button.addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            $.ajax('www.cyupeng.com/updata?uuid=' + uuid);
+            const danmakuEl = newDanmaku;
+            
+            const currentPosition = danmakuEl.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const currentX = (currentPosition.left / viewportWidth) * 100;
+            
+            danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
+            
+            danmakuEl.classList.add('ok');
+            
+            if (uuid && window.danmakuSystem.messageCache.has(uuid)) {
+              window.danmakuSystem.messageCache.delete(uuid);
+            }
+            
+            button.style.display = 'none';
+          });
+          
+          newDanmaku.appendChild(button);
+        }
+      }
+      
+      playedCount++;
+    }
+    
+    for (const [uuid, messageData] of this.messageCache.entries()) {
+      if (messageData.playCount >= this.cacheDuration) {
+        this.messageCache.delete(uuid);
+      }
+    }
+    
+    const maxCacheSize = 50;
+    if (this.messageCache.size > maxCacheSize) {
+      const entries = Array.from(this.messageCache.entries());
+      entries.sort((a, b) => a[1].playCount - b[1].playCount);
+      
+      const toDelete = entries.length - maxCacheSize;
+      for (let i = 0; i < toDelete; i++) {
+        this.messageCache.delete(entries[i][0]);
+      }
+    }
+    
+    if (this.processedMessages.size > 200) {
+      const messages = Array.from(this.processedMessages);
+      this.processedMessages = new Set(messages.slice(messages.length - 100));
+    }
   }
 }
 

@@ -358,6 +358,7 @@ class DanmakuSystem {
         const currentX = (currentPosition.left / viewportWidth) * 100;
         
         danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
+        danmakuEl.style.transform = `translateX(${currentX}vw) translateZ(0)`;
         
         $(this).parent().addClass('ok');
         
@@ -623,6 +624,7 @@ class DanmakuSystem {
             const currentX = (currentPosition.left / viewportWidth) * 100;
             
             danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
+            danmakuEl.style.transform = `translateX(${currentX}vw) translateZ(0)`;
             
             danmakuEl.classList.add('ok');
             

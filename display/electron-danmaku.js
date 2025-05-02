@@ -145,9 +145,10 @@ if (!gotTheLock) {
       fullscreenable: false,
       focusable: false,
       show: false,
-      type: 'panel', 
+      type: 'panel',
       titleBarStyle: 'hidden',
-      visualEffectState: 'active'
+      visualEffectState: 'active',
+      clickThrough: true
     });
 
     danmakuWindow.loadURL(url.format({
@@ -161,7 +162,11 @@ if (!gotTheLock) {
     
     ipcMain.on('danmaku-mouse-event', (event, { type, isOverDanmaku }) => {
       if (danmakuWindow) {
-        danmakuWindow.setIgnoreMouseEvents(!isOverDanmaku, { forward: true });
+        if (type === 'mouseover') {
+          danmakuWindow.setIgnoreMouseEvents(false, { forward: true });
+        } else if (type === 'mouseout') {
+          danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
+        }
       }
     });
     

@@ -6,6 +6,8 @@ const isElectron = () => {
 class DanmakuSystem {
   constructor() {
     this.apiUrl = 'http://www.cyupeng.com/message';
+    this.classParam = localStorage.getItem('classParam');
+    this.apiUrl = this.classParam ? `http://www.cyupeng.com/message?class=${this.classParam}` : 'http://www.cyupeng.com/message';
     this.pollingDelay = 1000;
     this.pollingInterval = null;
     this.lastContentHash = null;
@@ -96,11 +98,22 @@ class DanmakuSystem {
       });
     }
     
+    if (this.isElectronMode) {
+      if (!this.isOverlayMode) {
+        this.showVerificationDialog();
+      } else if (!this.classParam) {
+        if (window.electronAPI) {
+          window.electronAPI.showMainWindow();
+        }
+      }
+    }
+    
     this.initCorsProxy();
     this.initDebugInfo();
     this.startPolling();
     
     this.updateStatus('连接中...', 'connecting');
+    this.updateApiUrlDisplay();
   }
   
   setupSpeedControl() {
@@ -168,6 +181,10 @@ class DanmakuSystem {
   }
   
   startPolling() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
+    
     this.fetchMessages();
     
     this.pollingInterval = setInterval(() => {
@@ -268,11 +285,31 @@ class DanmakuSystem {
     }
   }
   
+  updateApiUrlDisplay() {
+    const apiUrlDisplay = document.getElementById('apiUrlDisplay');
+    if (apiUrlDisplay) {
+      apiUrlDisplay.textContent = this.apiUrl;
+    }
+  }
+  
   async fetchMessages() {
     try {
       const response = await this.fetchWithProxy(this.apiUrl);
       
       if (!response.ok) {
+        if (response.status === 404 && this.classParam) {
+          // class参数无效，清除并重新要求输入
+          localStorage.removeItem('classParam');
+          this.classParam = null;
+          this.apiUrl = 'http://www.cyupeng.com/message';
+          this.updateApiUrlDisplay();
+          
+          if (this.isElectronMode && window.electronAPI) {
+            window.electronAPI.showMainWindow();
+            this.showVerificationDialog();
+          }
+          return;
+        }
         throw new Error(`API请求失败: ${response.status}`);
       }
       
@@ -351,7 +388,7 @@ class DanmakuSystem {
       $(button).on('click', function(e){
         e.stopPropagation();
         
-        $.ajax('www.cyupeng.com/update?uuid='+$(this).parent().attr('id'));
+        $.ajax('www.cyupeng.com/update?class='+this.classParam+'&uuid='+$(this).parent().attr('id'));
         const danmakuEl = $(this).parent()[0];
         
         const currentPosition = danmakuEl.getBoundingClientRect();
@@ -501,6 +538,7 @@ class DanmakuSystem {
     }
 
     if (this.isOverlayMode) {
+      danmaku.style.pointerEvents = 'auto';
     } else {
       danmaku.style.fontSize = '18px';
     }
@@ -509,7 +547,8 @@ class DanmakuSystem {
     danmaku.style.webkitFontSmoothing = 'antialiased';
     danmaku.style.backfaceVisibility = 'hidden';
     
-    danmaku.addEventListener('click', () => {
+    danmaku.addEventListener('click', (e) => {
+      e.stopPropagation();
       if (!danmaku.classList.contains('ok')) {
         const button = danmaku.querySelector('button');
         if (button) {
@@ -524,13 +563,15 @@ class DanmakuSystem {
       }
     });
 
-    danmaku.addEventListener('mouseover', () => {
+    danmaku.addEventListener('mouseover', (e) => {
+      e.stopPropagation();
       if (this.isOverlayMode && window.electronAPI) {
         window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
       }
     });
     
-    danmaku.addEventListener('mouseout', () => {
+    danmaku.addEventListener('mouseout', (e) => {
+      e.stopPropagation();
       if (this.isOverlayMode && window.electronAPI) {
         window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
       }
@@ -665,6 +706,83 @@ class DanmakuSystem {
       this.processedMessages = new Set(messages.slice(messages.length - 100));
     }
   }
+
+  showVerificationDialog() {
+    const dialog = document.createElement('div');
+    dialog.className = 'verification-dialog';
+    dialog.innerHTML = `
+      <div class="dialog-content">
+        <h2>请输入验证码</h2>
+        <input type="text" id="verificationInput" placeholder="输入验证码">
+        <button id="submitVerification">确认</button>
+        <button id="skipVerification">跳过</button>
+        <p class="error-message" id="verificationError" style="display: none; color: red; margin-top: 10px;">验证码无效，请重新输入</p>
+      </div>
+    `;
+
+    const style = document.createElement('style');
+    style.textContent = `
+      .verification-dialog {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+      }
+      .dialog-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .dialog-content input {
+        margin: 10px 0;
+        padding: 5px;
+        width: 200px;
+      }
+      .dialog-content button {
+        margin: 5px;
+        padding: 5px 15px;
+        cursor: pointer;
+      }
+    `;
+
+    document.head.appendChild(style);
+    document.body.appendChild(dialog);
+
+    document.getElementById('submitVerification').addEventListener('click', async () => {
+      const classParam = document.getElementById('verificationInput').value.trim();
+      if (classParam) {
+        const testUrl = `http://www.cyupeng.com/message?class=${classParam}`;
+        
+        try {
+          const response = await fetch(testUrl);
+          if (response.ok) {
+            localStorage.setItem('classParam', classParam);
+            this.classParam = classParam;
+            this.apiUrl = testUrl;
+            this.updateApiUrlDisplay();
+            dialog.remove();
+            this.startPolling();
+          } else {
+            document.getElementById('verificationError').style.display = 'block';
+          }
+        } catch (error) {
+          document.getElementById('verificationError').style.display = 'block';
+        }
+      }
+    });
+
+    document.getElementById('skipVerification').addEventListener('click', () => {
+      dialog.remove();
+      this.startPolling();
+    });
+  }
 }
 
 class ElectronBridge {
@@ -713,6 +831,8 @@ if (typeof window.electronAPI === 'undefined' && isElectron()) {
     setAlwaysOnTop: (value) => console.log('需要实现 setAlwaysOnTop:', value),
     createExternalWindow: () => console.log('需要实现 createExternalWindow'),
     updateDanmakuStyle: (style) => console.log('需要实现 updateDanmakuStyle:', style),
-    toggleDevTools: () => console.log('需要实现 toggleDevTools')
+    toggleDevTools: () => console.log('需要实现 toggleDevTools'),
+    showMainWindow: () => console.log('需要实现 showMainWindow')
   };
 }
+ 

@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="../static/css/class.css">
 </head>
 <body>
+	<a href="/home" class="back-button"><</a>
 	<p class="big_title">北大附中北医分校消息管理系统</p>
 	<hr>
 	<div class="container">
@@ -13,13 +14,23 @@
 			{% for i in t_data %}
 			{% if i['name'] == t_name %}
 			<div class="item item-right">
-				<div class="bubble">{{i['content']}}</div>
+				{% if i['isread'] %}
+				<span class="read">已读</span>
+				{% else %}
+				<span class="read">未读</span>
+				{% endif %}
+				<div class="bubble" id="{{i['uuid']}}">{{i['content']}}</div>
 				<div class="avatar">{{i['name']}}</div>
 			</div>
 			{% else %}
 			<div class="item item-left">
 				<div class="avatar">{{i['name']}}</div>
-				<div class="bubble">{{i['content']}}</div>
+				<div class="bubble" id="{{i['uuid']}}">{{i['content']}}</div>
+				{% if i['isread'] %}
+				<span class="read">已读</span>
+				{% else %}
+				<span class="read">未读</span>
+				{% endif %}
 			</div>
 			{% endif %}
 			{% endfor %}
@@ -31,28 +42,64 @@
 	        </div>
 	    </div>
 	</div>
+	<button class="back" style="display: none;">撤回</button>
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
 	<script>
+		$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
 		function send(){
 		    let text = $('#textarea').val();
 		    if(!text){
 		        alert('请输入内容');
 		        return;
 		    }
-		    let item = document.createElement('div');
-		    item.className = 'item item-right';
-		    item.innerHTML = `<div class="bubble">${text}</div><div class="avatar">{{t_name}}</div>`;
-			$.ajax(`/send?class={{t_class}}&&content=${text}`)
-		    $('.content')[0].appendChild(item);
-		    $('#textarea')[0].value = '';
-		    $('#textarea')[0].focus();
-		    // //滚动条置底
-		    // document.querySelector(".content").scrollTop = document.querySelector('.content').scrollHeight;
+			$.ajax({
+				url: `/send?class={{t_class}}&&content=${text}`,
+				success: function(response){
+					let item = document.createElement('div');
+					item.className = 'item item-right';
+					item.innerHTML = `<span class="read">未读</span><div class="bubble" id="${response}">${text}</div><div class="avatar">{{t_name}}</div>`;
+					$('.content')[0].appendChild(item);
+					$('#textarea')[0].value = '';
+					$('#textarea')[0].focus();
+					$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
+					$('.bubble').on('contextmenu', function(event) {
+						event.preventDefault();
+						if ($(this)[0].innerHTML != '此消息已撤回'){
+							$('.back').css('display', 'block')
+							$('.back').css('left', event.clientX)
+							$('.back').css('top', event.clientY)
+							id = $(this).attr('id')
+						}
+					});
+				},
+				error: function(error){
+					$('#textarea')[0].value = '';
+					$('#textarea')[0].focus();
+					alert('error:'+error)
+				}
+			})
 		}
-		$('textarea')[0].addEventListener('keydown', function(event) {
+		$('textarea').on('keydown', function(event) {
 		    if (event.key === "Enter") {
 		        send()
 		    }
+		});
+		id = ''
+		$('.bubble').on('contextmenu', function(event) {
+		    event.preventDefault();
+			if ($(this)[0].innerHTML != '此消息已撤回'){
+				$('.back').css('display', 'block')
+				$('.back').css('left', event.clientX)
+				$('.back').css('top', event.clientY)
+				id = $(this).attr('id')
+			}
+		});
+		$('.back').on('click', function(){
+			$.ajax(`/back?class={{t_class}}&&uuid=${id}`)
+			$('#'+id)[0].innerHTML = '此消息已撤回'
+		})
+		$('body').on('click', function(){
+			$('.back').css('display', 'none')
 		});
 	</script>
 </body>

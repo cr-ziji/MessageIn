@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="../static/css/register.css">
 </head>
 <body>
-	<a class='download_button' href="../static/file/MmessageIn-Display Setup 1.4.0.exe"><img src="../static/image/icon.ico" height="23" width="23"></a>
+	<a class='download_button' href="../static/file/messagein-display Setup 1.0.0.exe"><img src="../static/image/download_ico.jpg" height="23" width="23"></a>
 	<p class="big_title">北大附中北医分校消息管理系统</p>
 	<hr>
 	<form action="/handle" method="post">
@@ -30,12 +30,12 @@
 			<option value="‌信息">‌信息</option>
 			<option value="劳技">劳技</option>
 		</select>
-		<input type="name" required maxlength="1" style="width: 30px;">
+		<input type="input" name="name" required maxlength="1" style="width: 30px;">
 		老师
 		<br>
-		手机号：<input type="tel" name="tel" required>
+		手机号：<input type="tel" name="tel" required style="width: 145px;">
 		<br>
-		密码：<input type="password" name="password" required>
+		密码：<input type="password" name="password" required style="width: 162px;">
 		<br>
 		管理班级：
 		<select class="grade">
@@ -45,6 +45,7 @@
 			<option>高一</option>
 			<option>高二</option>
 			<option>高三</option>
+			<option>全校</option>
 		</select>
 		<select class="class">
 			<option>一班</option>
@@ -53,7 +54,7 @@
 			<option>四班</option>
 			<option>五班</option>
 			<option>六班</option>
-			<option>联培班</option>
+			<option>通知</option>
 		</select>
 		<div class="add">十</div>
 		<div class="choose"></div>
@@ -62,11 +63,27 @@
 		<div style="display: none;" class="hidden"></div>
 	</form>
 	{% if t_alert %}
-	<!-- <script>alert('该用户名已被使用')</script> -->
+	<script>alert('请选择班级（选择后点击加号）')</script>
 	{% endif %}
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
 	<script>
 		l = {}
+		classlist = {
+			'初一':['一班', '二班', '三班', '四班', '五班', '六班'], 
+			'初二':['一班', '二班', '三班', '四班'], 
+			'初三':['一班', '二班', '三班', '联培班'], 
+			'高一':['一班', '二班', '三班'], 
+			'高二':['一班', '二班', '三班', '四班'], 
+			'高三':['一班', '二班', '三班', '四班'],
+			'全校':[]
+		}
+		$('.grade').on('change', function(){
+			$('.class')[0].innerHTML = ''
+			for (i in classlist[$('.grade').val()]){
+				$('.class')[0].innerHTML += '<option>' + classlist[$('.grade').val()][i] + '</option>'
+			}
+			$('.class')[0].innerHTML += '<option>通知</option>'
+		})
 		$('.add').on('click', function(){
 			choose = $('.grade').val() + $('.class').val()
 			if (!(choose in l) || l[choose] == 0){

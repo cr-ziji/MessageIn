@@ -58,7 +58,9 @@ def handle():
         session['班级'] = have['班级']
         return redirect('/home')
     elif request.form['type'] == '注册':
-        name = request.form['subject']+request.form['tel']+'老师'
+        if 'class' not in request.form:
+            return redirect('/register?alert=1')
+        name = request.form['subject']+request.form['name']+'老师'
         dict1 = {
             '用户名': name,
             '手机号': request.form['tel'],
@@ -88,7 +90,11 @@ def home():
 def class1():
     if request.args['class'] not in session['班级']:
         return redirect('/home')
-    data = db.data.find_one({'class': request.args['class']})['message']
+    data = db.data.find_one({'class': request.args['class']})
+    if data is None:
+        data = {'class': request.args['class'], 'message':[], 'back':''}
+        db.data.insert_one(data)
+    data = data['message']
     return render_template('class.html',
                            t_data=data,
                            t_name=session['用户名'],
@@ -96,18 +102,90 @@ def class1():
 
 @app.route('/send')
 def send():
+    classlist = {
+        '初一':['一班', '二班', '三班', '四班', '五班', '六班'],
+		'初二':['一班', '二班', '三班', '四班'],
+		'初三':['一班', '二班', '三班', '联培班'],
+		'高一':['一班', '二班', '三班'],
+		'高二':['一班', '二班', '三班', '四班'],
+		'高三':['一班', '二班', '三班', '四班']
+	}
+    uuid1 = str(uuid.uuid1())
+    class1 = request.args['class']
+    if '通知' not in class1:
+        data = db.data.find_one({'class': request.args['class']})
+        data['message'].append({
+            'uuid': uuid1,
+            'name': session['用户名'],
+            'content': request.args['content'],
+            'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+            'isread': False,
+        })
+        db.data.update_one({'class': request.args['class']}, {'$set': data})
+    elif class1 != '全校通知':
+        l = classlist[class1[0:2]]
+        for i in l:
+            data = db.data.find_one({'class': class1[0:2]+i})
+            data['message'].append({
+                'uuid': uuid1,
+                'name': session['用户名'],
+                'content': request.args['content'],
+                'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                'isread': False,
+            })
+            db.data.update_one({'class': class1[0:2]+i}, {'$set': data})
+    else:
+        for i in classlist:
+            for j in classlist[i]:
+                data = db.data.find_one({'class': i+j})
+                data['message'].append({
+                    'uuid': uuid1,
+                    'name': session['用户名'],
+                    'content': request.args['content'],
+                    'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+                    'isread': False,
+                })
+                db.data.update_one({'class': i+j}, {'$set': data})
+    return uuid1
+
+@app.route('/back')
+def back():
     data = db.data.find_one({'class': request.args['class']})
-    if data is None:
-        data = {'class': request.args['class'], 'message':[]}
-        db.data.insert_one(data)
-    data['message'].append({
-        'name': session['用户名'],
-        'content': request.args['content'],
-        'time': 'aaaa',
-        'isread': False,
-    })
+    l = data['message']
+    for i in range(len(l)):
+        if l[i]['uuid'] == request.args['uuid']:
+            data['message'][i]['content'] = '此消息已撤回'
+            break
+    data['back'] = request.args['uuid']
     db.data.update_one({'class': request.args['class']}, {'$set': data})
     return ''
+
+@app.route('/message')
+def message():
+    class1 = request.args['class']
+    data = db.data.find_one({'class': class1})
+    if data is None:
+        return ''
+    if data['message'][-1]['content'] != '此消息已撤回':
+        content = data['message'][-1]['name'] + ':' + data['message'][-1]['content']
+    else:
+        content = '此消息已撤回'
+    return '{"new":{"uuid":"' + data['message'][-1]['uuid'] + '","content":"' + content + '"},"back":{"uuid":"' + data['back'] + '"}}'
+
+@app.route('/update')
+def update():
+    class1 = request.args['class']
+    data = db.data.find_one({'class': class1})
+    if data is None:
+        return ''
+    l = data['message']
+    for i in range(len(l)):
+        if l[i]['uuid'] == request.args['uuid']:
+            data['message'][i]['isread'] = True
+            break
+    db.data.update_one({'class': request.args['class']}, {'$set': data})
+    return ''
+
 
 if __name__ == '__main__':
     app.run(port=5001, debug=True)

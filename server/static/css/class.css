@@ -1,12 +1,13 @@
 a{
 	display: inline-block;
-    background-color: white;
-    color: black;
-    border: 2px solid #008CBA;
-    border-radius: 8px;
+    color: gray;
     text-align: center;
-    width: 120px;
+    width: 40px;
+	height: 40px;
     text-decoration: none;
+	margin: 0 5px;
+	font-size: 30px;
+	border-radius: 100px;
 }
 a:hover {
 	background-color: #008CBA;
@@ -87,6 +88,7 @@ body{
     margin-top: 15px;
     display: flex;
     width: 100%;
+    align-items: flex-end;
 }
 .item.item-right{
     justify-content: flex-end;
@@ -122,7 +124,7 @@ body{
 textarea{
     flex: 1;
     padding: 5px;
-    font-size: 14px;
+    font-size: 17px;
     border: none;
     overflow-y: auto;
     overflow-x: hidden;
@@ -148,4 +150,11 @@ textarea{
 
 .avatar{
 	line-height: 40px;
+}
+.back{
+	position: absolute;
+}
+.read{
+    color: gray;
+    margin-right: 5px;
 }

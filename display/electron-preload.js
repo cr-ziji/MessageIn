@@ -18,6 +18,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('update-danmaku-style', style);
   },
 
+  setApiUrl: (url) => {
+    ipcRenderer.send('set-api-url', url);
+  },
+
+  onApiUrlChange: (callback) => {
+    ipcRenderer.removeAllListeners('api-url-changed');
+    ipcRenderer.on('api-url-changed', (event, url) => {
+      callback(url);
+    });
+  },
+
   getAppInfo: () => {
     return {
       isElectron: true,

@@ -114,6 +114,17 @@ class DanmakuSystem {
     
     this.updateStatus('连接中...', 'connecting');
     this.updateApiUrlDisplay();
+
+    if (this.isElectronMode && window.electronAPI && window.electronAPI.onApiUrlChange) {
+      window.electronAPI.onApiUrlChange((url) => {
+        if (url && typeof url === 'string') {
+          this.apiUrl = url;
+          this.updateApiUrlDisplay();
+          this.stopPolling();
+          this.startPolling();
+        }
+      });
+    }
   }
   
   setupSpeedControl() {
@@ -767,6 +778,9 @@ class DanmakuSystem {
             this.classParam = classParam;
             this.apiUrl = testUrl;
             this.updateApiUrlDisplay();
+            if (this.isElectronMode && window.electronAPI && window.electronAPI.setApiUrl) {
+              window.electronAPI.setApiUrl(testUrl);
+            }
             dialog.remove();
             this.startPolling();
           } else {
@@ -832,7 +846,8 @@ if (typeof window.electronAPI === 'undefined' && isElectron()) {
     createExternalWindow: () => console.log('需要实现 createExternalWindow'),
     updateDanmakuStyle: (style) => console.log('需要实现 updateDanmakuStyle:', style),
     toggleDevTools: () => console.log('需要实现 toggleDevTools'),
-    showMainWindow: () => console.log('需要实现 showMainWindow')
+    showMainWindow: () => console.log('需要实现 showMainWindow'),
+    setApiUrl: (url) => console.log('需要实现 setApiUrl:', url)
   };
 }
  

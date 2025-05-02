@@ -251,6 +251,15 @@ if (!gotTheLock) {
     }
   });
 
+  ipcMain.on('set-api-url', (event, url) => {
+    if (danmakuWindow && danmakuWindow.webContents) {
+      danmakuWindow.webContents.send('api-url-changed', url);
+    }
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('api-url-changed', url);
+    }
+  });
+
   app.whenReady().then(() => {
     setAutoLaunch(true);
 

@@ -289,13 +289,14 @@ class DanmakuSystem {
       }
 
       if (responseObj.new && responseObj.new.content && responseObj.new.uuid) {
-        this.processMessage(responseObj.new.content, responseObj.new.uuid);
-        
         if (responseObj.back && responseObj.back.uuid) {
-          if ($('#'+responseObj.back.uuid).length > 0) {
-            $('#'+responseObj.back.uuid)[0].innerHTML = '此消息已撤回';
+          const existingDanmaku = document.getElementById(responseObj.back.uuid);
+          if (existingDanmaku) {
+            existingDanmaku.textContent = '此消息已撤回';
+            return;
           }
         }
+        this.processMessage(responseObj.new.content, responseObj.new.uuid);
       }
       
       else if (Array.isArray(responseObj)) {

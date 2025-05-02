@@ -350,7 +350,7 @@ class DanmakuSystem {
       $(button).on('click', function(e){
         e.stopPropagation();
         
-        $.ajax('www.cyupeng.com/updata?uuid='+$(this).parent().attr('id'));
+        $.ajax('www.cyupeng.com/update?uuid='+$(this).parent().attr('id'));
         const danmakuEl = $(this).parent()[0];
         
         const currentPosition = danmakuEl.getBoundingClientRect();

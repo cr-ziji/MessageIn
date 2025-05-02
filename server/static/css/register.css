@@ -1,6 +1,8 @@
 body{
-	background: url("../images/1.jpg") repeat-y;
+	background: url("../images/1.jpg") repeat-x;
 	background-size: cover;
+	background-position: center;
+	height: calc(100vh - 16px);
 }
 a{
 	display: inline-block;

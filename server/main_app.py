@@ -12,9 +12,12 @@ app = Flask(__name__)
 app.secret_key = '123456'
 
 
-@app.route('/')
-def _():
-    return redirect("/login")
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'  # 允许所有域名
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
 
 @app.route('/login')
 def login():
@@ -184,6 +187,14 @@ def update():
             data['message'][i]['isread'] = True
             break
     db.data.update_one({'class': request.args['class']}, {'$set': data})
+    return ''
+
+@app.errorhandler(404)
+def error_date_404(error):
+    return redirect('/login')
+
+@app.errorhandler(Exception)
+def error_date_500(error):
     return ''
 
 

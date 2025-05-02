@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>班级</title>
     <link rel="stylesheet" href="../static/css/class.css">
+    <link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
 </head>
 <body>
 	<a href="/home" class="back-button"><</a>
@@ -49,6 +50,8 @@
 		function send(){
 		    let text = $('#textarea').val();
 		    if(!text){
+				$('#textarea')[0].value = '';
+				$('#textarea')[0].focus();
 		        alert('请输入内容');
 		        return;
 		    }

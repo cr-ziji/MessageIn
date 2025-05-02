@@ -399,7 +399,7 @@ class DanmakuSystem {
       $(button).on('click', function(e){
         e.stopPropagation();
         
-        $.ajax('www.cyupeng.com/update?class='+this.classParam+'&uuid='+$(this).parent().attr('id'));
+        $.ajax('http://www.cyupeng.com/update?class='+this.classParam+'&uuid='+$(this).parent().attr('id'));
         const danmakuEl = $(this).parent()[0];
         
         const currentPosition = danmakuEl.getBoundingClientRect();
@@ -669,7 +669,7 @@ class DanmakuSystem {
           button.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            $.ajax('www.cyupeng.com/updata?uuid=' + uuid);
+            $.ajax('http://www.cyupeng.com/update?uuid=' + uuid);
             const danmakuEl = newDanmaku;
             
             const currentPosition = danmakuEl.getBoundingClientRect();

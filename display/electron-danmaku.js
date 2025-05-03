@@ -143,12 +143,11 @@ if (!gotTheLock) {
       minimizable: false,
       maximizable: false,
       fullscreenable: false,
-      focusable: false,
+      focusable: true,
       show: false,
       type: 'panel',
       titleBarStyle: 'hidden',
       visualEffectState: 'active',
-      clickThrough: true
     });
 
     danmakuWindow.loadURL(url.format({
@@ -163,7 +162,7 @@ if (!gotTheLock) {
     ipcMain.on('danmaku-mouse-event', (event, { type, isOverDanmaku }) => {
       if (danmakuWindow) {
         if (type === 'mouseover') {
-          danmakuWindow.setIgnoreMouseEvents(false, { forward: true });
+          danmakuWindow.setIgnoreMouseEvents(false);
         } else if (type === 'mouseout') {
           danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
         }
@@ -191,7 +190,7 @@ if (!gotTheLock) {
 
       console.log('弹幕窗口已创建并显示');
 
-      // danmakuWindow.webContents.openDevTools({ mode: 'detach' });
+      //danmakuWindow.webContents.openDevTools({ mode: 'detach' });
 
     });
 

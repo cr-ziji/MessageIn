@@ -29,18 +29,6 @@ class DanmakuSystem {
     if (this.isOverlayMode) {
       document.body.classList.add('transparent-mode');
       document.getElementById('mainContainer').classList.add('external-window-mode');
-      
-      this.danmakuArea.addEventListener('mouseover', () => {
-        if (window.electronAPI) {
-          window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
-        }
-      });
-      
-      this.danmakuArea.addEventListener('mouseout', () => {
-        if (window.electronAPI) {
-          window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
-        }
-      });
     }
     
     this.statusDot = document.getElementById('statusDot');
@@ -399,7 +387,7 @@ class DanmakuSystem {
       $(button).on('click', function(e){
         e.stopPropagation();
         
-        $.ajax('http://www.cyupeng.com/update?class='+this.classParam+'&uuid='+$(this).parent().attr('id'));
+        $.ajax('http://www.cyupeng.com/update?class='+window.danmakuSystem.classParam+'&uuid='+$(this).parent().attr('id'));
         const danmakuEl = $(this).parent()[0];
         
         const currentPosition = danmakuEl.getBoundingClientRect();
@@ -550,6 +538,18 @@ class DanmakuSystem {
 
     if (this.isOverlayMode) {
       danmaku.style.pointerEvents = 'auto';
+      danmaku.addEventListener('mouseenter', (e) => {
+        e.stopPropagation();
+        if (window.electronAPI) {
+          window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
+        }
+      });
+      danmaku.addEventListener('mouseleave', (e) => {
+        e.stopPropagation();
+        if (window.electronAPI) {
+          window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
+        }
+      });
     } else {
       danmaku.style.fontSize = '18px';
     }
@@ -571,20 +571,6 @@ class DanmakuSystem {
             this.messageCache.delete(uuid);
           }
         }
-      }
-    });
-
-    danmaku.addEventListener('mouseover', (e) => {
-      e.stopPropagation();
-      if (this.isOverlayMode && window.electronAPI) {
-        window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
-      }
-    });
-    
-    danmaku.addEventListener('mouseout', (e) => {
-      e.stopPropagation();
-      if (this.isOverlayMode && window.electronAPI) {
-        window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
       }
     });
 

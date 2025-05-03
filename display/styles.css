@@ -363,6 +363,7 @@ body.transparent-mode .wave-container {
 }
 
 .external-window-mode .danmaku-item {
+  pointer-events: auto;
   background-color: rgba(0, 0, 0, 0.65); 
   color: white !important; 
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); 

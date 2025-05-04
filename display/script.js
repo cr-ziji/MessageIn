@@ -655,7 +655,7 @@ class DanmakuSystem {
           button.addEventListener('click', (e) => {
             e.stopPropagation();
             
-            $.ajax('http://www.cyupeng.com/update?uuid=' + uuid);
+            $.ajax('http://www.cyupeng.com/update?class=' + window.danmakuSystem.classParam + '&uuid=' + $(this).parent().attr('id'));
             const danmakuEl = newDanmaku;
             
             const currentPosition = danmakuEl.getBoundingClientRect();

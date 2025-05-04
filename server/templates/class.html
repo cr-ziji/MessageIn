@@ -9,16 +9,25 @@
 <body>
 	<a href="/home" class="back-button"><</a>
 	<p class="big_title">北大附中北医分校消息管理系统</p>
+	<p class="big_title" style="margin-left: 50px;">{{t_class}}</p>
 	<hr>
 	<div class="container">
 	    <div class="content">
 			{% for i in t_data %}
+			<span class="time">{{i['time']}}</span>
 			{% if i['name'] == t_name %}
 			<div class="item item-right">
-				{% if i['isread'] %}
+				{% if i['isread'] == True or i['isread'] == [] %}
 				<span class="read">已读</span>
 				{% else %}
-				<span class="read">未读</span>
+				<span class="read">未读
+				{% if i['isread'] != False %}
+				:
+				{% for j in i['isread'] %}
+				{{j}}
+				{% endfor %}
+				{% endif %}
+				</span>
 				{% endif %}
 				<div class="bubble" id="{{i['uuid']}}">{{i['content']}}</div>
 				<div class="avatar">{{i['name']}}</div>
@@ -58,9 +67,11 @@
 			$.ajax({
 				url: `/send?class={{t_class}}&&content=${text}`,
 				success: function(response){
+					const json = JSON.parse(response)
+					$('.content')[0].innerHTML += '<span class="time">' + json.time + '</span>'
 					let item = document.createElement('div');
 					item.className = 'item item-right';
-					item.innerHTML = `<span class="read">未读</span><div class="bubble" id="${response}">${text}</div><div class="avatar">{{t_name}}</div>`;
+					item.innerHTML = `<span class="read">${json.isread}</span><div class="bubble" id="${json.uuid}">${text}</div><div class="avatar">{{t_name}}</div>`;
 					$('.content')[0].appendChild(item);
 					$('#textarea')[0].value = '';
 					$('#textarea')[0].focus();

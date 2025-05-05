@@ -195,10 +195,10 @@ def update():
             if data['message'][i]['type'] != '':
                 data1 = db.data.find_one({'class': data['message'][i]['type']})
                 l1 = data1['message']
-                for i in range(len(l1)):
-                    if l1[i]['uuid'] == request.args['uuid']:
-                        if class1 in data1['message'][i]['isread']:
-                            data1['message'][i]['isread'].remove(class1)
+                for j in range(len(l1)):
+                    if l1[j]['uuid'] == request.args['uuid']:
+                        if class1 in data1['message'][j]['isread']:
+                            data1['message'][j]['isread'].remove(class1)
                             db.data.update_one({'class': data['message'][i]['type']}, {'$set': data1})
                         break
             break

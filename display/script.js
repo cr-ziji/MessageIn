@@ -654,23 +654,27 @@ class DanmakuSystem {
           
           button.addEventListener('click', (e) => {
             e.stopPropagation();
-            
-            $.ajax('http://www.cyupeng.com/update?class=' + window.danmakuSystem.classParam + '&uuid=' + $(this).parent().attr('id'));
+            const uuid = newDanmaku.getAttribute('id');
+            const classParam = window.danmakuSystem.classParam;
+            if (!uuid || !classParam) {
+              console.error('uuid或classParam为空，无法发送已读请求');
+              return;
+            }
+            let url = 'http://www.cyupeng.com/update?class=' + classParam + '&uuid=' + uuid;
+            if (!window.danmakuSystem.isElectronMode) {
+              url = window.danmakuSystem.corsProxies[0] + encodeURIComponent(url);
+            }
+            $.ajax(url);
             const danmakuEl = newDanmaku;
-            
             const currentPosition = danmakuEl.getBoundingClientRect();
             const viewportWidth = window.innerWidth;
             const currentX = (currentPosition.left / viewportWidth) * 100;
-            
             danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
             danmakuEl.style.transform = `translateX(${currentX}vw) translateZ(0)`;
-            
             danmakuEl.classList.add('ok');
-            
             if (uuid && window.danmakuSystem.messageCache.has(uuid)) {
               window.danmakuSystem.messageCache.delete(uuid);
             }
-            
             button.style.display = 'none';
           });
           

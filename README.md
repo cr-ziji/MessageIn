@@ -19,6 +19,7 @@ MessageIn是一款轻量级、跨平台的班级消息互动系统。老师可�
 cd server
 python run main_app.py
 ```
+
 Tip:后端需要MongoDB和flask,pymongo,pyttsx3,uuid, time, random
 
 ### 前端/大屏端

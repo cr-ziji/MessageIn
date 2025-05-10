@@ -1,14 +1,14 @@
 {
   "name": "MessageIn-Display",
-  "version": "1.6.1",
+  "version": "1.6.4",
   "description": "MessageIn显示端 - 实时消息展示系统",
+  "author": "CyrilGuo",
   "main": "electron-danmaku.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder build --win --publish never",
     "dist": "electron-builder"
   },
-  "author": "MessageIn Team",
   "license": "GNUV3",
   "devDependencies": {
     "electron": "^28.1.0",

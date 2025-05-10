@@ -413,8 +413,14 @@ class DanmakuSystem {
           button.addEventListener('click', (e) => {
             e.stopPropagation();
             if (this.socket) {
+              const classParam = this.classParam;
+              if (!classParam) {
+                console.error('classParam为空，无法发送已读请求');
+                return;
+              }
+              const encoder = new TextEncoder();
               this.socket.emit('isread', {
-                class: this.classParam,
+                class: encoder.encode(classParam),
                 uuid: uuid
               });
             }
@@ -595,9 +601,9 @@ class DanmakuSystem {
               return;
             }
             window.danmakuSystem.socket.emit('isread', {
-              class: classParam,
+              class: encodeURIComponent(classParam),
               uuid: uuid
-            })
+            });
             const danmakuEl = newDanmaku;
             const currentPosition = danmakuEl.getBoundingClientRect();
             const viewportWidth = window.innerWidth;

@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="UTF-8">
 <head>
-    <meta charset="UTF-8">
-    <title>班级</title>
-    <link rel="stylesheet" href="../static/css/class.css">
-    <link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
+	<meta charset="UTF-8">
+	<title>班级</title>
+	<link rel="stylesheet" href="../static/css/class.css">
+	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
 </head>
 <body>
 	<a href="/home" class="back-button"><</a>
@@ -12,7 +12,7 @@
 	<p class="big_title" style="margin-left: 50px;">{{t_class}}</p>
 	<hr>
 	<div class="container">
-	    <div class="content">
+		<div class="content">
 			{% for i in t_data %}
 			<span class="time">{{i['time']}}</span>
 			{% if i['name'] == t_name %}
@@ -45,75 +45,100 @@
 			{% endif %}
 			{% endfor %}
 		</div>
-	    <div class="input-area">
-	        <textarea name="text" id="textarea"></textarea>
-	        <div class="button-area">
-	            <button id="send-btn" onclick="send()">发 送</button>
-	        </div>
-	    </div>
+		<div class="input-area">
+			<textarea name="text" id="textarea" placeholder="请输入内容"></textarea>
+			<div class="button-area">
+				<button id="send-btn" onclick="send()">发 送</button>
+			</div>
+		</div>
 	</div>
 	<button class="back" style="display: none;">撤回</button>
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
+	<script src="../static/js/socket.io.min.js"></script>
 	<script>
+		const socket = io();
+		let class1 = '{{t_class}}';
+		let id = ''
+		let timer;
+		
 		$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
 		function send(){
-		    let text = $('#textarea').val();
-		    if(!text){
-				$('#textarea')[0].value = '';
+			let textMsg = $('#textarea').val();
+			if(!textMsg){
+				$('#textarea')[0].innerHTML = '';
 				$('#textarea')[0].focus();
-		        alert('请输入内容');
-		        return;
-		    }
-			$.ajax({
-				url: `/send?class={{t_class}}&&content=${text}`,
-				success: function(response){
-					const json = JSON.parse(response)
-					$('.content')[0].innerHTML += '<span class="time">' + json.time + '</span>'
-					let item = document.createElement('div');
-					item.className = 'item item-right';
-					item.innerHTML = `<span class="read">${json.isread}</span><div class="bubble" id="${json.uuid}">${text}</div><div class="avatar">{{t_name}}</div>`;
-					$('.content')[0].appendChild(item);
-					$('#textarea')[0].value = '';
-					$('#textarea')[0].focus();
-					$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
-					$('.bubble').on('contextmenu', function(event) {
-						event.preventDefault();
-						if ($(this)[0].innerHTML != '此消息已撤回'){
-							$('.back').css('display', 'block')
-							$('.back').css('left', event.clientX)
-							$('.back').css('top', event.clientY)
-							id = $(this).attr('id')
-						}
-					});
-				},
-				error: function(error){
-					$('#textarea')[0].value = '';
-					$('#textarea')[0].focus();
-					alert('error:'+error)
-				}
-			})
+				alert('请输入内容');
+				return;
+			}
+			socket.emit('send', {
+				class: class1,
+				content: textMsg
+			});
+			$('#textarea')[0].value = '';
+			$('#textarea')[0].focus();
 		}
-		$('textarea').on('keydown', function(event) {
-		    if (event.key === "Enter") {
-		        send()
-		    }
-		});
-		id = ''
-		$('.bubble').on('contextmenu', function(event) {
-		    event.preventDefault();
-			if ($(this)[0].innerHTML != '此消息已撤回'){
+		function button(event){
+			if ($(event)[0].innerHTML != '此消息已撤回'){
 				$('.back').css('display', 'block')
 				$('.back').css('left', event.clientX)
 				$('.back').css('top', event.clientY)
-				id = $(this).attr('id')
+				id = $(event).attr('id')
+			}
+		}
+		function back(){
+			$('.bubble').on('contextmenu', function(event) {
+				event.preventDefault();
+				if ($(this)[0].innerHTML != '此消息已撤回'){
+					$('.back').css('display', 'block')
+					$('.back').css('left', event.clientX)
+					$('.back').css('top', event.clientY)
+					id = $(this).attr('id')
+				}
+			});
+			$('.bubble').on('touchstart', function(event) {
+				clearTimeout(timer);
+				timer = setTimeout(button(this), 2000);
+			});
+			$('.bubble').on('touchend', function(event) {
+				clearTimeout(timer);
+			});
+			$('.bubble').on('touchcancel', function(event) {
+				clearTimeout(timer);
+			});
+		}
+		$('textarea').on('keydown', function(event) {
+			if (event.key === "Enter") {
+				event.preventDefault();
+				send()
 			}
 		});
+		back()
 		$('.back').on('click', function(){
-			$.ajax(`/back?class={{t_class}}&&uuid=${id}`)
-			$('#'+id)[0].innerHTML = '此消息已撤回'
+			socket.emit('back_data', {
+				class: class1,
+				uuid: id
+			});
 		})
 		$('body').on('click', function(){
 			$('.back').css('display', 'none')
+		});
+		socket.on('new', (data) => {
+			if (data.class1 !== class1) return;
+			$('.content')[0].innerHTML += '<span class="time">' + data.time + '</span>'
+			let item = document.createElement('div');
+			item.className = 'item item-right';
+			item.innerHTML = `<span class="read">${data.isread}</span><div class="bubble" id="${data.uuid}">${data.content}</div><div class="avatar">{{t_name}}</div>`;
+			$('.content')[0].appendChild(item);
+			$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
+			back()
+		});
+		socket.on('back', (data) => {
+			if (data.class1 !== class1) return;
+			$('#'+data.uuid)[0].innerHTML = '此消息已撤回'
+		});
+		socket.on('update', (data) => {
+			if (data.class1 !== class1) return;
+			$('#'+data.uuid).parent().children('.read')[0].innerHTML = data.isread
 		});
 	</script>
 </body>

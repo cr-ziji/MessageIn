@@ -6,14 +6,14 @@ body{
 }
 a{
 	display: inline-block;
-    background-color: white;
-    color: black;
-    border: 2px solid #008CBA;
-    border-radius: 8px;
-    font-size: 16px;
-    text-align: center;
-    width: 100px;
-    text-decoration: none;
+	background-color: white;
+	color: black;
+	border: 2px solid #008CBA;
+	border-radius: 8px;
+	font-size: 16px;
+	text-align: center;
+	width: 100px;
+	text-decoration: none;
 }
 a:hover {
 	background-color: #008CBA;
@@ -32,12 +32,12 @@ input[type=text] {
 }
 form{
 	position: absolute;
-    top: 50%;
-    background-color: white;
-    left: 25%;
-    padding: 30px;
-    width: 250px;
-    transform: translateX(-50%) translateY(-50%);
+	top: 50%;
+	background-color: white;
+	left: 25%;
+	padding: 30px;
+	width: 250px;
+	transform: translateX(-50%) translateY(-50%);
 	text-align: center;
 	border-radius: 20px;
 }
@@ -45,15 +45,15 @@ form{
 	float:right;
 }
 input {
-    margin: 5px 0;
+	margin: 5px 0;
 }
 input[type='submit']{
 	background-color: #008cba;
-    border: none;
-    color: white;
-    font-size: 15px;
-    border-radius: 5px;
-    width: 150px;
-    height: 25px;
+	border: none;
+	color: white;
+	font-size: 15px;
+	border-radius: 5px;
+	width: 150px;
+	height: 25px;
 	cursor: pointer;
 }

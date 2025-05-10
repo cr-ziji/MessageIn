@@ -190,7 +190,7 @@ if (!gotTheLock) {
 
       console.log('弹幕窗口已创建并显示');
 
-      danmakuWindow.webContents.openDevTools({ mode: 'detach' });
+      //danmakuWindow.webContents.openDevTools({ mode: 'detach' });
 
     });
 

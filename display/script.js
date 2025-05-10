@@ -242,13 +242,7 @@ class DanmakuSystem {
     this.socket.on('connect', () => {
       console.log('WebSocket连接成功');
       this.updateStatus('已连接', 'success');
-      if (this.classParam !== '__SKIP__') {
-        this.socket.emit('verify', {
-          class: this.classParam
-        });
-      }
     });
-
     this.socket.on('new', (data) => {
       // 验证消息是否属于当前班级
       if (data.class === this.classParam) {
@@ -256,7 +250,6 @@ class DanmakuSystem {
         this.playFromCache();
       }
     });
-    
     this.socket.on('back', (data) => {
       // 验证消息是否属于当前班级
       if (data.class === this.classParam) {
@@ -267,27 +260,10 @@ class DanmakuSystem {
         }
       }
     });
-
-    this.socket.on('verify_result', (data) => {
-      if (data.success) {
-        console.log('班级验证成功');
-        this.updateStatus('班级验证成功', 'success');
-      } else {
-        console.error('班级验证失败');
-        this.updateStatus('班级验证失败', 'error');
-        // 清除无效的验证码
-        localStorage.removeItem('classParam');
-        this.classParam = null;
-        this.socket.disconnect();
-        this.showVerificationDialog();
-      }
-    });
-
     this.socket.on('disconnect', () => {
       console.log('WebSocket连接断开');
       this.updateStatus('连接已断开', 'error');
     });
-
     this.socket.on('error', (error) => {
       console.error('WebSocket错误:', error);
       this.updateStatus('连接错误', 'error');

@@ -26,7 +26,7 @@
 </head>
 <body>
   <div class="container" id="mainContainer">
-    <div class="danmaku-area" id="danmakuArea" ></div>
+    <div class="danmaku-area" id="danmakuArea"></div>
     
     <div class="background"></div>
     <div class="wave-container">
@@ -58,7 +58,7 @@
     
     <div class="info-area">
       <h1>MessageIn显示端</h1>
-      <p>正在从 <span id="apiUrlDisplay">http://www.cyupeng.com</span> 获取socket链接</p>
+      <p>正在从 <span id="apiUrlDisplay">http://www.cyupeng.com</span> 启动websocket连接</p>
       <div class="status-indicator">
         <div class="status-dot" id="statusDot"></div>
         <span id="statusText">正在连接...</span>
@@ -72,10 +72,10 @@
     
     <div class="control-panel">
       <div class="control-row">
-      <button id="toggleBtn">暂停弹幕</button>
+        <button id="toggleBtn">暂停弹幕</button>
         <button id="testBtn">发送测试消息</button>
         <button id="clearBtn" class="red">清空弹幕</button>
-  </div>
+      </div>
       
       <div class="control-row">
         <label class="tooltip">
@@ -107,8 +107,8 @@
     </div>
   </div>
   
-  <script src="script.js"></script>
-  <script src="jquery-3.3.1.min.js"></script>
   <script src="socket.io.min.js"></script>
+  <script src="jquery-3.3.1.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html> 

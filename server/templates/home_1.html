@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<title>主页</title>
+	<link rel="stylesheet" href="../static/css/home_1.css">
+	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
+</head>
+<body>
+	<p class="big_title">北大附中北医分校消息管理系统</p>
+	<div class="user">
+		<span>{{t_name}}</span>
+		<a href="/change" style="width: 130px;">更改个人信息</a>
+		<a href="/logout">退出登录</a>
+	</div>
+	<hr>
+	{% for i in t_range %}
+	{% if i%2 == 1 %}
+	<div class="class" id="{{t_class[i]}}">{{t_class[i]}}</div>
+	<br>
+	{% else %}
+	<div class="class" id="{{t_class[i]}}">{{t_class[i]}}</div>
+	<br>
+	{% endif %}
+	{% endfor %}
+	<script src="../static/js/jquery-3.3.1.min.js"></script>
+	<script>
+		$('.class').on('click', function(){
+			s = $(this).attr('id')
+			window.location.href = '/class?class='+s
+		})
+	</script>
+</body>
+</html>

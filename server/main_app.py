@@ -9,7 +9,8 @@ db = client.main
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'  # 加密密钥（生产环境需修改）
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', logger=True, engineio_logger=True)  # 允许跨域
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')  # 允许跨域
+
 
 app.secret_key = '123456'
 classlist = {
@@ -20,7 +21,6 @@ classlist = {
     '高二': ['一班', '二班', '三班', '四班'],
     '高三': ['一班', '二班', '三班', '四班']
 }
-
 
 
 @app.route('/login')
@@ -45,6 +45,7 @@ def register():
         a = 0
     else:
         a = request.args['alert']
+    print(a)
     return render_template('register.html',
                            t_alert=a)
 
@@ -74,9 +75,9 @@ def handle():
             '密码': request.form['password'],
             '班级': dict(request.form)['class']
         }
-        # have = db.teacher.find_one({'用户名': name})
-        # if have is not None:
-        #     return redirect('/register?alert=1')
+        have = db.teacher.find_one({'手机号': request.form['tel']})
+        if have is not None:
+            return redirect('/register?alert=2')
         db.teacher.insert_one(dict1)
         session['用户名'] = name
         session['手机号'] = request.form['tel']
@@ -85,9 +86,66 @@ def handle():
         return redirect('/home')
 
 
+@app.route('/visitor')
+def visitor():
+    session['用户名'] = '访客'
+    session['手机号'] = ''
+    session['密码'] = ''
+    session['班级'] = []
+    for i in classlist:
+        for j in classlist[i]:
+            session['班级'].append(i+j)
+        session['班级'].append(i+'通知')
+    session['班级'].append('全校通知')
+    return redirect('/home')
+
+
+@app.route('/change')
+def change():
+    return render_template('change.html',
+                           t_name=session['用户名'],
+                           t_tel=session['手机号'],
+                           t_password=session['密码'],
+                           t_class=session['班级'])
+
+
+@app.route('/logoff')
+def logoff():
+    db.teacher.delete_one({'手机号': session['手机号']})
+    session.clear()
+    # 需要实现：删除该用户发送的消息
+    return redirect('/login')
+
+
+@app.route('/alter', methods=['post'])
+def alter():
+    name = request.form['subject']+request.form['name']+'老师'
+    dict1 = {
+        '用户名': name,
+        '手机号': request.form['tel'],
+        '密码': request.form['password'],
+        '班级': dict(request.form)['class']
+    }
+    db.teacher.update_one({'手机号': session['手机号']}, {'$set': dict1})
+    session['用户名'] = name
+    session['手机号'] = request.form['tel']
+    session['密码'] = request.form['password']
+    session['班级'] = dict(request.form)['class']
+    # 需要实现：发消息人改变
+    return redirect('/home')
+
+
 @app.route('/home')
 def home():
     return render_template('home.html',
+                           t_name=session['用户名'],
+                           t_class=session['班级'],
+                           t_range=range(len(session['班级'])))
+
+
+@app.route('/home1')
+def home1():
+    return render_template('home_1.html',
                            t_name=session['用户名'],
                            t_class=session['班级'],
                            t_range=range(len(session['班级'])))
@@ -180,21 +238,26 @@ def back(data):
             for j in classlist[i]:
                 data_back(i+j, uuid1)
 
-# @app.route('/message')
-# def message():
-#     class1 = request.args['class']
-#     data = db.data.find_one({'class': class1})
-#     if data is None:
-#         return ''
-#     if data['message'][-1]['content'] != '此消息已撤回':
-#         content = data['message'][-1]['name'] + ':' + data['message'][-1]['content']
-#     else:
-#         content = '此消息已撤回'
-#     return '{"new":{"uuid":"' + data['message'][-1]['uuid'] + '","content":"' + content + '"},"back":{"uuid":"' + data['back'] + '"}}'
+@socketio.on('delete_data')
+def delete(data):
+    uuid1 = data['uuid']
+    class1 = data['class']
+    data_delete(class1, uuid1)
+    if '通知' in class1 and class1 != '全校通知':
+        l = classlist[class1[0:2]]
+        for i in l:
+            data_delete(class1[0:2]+i, uuid1)
+    elif class1 == '全校通知':
+        for i in classlist:
+            for j in classlist[i]:
+                data_delete(i+j, uuid1)
 
 @socketio.on('isread')
 def isread(data):
     class1 = data['class']
+    byte_values = [class1[k] for k in class1]
+    bytes_data = bytes(byte_values)
+    class1 = bytes_data.decode()
     data1 = db.data.find_one({'class': class1})
     if data1 is None:
         return ''
@@ -239,9 +302,17 @@ def data_back(class1, uuid1):
         if l[i]['uuid'] == uuid1:
             data1['message'][i]['content'] = '此消息已撤回'
             break
-    data1['back'] = uuid1
     db.data.update_one({'class': class1}, {'$set': data1})
     emit('back', {'uuid': uuid1, 'class1': class1}, class1=class1, broadcast=True)
+
+def data_delete(class1, uuid1):
+    data1 = db.data.find_one({'class': class1})
+    l = data1['message']
+    for i in l:
+        if i['uuid'] == uuid1:
+            l.remove(i)
+    db.data.update_one({'class': class1}, {'$set': data1})
+    emit('delete', {'uuid': uuid1, 'class1': class1}, class1=class1, broadcast=True)
 
 def data_isread(l):
     if l == []:
@@ -253,9 +324,9 @@ def data_isread(l):
 def error_date_404(error):
     return redirect('/login')
 
-@app.errorhandler(Exception)
-def error_date_500(error):
-    return 'error code:500'
+# @app.errorhandler(Exception)
+# def error_date_500(error):
+#     return 'error code:500'
 
 
 if __name__ == '__main__':

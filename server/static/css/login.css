@@ -26,7 +26,7 @@ a:hover {
 	color: #008CBA;
 	display: inline;
 }
-input[type=text] {
+input[type=text]{
 	background-color:  #008CBA;
 	color: white;
 }
@@ -47,7 +47,7 @@ form{
 input {
 	margin: 5px 0;
 }
-input[type='submit']{
+input[type='submit'], .visitor{
 	background-color: #008cba;
 	border: none;
 	color: white;
@@ -56,4 +56,5 @@ input[type='submit']{
 	width: 150px;
 	height: 25px;
 	cursor: pointer;
+	line-height: 25px;
 }

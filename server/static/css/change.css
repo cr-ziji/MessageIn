@@ -1,0 +1,90 @@
+a{
+	display: inline-block;
+	color: gray;
+	text-align: center;
+	width: 40px;
+	height: 40px;
+	text-decoration: none;
+	margin: 0 5px;
+	font-size: 30px;
+	border-radius: 100px;
+}
+a:hover {
+	background-color: #008CBA;
+	color: white;
+}
+.big_title{
+	text-align: center;
+	text-decoration:none;
+	font-size: 40px;
+	color: #008CBA;
+	display: inline;
+}
+input[type=text] {
+	background-color:  #008CBA;
+	color: white;
+}
+form{
+	padding: 30px;
+	width: 250px;
+	text-align: center;
+	border-radius: 20px;
+	margin: auto;
+	width: 300px;
+	border: 3px solid #008CBA;
+	padding: 10px;
+}
+input {
+	margin: 5px 0;
+}
+input[type='submit'], .logoff{
+	background-color: #008cba;
+	border: none;
+	color: white;
+	font-size: 15px;
+	border-radius: 5px;
+	width: 150px;
+	height: 25px;
+	cursor: pointer;
+	line-height: 25px;
+}
+.small_title{
+	text-align: center;
+	font-size: 30px;
+	color: #008CBA;
+}
+.choose{
+	min-height: 32px;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	align-items: center;
+	margin-top: 5px;
+}
+.add {
+	display: inline-block;
+	border: solid;
+	border-width: 1px;
+	border-radius: 100px;
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+}
+.choose button{
+	background-color: transparent;
+	border: none;
+	font-size: 15px;
+	border-radius: 5px;
+	padding: 2px;
+	cursor: pointer;
+}
+.choose div{
+	border: solid;
+	border-color: #98d4e8;
+	border-radius: 5px;
+	padding: 1px 2px;
+	margin: 2px;
+	padding-left: 4px;
+}
+form{
+}

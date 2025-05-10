@@ -10,7 +10,9 @@
 	<p class="big_title">北大附中北医分校消息管理系统</p>
 	<div class="user">
 		<span>{{t_name}}</span>
-		<!--<a href="/change" style="width: 130px;">更改个人信息</a>-->
+		{% if t_name != '访客' %}
+		<a href="/change" style="width: 130px;">更改个人信息</a>
+		{% endif %}
 		<a href="/logout">退出登录</a>
 	</div>
 	<hr>

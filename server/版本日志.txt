@@ -25,3 +25,11 @@ v3.0.1
 更改网站架构为websocket
 服务端适配了websocket
 略微美化了class页面
+v3.0.2
+略微美化home
+将语言改为中文
+添加change页面
+v3.1.1
+增加了管理员的删除功能
+完善了change页面
+增加了访客功能

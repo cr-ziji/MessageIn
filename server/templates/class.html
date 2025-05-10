@@ -36,10 +36,17 @@
 			<div class="item item-left">
 				<div class="avatar">{{i['name']}}</div>
 				<div class="bubble" id="{{i['uuid']}}">{{i['content']}}</div>
-				{% if i['isread'] %}
+				{% if i['isread'] == True or i['isread'] == [] %}
 				<span class="read">已读</span>
 				{% else %}
-				<span class="read">未读</span>
+				<span class="read">未读
+				{% if i['isread'] != False %}
+				:
+				{% for j in i['isread'] %}
+				{{j}}
+				{% endfor %}
+				{% endif %}
+				</span>
 				{% endif %}
 			</div>
 			{% endif %}
@@ -48,11 +55,19 @@
 		<div class="input-area">
 			<textarea name="text" id="textarea" placeholder="请输入内容"></textarea>
 			<div class="button-area">
-				<button id="send-btn" onclick="send()">发 送</button>
+				<button id="send-btn" onclick="send()" style="{% if t_name == '访客' %}cursor: no-drop;{% endif %}">发 送</button>
 			</div>
 		</div>
 	</div>
+	<div class="loading" style="display: none;">
+		<div>
+			<img src="../static/images/loading.png">
+			<br>
+			加载中
+		</div>
+	</div>
 	<button class="back" style="display: none;">撤回</button>
+	<button class="delete" style="display: none;">删除</button>
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
 	<script src="../static/js/socket.io.min.js"></script>
 	<script>
@@ -60,9 +75,14 @@
 		let class1 = '{{t_class}}';
 		let id = ''
 		let timer;
+		let loading;
 		
 		$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
 		function send(){
+			{% if t_name == '访客' %}
+			alert('访客禁止发送消息')
+			{% else %}
+			loading = setTimeout(function(){$('.loading').css('display', 'flex')}, 100)
 			let textMsg = $('#textarea').val();
 			if(!textMsg){
 				$('#textarea')[0].innerHTML = '';
@@ -76,35 +96,60 @@
 			});
 			$('#textarea')[0].value = '';
 			$('#textarea')[0].focus();
+			{% endif %}
 		}
-		function button(event){
-			if ($(event)[0].innerHTML != '此消息已撤回'){
+		function button(div, event){
+			if ($(div)[0].innerHTML != '此消息已撤回'){
 				$('.back').css('display', 'block')
 				$('.back').css('left', event.clientX)
 				$('.back').css('top', event.clientY)
-				id = $(event).attr('id')
+				id = $(div).attr('id')
+				{% if t_name == '管理员' %}
+				$('.delete').css('display', 'block')
+				$('.delete').css('left', event.clientX)
+				$('.delete').css('top', event.clientY+20)
+				{% endif %}
+			}
+			else{
+				{% if t_name == '管理员' %}
+				id = $(div).attr('id')
+				$('.delete').css('display', 'block')
+				$('.delete').css('left', event.clientX)
+				$('.delete').css('top', event.clientY)
+				{% endif %}
 			}
 		}
 		function back(){
-			$('.bubble').on('contextmenu', function(event) {
+			$('.item-right .bubble').on('contextmenu', function(event) {
 				event.preventDefault();
-				if ($(this)[0].innerHTML != '此消息已撤回'){
-					$('.back').css('display', 'block')
-					$('.back').css('left', event.clientX)
-					$('.back').css('top', event.clientY)
-					id = $(this).attr('id')
-				}
+				button(this, event)
 			});
-			$('.bubble').on('touchstart', function(event) {
+			$('.item-right .bubble').on('touchstart', function(event) {
 				clearTimeout(timer);
-				timer = setTimeout(button(this), 2000);
+				timer = setTimeout(button(this, event), 2000);
 			});
-			$('.bubble').on('touchend', function(event) {
+			$('.item-right .bubble').on('touchend', function(event) {
 				clearTimeout(timer);
 			});
-			$('.bubble').on('touchcancel', function(event) {
+			$('.item-right .bubble').on('touchcancel', function(event) {
 				clearTimeout(timer);
 			});
+			{% if t_name == '管理员' %}
+			$('.item-left .bubble').on('contextmenu', function(event) {
+				event.preventDefault();
+				button(this, event)
+			});
+			$('.item-left .bubble').on('touchstart', function(event) {
+				clearTimeout(timer);
+				timer = setTimeout(button(this, event), 2000);
+			});
+			$('.item-left .bubble').on('touchend', function(event) {
+				clearTimeout(timer);
+			});
+			$('.item-left .bubble').on('touchcancel', function(event) {
+				clearTimeout(timer);
+			});
+			{% endif %}
 		}
 		$('textarea').on('keydown', function(event) {
 			if (event.key === "Enter") {
@@ -114,15 +159,26 @@
 		});
 		back()
 		$('.back').on('click', function(){
+			loading = setTimeout(function(){$('.loading').css('display', 'flex')}, 100)
 			socket.emit('back_data', {
+				class: class1,
+				uuid: id
+			});
+		})
+		$('.delete').on('click', function(){
+			loading = setTimeout(function(){$('.loading').css('display', 'flex')}, 100)
+			socket.emit('delete_data', {
 				class: class1,
 				uuid: id
 			});
 		})
 		$('body').on('click', function(){
 			$('.back').css('display', 'none')
+			$('.delete').css('display', 'none')
 		});
 		socket.on('new', (data) => {
+			clearTimeout(loading)
+			$('.loading').css('display', 'none')
 			if (data.class1 !== class1) return;
 			$('.content')[0].innerHTML += '<span class="time">' + data.time + '</span>'
 			let item = document.createElement('div');
@@ -133,8 +189,17 @@
 			back()
 		});
 		socket.on('back', (data) => {
+			clearTimeout(loading)
+			$('.loading').css('display', 'none')
 			if (data.class1 !== class1) return;
 			$('#'+data.uuid)[0].innerHTML = '此消息已撤回'
+		});
+		socket.on('delete', (data) => {
+			clearTimeout(loading)
+			$('.loading').css('display', 'none')
+			if (data.class1 !== class1) return;
+			$('#'+data.uuid).parent()[0].previousElementSibling.outerHTML = ''
+			$('#'+data.uuid).parent()[0].outerHTML = ''
 		});
 		socket.on('update', (data) => {
 			if (data.class1 !== class1) return;

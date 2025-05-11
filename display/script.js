@@ -253,10 +253,47 @@ class DanmakuSystem {
 
       this.socket.on('back', (data) => {
         if (data.class === this.classParam) {
-          const existingDanmaku = document.getElementById(data.uuid);
-          if (existingDanmaku) {
-            existingDanmaku.textContent = '此消息已撤回';
+          if (this.messageCache.has(data.uuid)) {
+            this.messageCache.set(data.uuid, { content: '此消息已撤回', playCount: this.messageCache.get(data.uuid).playCount });
           }
+          document.querySelectorAll('.danmaku-item').forEach(el => {
+            if (el.id === data.uuid) {
+              el.textContent = '此消息已撤回';
+              if (!el.querySelector('button')) {
+                const button = document.createElement('button');
+                button.title = "标记为已读";
+                button.textContent = "✓";
+                button.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  const uuid = el.id;
+                  if (this.socket) {
+                    const classParam = this.classParam;
+                    if (!classParam) {
+                      console.error('classParam为空，无法发送已读请求');
+                      return;
+                    }
+                    const encoder = new TextEncoder();
+                    this.socket.emit('isread', {
+                      class: encoder.encode(classParam),
+                      uuid: uuid
+                    });
+                  }
+                  const danmakuEl = el;
+                  const currentPosition = danmakuEl.getBoundingClientRect();
+                  const viewportWidth = window.innerWidth;
+                  const currentX = (currentPosition.left / viewportWidth) * 100;
+                  danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
+                  danmakuEl.style.transform = `translateX(${currentX}vw) translateZ(0)`;
+                  danmakuEl.classList.add('ok');
+                  if (uuid && this.messageCache.has(uuid)) {
+                    this.messageCache.delete(uuid);
+                  }
+                  button.style.display = 'none';
+                });
+                el.appendChild(button);
+              }
+            }
+          });
         }
       });
 
@@ -495,6 +532,40 @@ class DanmakuSystem {
       danmaku.style.webkitFontSmoothing = 'antialiased';
       danmaku.style.backfaceVisibility = 'hidden';
 
+      if (!danmaku.querySelector('button')) {
+        const button = document.createElement('button');
+        button.title = "标记为已读";
+        button.textContent = "✓";
+        button.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const uuid = danmaku.id;
+          if (this.socket) {
+            const classParam = this.classParam;
+            if (!classParam) {
+              console.error('classParam为空，无法发送已读请求');
+              return;
+            }
+            const encoder = new TextEncoder();
+            this.socket.emit('isread', {
+              class: encoder.encode(classParam),
+              uuid: uuid
+            });
+          }
+          const danmakuEl = danmaku;
+          const currentPosition = danmakuEl.getBoundingClientRect();
+          const viewportWidth = window.innerWidth;
+          const currentX = (currentPosition.left / viewportWidth) * 100;
+          danmakuEl.style.setProperty('--current-x', `${currentX}vw`);
+          danmakuEl.style.transform = `translateX(${currentX}vw) translateZ(0)`;
+          danmakuEl.classList.add('ok');
+          if (uuid && this.messageCache.has(uuid)) {
+            this.messageCache.delete(uuid);
+          }
+          button.style.display = 'none';
+        });
+        danmaku.appendChild(button);
+      }
+
       danmaku.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!danmaku.classList.contains('ok')) {
@@ -516,21 +587,23 @@ class DanmakuSystem {
       danmaku.addEventListener('animationend', (event) => {
         if (event.animationName === 'danmaku-move' || event.animationName === 'danmaku-move-fast') {
           const uuid = danmaku.id;
-          const playCount = parseInt(danmaku.getAttribute('data-play-count') || '0');
+          let playCount = parseInt(danmaku.getAttribute('data-play-count') || '0');
 
           if (danmaku.classList.contains('ok') || !uuid) {
             danmaku.remove();
             return;
           }
 
-          if (playCount >= this.cacheDuration) {
+          playCount++;
+          if (playCount < this.cacheDuration) {
+            // 重新渲染弹幕，playCount递增
+            this.addDanmaku(this.messageCache.get(uuid)?.content || danmaku.textContent, uuid, playCount);
+          } else {
             if (uuid && this.messageCache.has(uuid)) {
               this.messageCache.delete(uuid);
             }
-            danmaku.remove();
-          } else {
-            danmaku.remove();
           }
+          danmaku.remove();
         }
       });
     } catch (error) {

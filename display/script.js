@@ -252,7 +252,8 @@ class DanmakuSystem {
       });
 
       this.socket.on('back', (data) => {
-        if (data.class === this.classParam) {
+        console.log('收到撤回消息:', data);
+        if (data.class1 === this.classParam) {
           if (this.messageCache.has(data.uuid)) {
             this.messageCache.set(data.uuid, { content: '此消息已撤回', playCount: this.messageCache.get(data.uuid).playCount });
           }
@@ -438,7 +439,6 @@ class DanmakuSystem {
 
       const lastDanmaku = document.querySelector('.danmaku-item:last-child');
       if (lastDanmaku) {
-        lastDanmaku.textContent = content.length > 20 ? content.substring(0, 20) + '...' : content;
         lastDanmaku.id = uuid;
 
         if (!lastDanmaku.querySelector('button')) {
@@ -652,13 +652,11 @@ class DanmakuSystem {
         playCount: newCount
       });
 
-      this.addDanmaku(messageData.content, uuid, newCount);
+      const showContent = messageData.content === '此消息已撤回' ? '此消息已撤回' : messageData.content;
+      this.addDanmaku(showContent, uuid, newCount);
 
       const newDanmaku = document.getElementById(uuid);
       if (newDanmaku) {
-        newDanmaku.textContent = messageData.content.length > 20 ?
-          messageData.content.substring(0, 20) + '...' :
-          messageData.content;
 
         if (!newDanmaku.querySelector('button')) {
           const button = document.createElement('button');

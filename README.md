@@ -20,7 +20,7 @@ cd server
 python run main_app.py
 ```
 
-Tip:后端需要MongoDB和flask,pymongo,pyttsx3,uuid, time, random
+Tip:后端需要MongoDB数据库和flask,flask_socketio,pymongo
 
 ### 前端/大屏端
 
@@ -39,7 +39,8 @@ npm run build
 
 ## 文档
 
-[01_功能文档](Docx\01_功能文档.md)
+- [01_功能文档](Docx\01_功能文档.md)
+- [02_学生端帮助文档](Docx\02_学生端帮助文档.md)
 
 ## 许可证
 

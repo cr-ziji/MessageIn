@@ -13,6 +13,9 @@
 		{% if t_name != '访客' %}
 		<a href="/change" style="width: 130px;">更改个人信息</a>
 		{% endif %}
+		{% if t_name == '管理员' %}
+		<a href="/admin">用户管理</a>
+		{% endif %}
 		<a href="/logout">退出登录</a>
 	</div>
 	<hr>

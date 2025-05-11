@@ -1,0 +1,95 @@
+body{
+	margin: 0;
+}
+.delete{
+	display: inline-block;
+	background-color: white;
+	color: black;
+	border: 2px solid #c00707;
+	border-radius: 8px;
+	font-size: 16px;
+	text-align: center;
+	width: 100px;
+	text-decoration: none;
+	height: 30px;
+	align-items: center;
+	line-height: 30px;
+	padding: 0;
+}
+.delete:hover {
+	background-color: #c00707;
+	color: white;
+}
+input[type='submit']{
+	display: inline-block;
+	background-color: white;
+	color: black;
+	border: 2px solid #00d2ff;
+	border-radius: 8px;
+	font-size: 16px;
+	text-align: center;
+	width: 100px;
+	text-decoration: none;
+	align-items: center;
+	height: 30px;
+	line-height: 30px;
+	padding: 0;
+}
+input[type='submit']:hover {
+	background-color: #00d2ff;
+	color: white;
+}
+form{
+	font-size: 20px;
+	border: solid;
+	border-radius: 5px;
+	background-color: #cfe5ec;
+	display: flex;
+	padding: 5px;
+	align-items: center;
+	justify-content: center;
+	height: 64px;
+	overflow: auto;
+}
+.add {
+	display: inline-block;
+	border: solid;
+	border-width: 1px;
+	border-radius: 100px;
+	width: 20px;
+	height: 20px;
+	cursor: pointer;
+	font-size: 15px;
+	text-align: center;
+}
+.choose{
+	min-height: 32px;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-around;
+	align-items: center;
+	margin-top: 5px;
+	font-size: 15px;
+}
+.choose button{
+	background-color: transparent;
+	border: none;
+	font-size: 15px;
+	border-radius: 5px;
+	padding: 2px;
+	cursor: pointer;
+}
+.choose div{
+	border: solid;
+	border-color: #98d4e8;
+	border-radius: 5px;
+	padding: 1px 2px;
+	margin: 2px;
+	padding-left: 4px;
+}
+input[type='text'], input[type='tel']{
+	width: 100px;
+}
+.item{
+	margin-left: 60px;
+}

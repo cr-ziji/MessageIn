@@ -109,6 +109,22 @@ def change():
                            t_class=session['班级'])
 
 
+@app.route('/admin')
+def admin():
+    if session['用户名'] != '管理员':
+        return redirect('/home')
+    user1 = list(db.teacher.find())
+    return render_template('admin.html',
+                           t_user=user1)
+
+
+@app.route('/user')
+def user():
+    user1 = db.teacher.find_one({'手机号': request.args['tel']})
+    return render_template('user.html',
+                           t_user=user1)
+
+
 @app.route('/logoff')
 def logoff():
     db.teacher.delete_one({'手机号': session['手机号']})
@@ -117,9 +133,19 @@ def logoff():
     return redirect('/login')
 
 
+@app.route('/delete')
+def delete():
+    db.teacher.delete_one({'手机号': request.args['tel']})
+    # 需要实现：删除该用户发送的消息
+    return ''
+
+
 @app.route('/alter', methods=['post'])
 def alter():
-    name = request.form['subject']+request.form['name']+'老师'
+    if 'subject' in request.form:
+        name = request.form['subject']+request.form['name']+'老师'
+    else:
+        name = '管理员'
     dict1 = {
         '用户名': name,
         '手机号': request.form['tel'],
@@ -133,6 +159,23 @@ def alter():
     session['班级'] = dict(request.form)['class']
     # 需要实现：发消息人改变
     return redirect('/home')
+
+
+@app.route('/alter_admin', methods=['post'])
+def alter_admin():
+    if 'subject' in request.form:
+        name = request.form['subject']+request.form['name']+'老师'
+    else:
+        name = '管理员'
+    dict1 = {
+        '用户名': name,
+        '手机号': request.form['tel'],
+        '密码': request.form['password'],
+        '班级': dict(request.form)['class']
+    }
+    db.teacher.update_one({'手机号': request.form['old_tel']}, {'$set': dict1})
+    # 需要实现：发消息人改变
+    return redirect('/user?tel='+request.form['old_tel'])
 
 
 @app.route('/home')
@@ -158,7 +201,7 @@ def class1():
         return redirect('/home')
     data = db.data.find_one({'class': request.args['class']})
     if data is None:
-        data = {'class': request.args['class'], 'message':[], 'back':''}
+        data = {'class': request.args['class'], 'message':[]}
         db.data.insert_one(data)
     data = data['message']
     return render_template('class.html',
@@ -320,9 +363,9 @@ def data_isread(l):
     else:
         return '未读 : ' + ' '.join(l)
 
-@app.errorhandler(404)
-def error_date_404(error):
-    return redirect('/login')
+# @app.errorhandler(404)
+# def error_date_404(error):
+#     return redirect('/login')
 
 # @app.errorhandler(Exception)
 # def error_date_500(error):

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="utf-8">
+<head>
+	<meta charset="UTF-8">
+	<title>用户管理</title>
+	<link rel="stylesheet" href="../static/css/admin.css">
+	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
+</head>
+<body>
+	<a href="home"><</a>
+	<p class="big_title">北大附中北医分校信息管理系统</p></div>
+	<hr>
+	{% for i in t_user %}
+	<iframe src="/user?tel={{i['手机号']}}" id="{{i['手机号']}}"></iframe>
+	{% endfor %}
+	</form>
+	<script>
+		window.addEventListener('message', (event) => {
+			if (event.data.type === 'delete') {
+				document.getElementById(event.data.id).outerHTML = ''
+			}
+		});
+	</script>
+</body>
+</html>

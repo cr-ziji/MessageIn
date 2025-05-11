@@ -7,64 +7,68 @@
 	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
 </head>
 <body>
+	<script>if (prompt('请输入密码') != '{{t_password}}') location.href = '/home';</script>
 	<a href="home"><</a>
 	<p class="big_title">北大附中北医分校信息管理系统</p>
 	<hr>
 	<p class="small_title">更改个人信息</p>
 	<form action="/alter" method="post">
-	用户名：
-	<select name="subject">
-		<option value="语文">语文</option>
-		<option value="数学‌">数学‌</option>
-		<option value="英语‌">英语‌</option>
-		<option value="物理">物理</option>
-		<option value="化学">化学</option>
-		<option value="生物">生物</option>
-		<option value="政治">政治</option>
-		<option value="历史">历史</option>
-		<option value="地理">地理</option>
-		<option value="‌体育">‌体育</option>
-		<option value="音乐">音乐</option>
-		<option value="美术">美术</option>
-		<option value="‌信息">‌信息</option>
-		<option value="劳技">劳技</option>
-		<option value="其他">其他</option>
-	</select>
-	<input type="input" name="name"	maxlength="2" style="width: 30px;" value="{{t_name[2:][:-2]}}">
-	老师
-	<br>
-	手机号：<input type="tel" name="tel"	style="width: 145px;" value="{{t_tel}}">
-	<br>
-	密码：<input type="password" name="password"	style="width: 162px;" value="{{t_password}}">
-	<br>
-	管理班级：
-	<select class="grade">
-		<option>初一</option>
-		<option>初二</option>
-		<option>初三</option>
-		<option>高一</option>
-		<option>高二</option>
-		<option>高三</option>
-		<option>全校</option>
-	</select>
-	<select class="class">
-		<option>一班</option>
-		<option>二班</option>
-		<option>三班</option>
-		<option>四班</option>
-		<option>五班</option>
-		<option>六班</option>
-		<option>通知</option>
-	</select>
-	<div class="add" onclick="add($('.grade').val() + $('.class').val())">十</div>
-	<div class="choose"></div>
-	<input type="submit" value="更改">
-	<button class="logoff">注销</button>
-	<div style="display: none;" class="hidden"></div>
+		用户名：
+		{% if t_name != '管理员' %}
+		<select name="subject">
+			<option value="语文">语文</option>
+			<option value="数学‌">数学‌</option>
+			<option value="英语‌">英语‌</option>
+			<option value="物理">物理</option>
+			<option value="化学">化学</option>
+			<option value="生物">生物</option>
+			<option value="政治">政治</option>
+			<option value="历史">历史</option>
+			<option value="地理">地理</option>
+			<option value="‌体育">‌体育</option>
+			<option value="音乐">音乐</option>
+			<option value="美术">美术</option>
+			<option value="‌信息">‌信息</option>
+			<option value="劳技">劳技</option>
+			<option value="其他">其他</option>
+		</select>
+		<input type="input" name="name"	maxlength="2" style="width: 30px;" value="{{t_name[2:][:-2]}}">
+		老师
+		{% else %}
+		管理员
+		{% endif %}
+		<br>
+		手机号：<input type="tel" name="tel"	style="width: 145px;" value="{{t_tel}}">
+		<br>
+		密码：<input type="password" name="password"	style="width: 162px;" value="{{t_password}}">
+		<br>
+		管理班级：
+		<select class="grade">
+			<option>初一</option>
+			<option>初二</option>
+			<option>初三</option>
+			<option>高一</option>
+			<option>高二</option>
+			<option>高三</option>
+			<option>全校</option>
+		</select>
+		<select class="class">
+			<option>一班</option>
+			<option>二班</option>
+			<option>三班</option>
+			<option>四班</option>
+			<option>五班</option>
+			<option>六班</option>
+			<option>通知</option>
+		</select>
+		<div class="add" onclick="add($('.grade').val() + $('.class').val())">十</div>
+		<div class="choose"></div>
+		<input type="submit" value="更改">
+		<button class="logoff">注销</button>
+		<div style="display: none;" class="hidden"></div>
 	</form>
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
 	<script>
-	if (prompt('请输入密码') != '{{t_password}}') location.href = '/home'
 	l = {}
 	classlist = {
 		'初一':['一班', '二班', '三班', '四班', '五班', '六班'],
@@ -102,7 +106,7 @@
 			location.href = '/logoff'
 		}
 	})
-	$('select')[0].value="{{t_name[0:2]}}"
+	if ($('.subject')[0]) $('.subject')[0].value="{{t_name[0:2]}}"
 	{% for i in t_class %}
 	add('{{i}}')
 	{% endfor %}

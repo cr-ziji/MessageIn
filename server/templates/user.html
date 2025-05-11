@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="utf-8">
+<head>
+	<meta charset="utf-8">
+	<title>用户</title>
+	<link rel="stylesheet" href="../static/css/user.css">
+	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
+</head>
+<body>
+	<form action="/alter_admin" method="post">
+		<div style="width: 140px;">
+			用户名:
+			<br>
+			{% if t_user['用户名'] != '管理员' %}
+			<select name="subject">
+				<option value="语文">语文</option>
+				<option value="数学‌">数学‌</option>
+				<option value="英语‌">英语‌</option>
+				<option value="物理">物理</option>
+				<option value="化学">化学</option>
+				<option value="生物">生物</option>
+				<option value="政治">政治</option>
+				<option value="历史">历史</option>
+				<option value="地理">地理</option>
+				<option value="‌体育">‌体育</option>
+				<option value="音乐">音乐</option>
+				<option value="美术">美术</option>
+				<option value="‌信息">‌信息</option>
+				<option value="劳技">劳技</option>
+				<option value="其他">其他</option>
+			</select>
+			<input type="input" name="name"	maxlength="2" style="width: 30px;" value="{{t_user['用户名'][2:][:-2]}}">
+			老师
+			{% else %}
+			管理员
+			{% endif %}
+		</div>
+		<div class="item">
+			手机号:
+			<br>
+			<input type="tel" name="tel" value="{{t_user['手机号']}}">
+		</div>
+		<div class="item">
+			密码:
+			<br>
+			<input type="text" name="password" value="{{t_user['密码']}}">
+		</div>
+		<div class="item" style="width: 340px; height: 64px; overflow-y: auto;">
+			管理班级：
+			<select class="grade">
+				<option>初一</option>
+				<option>初二</option>
+				<option>初三</option>
+				<option>高一</option>
+				<option>高二</option>
+				<option>高三</option>
+				<option>全校</option>
+			</select>
+			<select class="class">
+				<option>一班</option>
+				<option>二班</option>
+				<option>三班</option>
+				<option>四班</option>
+				<option>五班</option>
+				<option>六班</option>
+				<option>通知</option>
+			</select>
+			<div class="add" onclick="add($('.grade').val() + $('.class').val())">十</div>
+			<div class="choose"></div>
+		</div>
+		<div class="hidden"></div>
+		<input type="hidden" name="old_tel" value="{{t_user['手机号']}}">
+		<input type="submit" class="item" value="更改">
+		<button class='delete item'>删除</button>
+	</form>
+	<script src="../static/js/jquery-3.3.1.min.js"></script>
+	<script>
+		l = {}
+		classlist = {
+			'初一':['一班', '二班', '三班', '四班', '五班', '六班'],
+			'初二':['一班', '二班', '三班', '四班'],
+			'初三':['一班', '二班', '三班', '联培班'],
+			'高一':['一班', '二班', '三班'],
+			'高二':['一班', '二班', '三班', '四班'],
+			'高三':['一班', '二班', '三班', '四班'],
+			'全校':[]
+		}
+		$('.grade').on('change', function(){
+			$('.class')[0].innerHTML = ''
+			for (i in classlist[$('.grade').val()]){
+			$('.class')[0].innerHTML += '<option>' + classlist[$('.grade').val()][i] + '</option>'
+			}
+			$('.class')[0].innerHTML += '<option>通知</option>'
+		})
+		function add(choose){
+			if (!(choose in l) || l[choose] == 0){
+			$('.choose')[0].innerHTML += '<div>' + choose + '<button>×</button></div>'
+			$('.hidden')[0].innerHTML += '<input type="hidden" name="class" value="' + choose + '">'
+			l[choose] = 1
+			$('.choose button').on('click', function(){
+				$(this).parent()[0].outerHTML = ''
+				choose = $(this).parent()[0].innerText
+				choose = choose.substring(0, choose.length - 1)
+				l[choose] = 0
+				$('input[value="' + choose + '"]')[0].outerHTML = ''
+			})
+			}
+		}
+		$('.delete').on('click', function(event){
+			event.preventDefault();
+			if (confirm('确定要注销此账号吗？')){
+				location.href = '/delete?tel={{t_user['手机号']}}'
+				window.parent.postMessage({type: 'delete', id: {{t_user['手机号']}}}, '*');
+			}
+		})
+		if ($('.subject')[0]) $('.subject')[0].value="{{t_user['用户名'][0:2]}}"
+		{% for i in t_user['班级'] %}
+		add('{{i}}')
+		{% endfor %}
+	</script>
+</body>
+</html>

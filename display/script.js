@@ -30,6 +30,10 @@ class DanmakuSystem {
       document.body.style.overflow = 'hidden';
       document.body.style.background = 'transparent';
       document.body.style.pointerEvents = 'none';
+      const danmakuArea = document.getElementById('danmakuArea');
+      if (danmakuArea) {
+        danmakuArea.style.pointerEvents = 'none';
+      }
     }
 
     this.statusDot = document.getElementById('statusDot');
@@ -519,12 +523,14 @@ class DanmakuSystem {
           if (window.electronAPI) {
             window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
           }
+          document.body.style.pointerEvents = 'auto';
         });
         danmaku.addEventListener('mouseleave', (e) => {
           e.stopPropagation();
           if (window.electronAPI) {
             window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
           }
+          document.body.style.pointerEvents = 'none';
         });
       }
 

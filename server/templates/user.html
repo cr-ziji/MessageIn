@@ -12,20 +12,20 @@
 			用户名:
 			<br>
 			{% if t_user['用户名'] != '管理员' %}
-			<select name="subject">
+			<select name="subject" class="subject">
 				<option value="语文">语文</option>
-				<option value="数学‌">数学‌</option>
-				<option value="英语‌">英语‌</option>
+				<option value="数学">数学</option>
+				<option value="英语">英语</option>
 				<option value="物理">物理</option>
 				<option value="化学">化学</option>
 				<option value="生物">生物</option>
 				<option value="政治">政治</option>
 				<option value="历史">历史</option>
 				<option value="地理">地理</option>
-				<option value="‌体育">‌体育</option>
+				<option value="体育">体育</option>
 				<option value="音乐">音乐</option>
 				<option value="美术">美术</option>
-				<option value="‌信息">‌信息</option>
+				<option value="信息">信息</option>
 				<option value="劳技">劳技</option>
 				<option value="其他">其他</option>
 			</select>
@@ -45,7 +45,7 @@
 			<br>
 			<input type="text" name="password" value="{{t_user['密码']}}">
 		</div>
-		<div class="item" style="width: 340px; height: 64px; overflow-y: auto;">
+		<div class="item" style="width: calc(100% - 656px); height: 64px; overflow-y: auto;">
 			管理班级：
 			<select class="grade">
 				<option>初一</option>
@@ -108,10 +108,18 @@
 		}
 		$('.delete').on('click', function(event){
 			event.preventDefault();
+			{% if t_user['用户名'] == '管理员' %}
+			alert('请勿删除管理员')
+			{% else %}
 			if (confirm('确定要注销此账号吗？')){
-				location.href = '/delete?tel={{t_user['手机号']}}'
-				window.parent.postMessage({type: 'delete', id: {{t_user['手机号']}}}, '*');
+				$.ajax({
+					url: '/delete?tel={{t_user['手机号']}}',
+					success: function(){
+						window.parent.postMessage({type: 'delete', id: {{t_user['手机号']}}}, '*');
+					}
+				})
 			}
+			{% endif %}
 		})
 		if ($('.subject')[0]) $('.subject')[0].value="{{t_user['用户名'][0:2]}}"
 		{% for i in t_user['班级'] %}

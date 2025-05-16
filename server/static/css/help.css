@@ -1,0 +1,84 @@
+/* 大纲导航样式 */
+#outline-list, #outline-list1 {
+	list-style: none;
+	padding-left: 0;
+}
+
+#outline-list a {
+	display: block;
+	padding: 5px 10px;
+	text-decoration: none;
+	color: #333;
+	transition: all 0.2s;
+}
+
+#outline-list a:hover {
+	background: #e9ecef;
+	transform: translateX(5px);
+}
+
+/* 标题层级缩进 */
+.level-2 { padding-left: 15px !important; }
+.level-3 { padding-left: 30px !important; }
+.level-4 { padding-left: 45px !important; }
+
+/* 代码块样式 */
+pre code {
+	display: block;
+	padding: 15px;
+	border-radius: 5px;
+	background: #f8f9fa;
+}
+
+body{
+	margin: 0;
+}
+
+/* 三栏布局设置 */
+.container {
+	display: flex;
+	height: 100vh;
+}
+
+/* 编辑器区域 */
+#editor {
+	flex: 1;
+	padding: 20px;
+	border-right: 1px solid #ddd;
+	font-family: 'Monaco', monospace;
+}
+
+/* 预览区域 */
+#preview {
+	flex: 2;
+	padding: 20px;
+	overflow-y: auto;
+}
+
+/* 大纲导航 */
+#outline, #outline1 {
+	width: 250px;
+	background: #f8f9fa;
+	border-left: 1px solid #ddd;
+	padding: 20px;
+	/* position: fixed; */
+	/* right: 0; */
+	height: calc(100vh - 40px);
+}
+.back-button{
+	display: inline-block;
+	color: gray;
+	text-align: center;
+	width: 40px;
+	height: 40px;
+	text-decoration: none;
+	margin: 0 5px;
+	font-size: 30px;
+	border-radius: 100px;
+	position: absolute;
+	left: 10px;
+	top: 5px;
+}
+video{
+	width: 100%;
+}

@@ -46,3 +46,4 @@ coverage/
 
 # 项目特定忽略
 Docx/MessageIn学生端帮助视频.mp4
+server/static/file/学生端帮助视频.mp4

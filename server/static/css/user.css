@@ -47,7 +47,7 @@ form{
 	display: flex;
 	padding: 5px;
 	align-items: center;
-	justify-content: center;
+	justify-content: space-evenly;
 	height: 64px;
 	overflow: auto;
 }
@@ -91,5 +91,5 @@ input[type='text'], input[type='tel']{
 	width: 100px;
 }
 .item{
-	margin-left: 60px;
+	/* margin-left: 60px; */
 }

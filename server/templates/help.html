@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>帮助</title>
+	<link rel="stylesheet" href="../static/css/highlight.css">
+	<link rel="stylesheet" href="../static/css/help.css">
+	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
+</head>
+<body>
+	<a href="/login" class="back-button"><</a>
+	<div class="container">
+		<!-- <textarea id="editor" placeholder="输入Markdown内容..."></textarea> -->
+		<div id="outline" style="width: 160px; padding-top: 40px; padding-bottom: 0;">
+			<h3>目录</h3>
+			<ul id="outline-list"><li>
+				<a href="/help?name=01_功能文档.md" class="level-1">
+					01_功能文档
+				</a>
+			</li><li>
+				<a href="/help?name=02_学生端帮助文档.md" class="level-1">
+					02_学生端帮助文档
+				</a>
+			</li><li>
+				<a href="/help?name=03_教师端帮助文档.md" class="level-1">
+					03_教师端帮助文档
+				</a>
+			</li></ul>
+		</div>
+		<div id="outline">
+			<h3>文档大纲</h3>
+			<ul id="outline-list" class="outline-list"></ul>
+		</div>
+		<div id="preview"></div>
+	</div>
+
+	<script src="../static/js/marked.min.js"></script>
+	<script>
+		// 初始化配置
+		marked.setOptions({
+			highlight: code => hljs.highlightAuto(code).value
+		});// 初始化元素引用
+	
+	
+	const editor = document.getElementById('editor');
+	const preview = document.getElementById('preview');
+	const outlineList = document.getElementsByClassName('outline-list')[0];
+
+	// 实时渲染功能
+	// editor.addEventListener('input', () => {
+	//	 const markdown = editor.value;
+	//	 preview.innerHTML = marked.parse(markdown);
+	//	 generateOutline();
+	// });
+
+	// 大纲生成算法
+	function generateOutline() {
+		const headings = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
+		outlineList.innerHTML = '';
+		
+		headings.forEach(heading => {
+		const li = document.createElement('li');
+		li.innerHTML = `
+			<a href="#${heading.id}" class="level-${heading.tagName.slice(1)}">
+			${heading.textContent}
+			</a>
+		`;
+		outlineList.appendChild(li);
+		});
+	}
+
+	// 自动锚点生成
+	let headingCounter = 0;
+	marked.use({
+		renderer: {
+		heading(text, level) {
+			const id = `heading-${++headingCounter}`;
+			return `<h${level} id="${id}">${text}</h${level}>`;
+		}
+		}
+	});
+	
+	let text = `{{t_text}}`;
+	preview.innerHTML = marked.parse(text);
+	{% if t_name != '' %}
+	preview.innerHTML += '<video src="../static/file/{{t_name}}" controls></video>';
+	{% endif %}
+	generateOutline()
+	</script>
+</body>
+</html>

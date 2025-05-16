@@ -58,3 +58,13 @@ input[type='submit'], .visitor{
 	cursor: pointer;
 	line-height: 25px;
 }
+.help {
+	position: absolute;
+	right: 8px;
+	bottom: 8px;
+	width: 30px;
+	height: 30px;
+	font-size: 25px;
+	line-height: 30px;
+	border-radius: 100px;
+}

@@ -21,6 +21,7 @@ classlist = {
     '高二': ['一班', '二班', '三班', '四班'],
     '高三': ['一班', '二班', '三班', '四班']
 }
+video = {'01_功能文档.md': '', '02_学生端帮助文档.md': '学生端帮助视频.mp4', '03_教师端帮助文档.md': '教师端帮助视频.mp4'}
 
 
 @app.route('/login')
@@ -45,7 +46,6 @@ def register():
         a = 0
     else:
         a = request.args['alert']
-    print(a)
     return render_template('register.html',
                            t_alert=a)
 
@@ -84,6 +84,15 @@ def handle():
         session['密码'] = request.form['password']
         session['班级'] = dict(request.form)['class']
         return redirect('/home')
+
+@app.route('/help')
+def help():
+    if request.args['name'] not in video:
+        return redirect('/home')
+    f = open('static/file/'+request.args['name'], 'r', encoding="utf-8")
+    t = f.read()
+    f.close()
+    return render_template('help.html', t_text=t, t_name=video[request.args['name']])
 
 
 @app.route('/visitor')
@@ -174,16 +183,41 @@ def alter_admin():
         '班级': dict(request.form)['class']
     }
     db.teacher.update_one({'手机号': request.form['old_tel']}, {'$set': dict1})
+    if request.form['old_tel'] == session['手机号']:
+        session['用户名'] = name
+        session['手机号'] = request.form['tel']
+        session['密码'] = request.form['password']
+        session['班级'] = dict(request.form)['class']
     # 需要实现：发消息人改变
     return redirect('/user?tel='+request.form['old_tel'])
 
 
 @app.route('/home')
 def home():
+    l = []
+    for i in session['班级']:
+        l1 = [i]
+        data = db.data.find_one({'class': i})
+        if data is None:
+            data = {'class': i, 'message':[]}
+            db.data.insert_one(data)
+        if data['message'] == []:
+            l1.append('')
+            l1.append('')
+            l1.append('')
+            l1.append('')
+            l1.append('')
+        else:
+            l1.append(data['message'][-1]['uuid'])
+            l1.append(data['message'][-1]['time'])
+            l1.append(data['message'][-1]['name'] + ': ')
+            l1.append(long(data['message'][-1]['content'], 8-len(data['message'][-1]['name'])))
+            l1.append(long(data_isread(data['message'][-1]['isread']), 10))
+        l.append(l1)
     return render_template('home.html',
                            t_name=session['用户名'],
-                           t_class=session['班级'],
-                           t_range=range(len(session['班级'])))
+                           t_class=l,
+                           t_range=range(len(l)))
 
 
 @app.route('/home1')
@@ -196,7 +230,6 @@ def home1():
 
 @app.route('/class')
 def class1():
-    print(session)
     if request.args['class'] not in session['班级']:
         return redirect('/home')
     data = db.data.find_one({'class': request.args['class']})
@@ -245,7 +278,7 @@ def send(data):
         db.data.update_one({'class': class1}, {'$set': data1})
         data1['message'][-1]['class1'] = class1
         data1['message'][-1]['isread'] = data_isread(data1['message'][-1]['isread'])
-        emit('new', data1['message'][-1], class1=class1, broadcast=True)
+        emit('new', data1['message'][-1], broadcast=True)
     else:
         isread += ' : '
         data1 = db.data.find_one({'class': data['class']})
@@ -265,7 +298,7 @@ def send(data):
         db.data.update_one({'class': data['class']}, {'$set': data1})
         data1['message'][-1]['class1'] = class1
         data1['message'][-1]['isread'] = data_isread(data1['message'][-1]['isread'])
-        emit('new', data1['message'][-1], class1=class1, broadcast=True)
+        emit('new', data1['message'][-1], broadcast=True)
 
 @socketio.on('back_data')
 def back(data):
@@ -310,7 +343,7 @@ def isread(data):
             data1['message'][i]['isread'] = True
             db.data.update_one({'class': class1}, {'$set': data1})
 
-            emit('update', {'uuid': data['uuid'], 'isread': '已读', 'class1': class1}, class1=class1, broadcast=True)
+            emit('update', {'uuid': data['uuid'], 'isread': '已读', 'class1': class1}, broadcast=True)
             if data1['message'][i]['type'] != '':
                 data2 = db.data.find_one({'class': data1['message'][i]['type']})
                 l1 = data2['message']
@@ -318,8 +351,8 @@ def isread(data):
                     if l1[j]['uuid'] == data['uuid']:
                         if class1 in data2['message'][j]['isread']:
                             data2['message'][j]['isread'].remove(class1)
-                            db.data.update_one({'class': data2['message'][i]['type']}, {'$set': data1})
-                            emit('update', {'uuid': data['uuid'], 'isread': data_isread(data2['message'][i]['isread']), 'class1': data1['message'][i]['type']}, class1=data1['message'][i]['type'], broadcast=True)
+                            db.data.update_one({'class': data1['message'][i]['type']}, {'$set': data2})
+                            emit('update', {'uuid': data['uuid'], 'isread': data_isread(data2['message'][i]['isread']), 'class1': data1['message'][i]['type']}, broadcast=True)
                         break
             break
 
@@ -336,7 +369,7 @@ def data_send(content, class1, uuid1, time1, type1):
     db.data.update_one({'class': class1}, {'$set': data1})
     data1['message'][-1]['class1'] = class1
     data1['message'][-1]['isread'] = '未读'
-    emit('new', data1['message'][-1], class1=class1, broadcast=True)
+    emit('new', data1['message'][-1], broadcast=True)
 
 def data_back(class1, uuid1):
     data1 = db.data.find_one({'class': class1})
@@ -346,7 +379,7 @@ def data_back(class1, uuid1):
             data1['message'][i]['content'] = '此消息已撤回'
             break
     db.data.update_one({'class': class1}, {'$set': data1})
-    emit('back', {'uuid': uuid1, 'class1': class1}, class1=class1, broadcast=True)
+    emit('back', {'uuid': uuid1, 'class1': class1}, broadcast=True)
 
 def data_delete(class1, uuid1):
     data1 = db.data.find_one({'class': class1})
@@ -355,21 +388,42 @@ def data_delete(class1, uuid1):
         if i['uuid'] == uuid1:
             l.remove(i)
     db.data.update_one({'class': class1}, {'$set': data1})
-    emit('delete', {'uuid': uuid1, 'class1': class1}, class1=class1, broadcast=True)
+    l1 = []
+    data = db.data.find_one({'class': class1})
+    if data['message'] == []:
+        l1.append('')
+        l1.append('')
+        l1.append('')
+        l1.append('')
+        l1.append('')
+    else:
+        l1.append(data['message'][-1]['uuid'])
+        l1.append(data['message'][-1]['time'])
+        l1.append(data['message'][-1]['name'] + ': ')
+        l1.append(long(data['message'][-1]['content'], 8-len(data['message'][-1]['name'])))
+        l1.append(long(data_isread(data['message'][-1]['isread']), 10))
+    emit('delete', {'uuid': uuid1, 'class1': class1, 'last': l1}, broadcast=True)
 
 def data_isread(l):
-    if l == []:
+    if l == [] or l == True:
         return '已读'
+    elif l == False:
+        return '未读'
     else:
         return '未读 : ' + ' '.join(l)
 
-# @app.errorhandler(404)
-# def error_date_404(error):
-#     return redirect('/login')
+def long(t, n):
+    if len(t) > n:
+        t = t[:n]+'...'
+    return t
+
+@app.errorhandler(404)
+def error_date_404(error):
+    return redirect('/login')
 
 # @app.errorhandler(Exception)
 # def error_date_500(error):
-#     return 'error code:500'
+#     return redirect('/login')
 
 
 if __name__ == '__main__':

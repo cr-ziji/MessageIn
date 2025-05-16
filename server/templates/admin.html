@@ -8,12 +8,11 @@
 </head>
 <body>
 	<a href="home"><</a>
-	<p class="big_title">北大附中北医分校信息管理系统</p></div>
+	<p class="big_title">北大附中北医分校信息管理系统</p>
 	<hr>
 	{% for i in t_user %}
 	<iframe src="/user?tel={{i['手机号']}}" id="{{i['手机号']}}"></iframe>
 	{% endfor %}
-	</form>
 	<script>
 		window.addEventListener('message', (event) => {
 			if (event.data.type === 'delete') {

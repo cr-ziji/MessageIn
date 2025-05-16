@@ -19,19 +19,157 @@
 		<a href="/logout">退出登录</a>
 	</div>
 	<hr>
-	{% for i in t_range %}
-	{% if i%2 == 1 %}
-	<div class="class" id="{{t_class[i]}}" style="background-color: white;">{{t_class[i]}}</div>
-	{% else %}
-	<div class="class" id="{{t_class[i]}}">{{t_class[i]}}</div>
-	{% endif %}
-	{% endfor %}
+	<div class="main">
+		<div class="content">
+			{% for i in t_range %}
+			{% if i%2 == 1 %}
+			<div class="class" id="{{t_class[i][0]}}" style="background-color: white;">
+				{{t_class[i][0]}}
+				<div class="{{t_class[i][1]}}">
+					<span>{{t_class[i][2]}}</span>
+					<br>
+					<span>{{t_class[i][3]}}</span><span>{{t_class[i][4]}}</span>
+					<span>{{t_class[i][5]}}</span>
+				</div>
+			</div>
+			{% else %}
+			<div class="class" id="{{t_class[i][0]}}">
+				{{t_class[i][0]}}
+				<div class="{{t_class[i][1]}}">
+					<span>{{t_class[i][2]}}</span>
+					<br>
+					<span>{{t_class[i][3]}}</span><span>{{t_class[i][4]}}</span>
+					<span>{{t_class[i][5]}}</span>
+				</div>
+			</div>
+			{% endif %}
+			{% endfor %}
+		</div>
+		<iframe src=""></iframe>
+	</div>
+	<div class="loading" style="display: none;">
+		<div>
+			<img src="../static/images/loading.png">
+			<br>
+			连接断开，正在重新连接
+		</div>
+	</div>
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
+	<script src="../static/js/socket.io.min.js"></script>
 	<script>
-		$('.class').on('click', function(){
-			s = $(this).attr('id')
-			window.location.href = '/class?class='+s
-		})
+		// 横屏时执行的函数
+		function handleLandscape() {
+			$(".class").off("click");
+			$('.class').on('click', function(){
+				s = $(this).attr('id')
+				// window.location.href = '/class?class='+s
+				$('iframe').attr('src', '/class?class='+s)
+			})
+			$('iframe').css('display', 'block')
+			$('.content').css('width', '')
+		}
+
+		// 竖屏时执行的函数
+		function handlePortrait() {
+			$(".class").off("click");
+			$('.class').on('click', function(){
+				s = $(this).attr('id')
+				window.location.href = '/class?class='+s
+				// $('iframe').attr('src', '/class?class='+s)
+			})
+			$('iframe').css('display', 'none')
+			$('.content').css('width', '100%')
+		}
+
+		// 方向变化监听函数
+		function checkOrientation() {
+			// 现代浏览器标准方式
+			if (typeof screen.orientation !== 'undefined') {
+				const orientation = screen.orientation.type;
+				
+				// 判断方向类型（兼容不同浏览器的返回值）
+				if (orientation.startsWith('portrait')) {
+					handlePortrait();
+				} else if (orientation.startsWith('landscape')) {
+					handleLandscape();
+				}
+			}
+			// 兼容性处理（旧版浏览器/移动端）
+			else {
+				const isLandscape = window.innerWidth > window.innerHeight;
+				isLandscape ? handleLandscape() : handlePortrait();
+			}
+		}
+
+		// 初始化检查（页面加载时立即执行一次）
+		checkOrientation();
+
+		// 添加方向变化监听
+		if (window.screen.orientation) {
+			window.screen.orientation.addEventListener('change', checkOrientation);
+		}
+		
+		// 兼容性监听（窗口大小变化）
+		window.addEventListener('resize', checkOrientation);
+		
+		
+		const socket = io({
+			reconnection: true,        // 启用自动重连
+			reconnectionAttempts: 10,  // 最大重试次数
+			reconnectionDelay: 1000,   // 初始重试间隔（毫秒）
+			reconnectionDelayMax: 5000,// 最大重试间隔
+			randomizationFactor: 0.5,  // 随机化因子（0-1）
+			timeout: 20000,            // 连接超时时间
+			autoConnect: true          // 自动连接
+		});
+		let timer
+		
+		// 断开连接事件
+		socket.on('disconnect', (reason) => {
+			alert('连接断开，可等待自动重连或手动刷新页面')
+		});
+		// 重连尝试事件
+		socket.on('reconnect_attempt', (attemptNumber) => {
+			timer = setTimeout(function(){$('.loading').css('display', 'flex')}, 100)
+		});
+		// 重连成功事件
+		socket.on('reconnect', (attemptNumber) => {
+			clearTimeout(timer)
+			$('.loading').css('display', 'none')
+		});
+        // 错误处理
+        socket.on('connect_error', (error) => {
+			alert('无法连接')
+			clearTimeout(timer)
+			$('.loading').css('display', 'none')
+        });
+		socket.on('new', (data) => {
+			$('#'+data.class1+' div').attr('class', data.uuid)
+			$('#'+data.class1+' span')[0].innerHTML = data.time
+			$('#'+data.class1+' span')[1].innerHTML = data.name + ': '
+			$('#'+data.class1+' span')[2].innerHTML = long(data.content, 8-data.name.length)
+			$('#'+data.class1+' span')[3].innerHTML = long(data.isread, 10)
+		});
+		socket.on('back', (data) => {
+			if ($('#'+data.class1+' .'+data.uuid+' span:nth-child(4)').length) $('#'+data.class1+' .'+data.uuid+' span:nth-child(4)').html(long('此消息已撤回', 10-$('#'+data.class1+' .'+data.uuid+' span:nth-child(3)')[0].innerHTML.length))
+		});
+		socket.on('delete', (data) => {
+			if ($('#'+data.class1+' .'+data.uuid+' span').length){
+				$('#'+data.class1+' .'+data.uuid+' span')[0].innerHTML = data.last[1]
+				$('#'+data.class1+' .'+data.uuid+' span')[1].innerHTML = data.last[2]
+				$('#'+data.class1+' .'+data.uuid+' span')[2].innerHTML = data.last[3]
+				$('#'+data.class1+' .'+data.uuid+' span')[3].innerHTML = data.last[4]
+				$('#'+data.class1+' .'+data.uuid).attr('class', data.last[0])
+			}
+		});
+		socket.on('update', (data) => {
+			if ($('#'+data.class1+' .'+data.uuid+' span:nth-child(4)').length) $('#'+data.class1+' .'+data.uuid+' span:nth-child(4)').html(data.isread)
+		});
+		
+		function long(str, l){
+			if (str.length > l) str = str.substr(0, l) + '...'
+			return str
+		}
 	</script>
 </body>
 </html>

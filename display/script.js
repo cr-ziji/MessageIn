@@ -235,8 +235,10 @@ class DanmakuSystem {
     try {
       this.socket = io.connect(this.socketUrl, {
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        autoConnect: true,
+        randomizationFactor: 0.5
       });
 
       this.updateSocketUrlDisplay();

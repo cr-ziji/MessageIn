@@ -88,6 +88,14 @@ iframe{
 	width: 100px;
 	height: 100px;
 }
+.heng iframe{
+	position: absolute;
+	height: calc(100% - 86px);
+	width: calc(100% - 16px);
+}
+.heng .content{
+	width: 100%;
+}
 
 @keyframes myAnim {
 	from {

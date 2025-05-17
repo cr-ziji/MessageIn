@@ -1,0 +1,12 @@
+body{
+	height: calc(100vh - 16px);
+}
+img{
+	width: 80px;
+	position: relative;
+	left: 50%;
+	top: 50%;
+	transform: translateX(-50%) translateY(-50%);
+	filter: grayscale(1);
+	opacity: 0.3;
+}

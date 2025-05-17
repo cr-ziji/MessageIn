@@ -45,7 +45,7 @@
 			{% endif %}
 			{% endfor %}
 		</div>
-		<iframe src=""></iframe>
+		<iframe src="/none"></iframe>
 	</div>
 	<div class="loading" style="display: none;">
 		<div>
@@ -57,28 +57,40 @@
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
 	<script src="../static/js/socket.io.min.js"></script>
 	<script>
+		let flag;
+		window.addEventListener('message', (event) => {
+			if (event.data.type === 'close' && flag) {
+				$('iframe').css('display', 'none')
+			}
+		});
 		// 横屏时执行的函数
 		function handleLandscape() {
+			flag = 0
+			$('iframe').css('display', 'block')
 			$(".class").off("click");
 			$('.class').on('click', function(){
 				s = $(this).attr('id')
 				// window.location.href = '/class?class='+s
 				$('iframe').attr('src', '/class?class='+s)
 			})
-			$('iframe').css('display', 'block')
-			$('.content').css('width', '')
+			// $('iframe').css('display', 'block')
+			// $('.content').css('width', '')
+			$('.main').removeClass('heng')
 		}
 
 		// 竖屏时执行的函数
 		function handlePortrait() {
+			flag = 1
+			$('iframe').css('display', 'none')
 			$(".class").off("click");
 			$('.class').on('click', function(){
 				s = $(this).attr('id')
-				window.location.href = '/class?class='+s
-				// $('iframe').attr('src', '/class?class='+s)
+				$('iframe').attr('src', '/class?class='+s)
+				$('iframe').css('display', 'block')
 			})
-			$('iframe').css('display', 'none')
-			$('.content').css('width', '100%')
+			// $('iframe').css('display', 'none')
+			// $('.content').css('width', '100%')
+			$('.main').addClass('heng')
 		}
 
 		// 方向变化监听函数

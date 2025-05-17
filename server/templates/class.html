@@ -8,7 +8,7 @@
 </head>
 <body>
 	<div>
-		<a href="javascript:history.back()" class="back-button"><</a>
+		<a href="/none" class="back-button"><</a>
 		<!-- <p class="big_title">北大附中北医分校消息管理系统</p> -->
 		<p class="big_title">{{t_class}}</p>
 		<hr>
@@ -163,8 +163,8 @@
 				button(this, event)
 			});
 			$('.item-right .bubble').on('touchstart', function(event) {
-				clearTimeout(timer);
-				timer = setTimeout(button(this, event), 2000);
+				// clearTimeout(timer);
+				timer = setTimeout(function(){button(this, event)}, 1000);
 			});
 			$('.item-right .bubble').on('touchend', function(event) {
 				clearTimeout(timer);
@@ -178,8 +178,8 @@
 				button(this, event)
 			});
 			$('.item-left .bubble').on('touchstart', function(event) {
-				clearTimeout(timer);
-				timer = setTimeout(button(this, event), 2000);
+				// clearTimeout(timer);
+				timer = setTimeout(function(){button(this, event)}, 2000);
 			});
 			$('.item-left .bubble').on('touchend', function(event) {
 				clearTimeout(timer);

@@ -242,6 +242,11 @@ def class1():
                            t_name=session['用户名'],
                            t_class=request.args['class'])
 
+
+@app.route('/none')
+def none():
+    return render_template('none.html')
+
 @socketio.on('connect')
 def handle_connect():
     print('客户端已连接')

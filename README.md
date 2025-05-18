@@ -5,11 +5,11 @@ MessageIn是一款轻量级、跨平台的班级消息互动系统。老师可�
 ## 主要特性
 
 - 实时弹幕消息推送与已读统计
-- 支持老师、管理员、学生（大屏）多角色
+- 支持老师、管理员、学生（大屏）、访客多角色
 - 大屏端弹幕美观，支持交互打勾、鼠标穿透、全透明
 - 多显示器全屏、窗口始终置顶
 - 控制面板支持弹幕速度、透明度、清空、测试等
-- HTTP + AJAX，易于二次开发
+- HTTP + websocket，易于二次开发
 
 ## 快速开始
 
@@ -20,7 +20,7 @@ cd server
 python run main_app.py
 ```
 
-Tip:后端需要MongoDB数据库和flask,flask_socketio,pymongo
+Tip:后端需要MongoDB数据库和flask,flask_socketio,pymongo,uuid,time
 
 ### 前端/大屏端
 

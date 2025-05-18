@@ -156,6 +156,9 @@ class DanmakuSystem {
     if (document.getElementById('debugStatus')) {
       document.getElementById('debugStatus').textContent = text;
     }
+    if (status === 'error') {
+      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now());
+    }
   }
 
   showVerificationDialog() {
@@ -245,6 +248,10 @@ class DanmakuSystem {
 
       this.socket.on('connect', () => {
         console.log('WebSocket连接成功');
+        const encoder = new TextEncoder();
+        this.socket.emit('init',{
+          class: encoder.encode(this.classParam)
+        });
         this.updateStatus('已连接', 'success');
       });
 
@@ -279,7 +286,6 @@ class DanmakuSystem {
                       console.error('classParam为空，无法发送已读请求');
                       return;
                     }
-                    const encoder = new TextEncoder();
                     this.socket.emit('isread', {
                       class: encoder.encode(classParam),
                       uuid: uuid
@@ -511,7 +517,7 @@ class DanmakuSystem {
 
       const danmaku = document.createElement('div');
       danmaku.className = 'danmaku-item';
-      danmaku.textContent = content;
+      danmaku.textContent = content.replace(/✓$/, '');
 
       if (uuid) {
         danmaku.id = uuid;

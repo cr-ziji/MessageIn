@@ -10,7 +10,7 @@
 	<div>
 		<a href="/none" class="back-button"><</a>
 		<!-- <p class="big_title">北大附中北医分校消息管理系统</p> -->
-		<p class="big_title">{{t_class}}</p>
+		<p class="big_title">{{t_class}}{% if t_class not in t_user %}<span class='outline' style='color: red'>（未连接）</span>{% endif %}</p>
 		<hr>
 	</div>
 	<div class="container">
@@ -31,6 +31,19 @@
 				{% endif %}
 				</span>
 				{% endif %}
+				
+				{% if i['state'] != True and i['state'] != [] %}
+				<span class="state">未发送成功
+				{% if i['state'] != False %}
+				:
+				{% for j in i['state'] %}
+				{{j}}
+				{% endfor %}
+				{% endif %}
+				</span>
+				<button class="again">!</button>
+				{% endif %}
+				
 				<div class="bubble" id="{{i['uuid']}}">{{i['content']}}</div>
 				<div class="avatar">{{i['name']}}</div>
 			</div>
@@ -38,6 +51,19 @@
 			<div class="item item-left">
 				<div class="avatar">{{i['name']}}</div>
 				<div class="bubble" id="{{i['uuid']}}">{{i['content']}}</div>
+				
+				{% if i['state'] != True and i['state'] != [] %}
+				<button class="again">!</button>
+				<span class="state">未发送成功
+				{% if i['state'] != False %}
+				:
+				{% for j in i['state'] %}
+				{{j}}
+				{% endfor %}
+				{% endif %}
+				</span>
+				{% endif %}
+				
 				{% if i['isread'] == True or i['isread'] == [] %}
 				<span class="read">已读</span>
 				{% else %}
@@ -119,7 +145,8 @@
 		function send(){
 			{% if t_name == '访客' %}
 			alert('访客禁止发送消息')
-			{% else %}
+			return 
+			{% endif %}
 			let textMsg = $('#textarea').val();
 			if(!textMsg){
 				$('#textarea')[0].innerHTML = '';
@@ -134,27 +161,34 @@
 			});
 			$('#textarea')[0].value = '';
 			$('#textarea')[0].focus();
-			{% endif %}
 		}
 		function button(div, event){
-			if ($(div)[0].innerHTML != '此消息已撤回'){
-				$('.back').css('display', 'block')
-				$('.back').css('left', event.clientX)
-				$('.back').css('top', event.clientY)
-				id = $(div).attr('id')
-				{% if t_name == '管理员' %}
-				$('.delete').css('display', 'block')
-				$('.delete').css('left', event.clientX)
-				$('.delete').css('top', event.clientY+20)
-				{% endif %}
-			}
-			else{
-				{% if t_name == '管理员' %}
+			if ($(div).parent().children('.state').length){
 				id = $(div).attr('id')
 				$('.delete').css('display', 'block')
 				$('.delete').css('left', event.clientX)
 				$('.delete').css('top', event.clientY)
-				{% endif %}
+			}
+			else{
+				if ($(div)[0].innerHTML != '此消息已撤回'){
+					$('.back').css('display', 'block')
+					$('.back').css('left', event.clientX)
+					$('.back').css('top', event.clientY)
+					id = $(div).attr('id')
+					{% if t_name == '管理员' %}
+					$('.delete').css('display', 'block')
+					$('.delete').css('left', event.clientX)
+					$('.delete').css('top', event.clientY+20)
+					{% endif %}
+				}
+				else{
+					{% if t_name == '管理员' %}
+					id = $(div).attr('id')
+					$('.delete').css('display', 'block')
+					$('.delete').css('left', event.clientX)
+					$('.delete').css('top', event.clientY)
+					{% endif %}
+				}
 			}
 		}
 		function back(){
@@ -163,13 +197,15 @@
 				button(this, event)
 			});
 			$('.item-right .bubble').on('touchstart', function(event) {
-				// clearTimeout(timer);
+				event.preventDefault();
 				timer = setTimeout(function(){button(this, event)}, 1000);
 			});
 			$('.item-right .bubble').on('touchend', function(event) {
+				event.preventDefault();
 				clearTimeout(timer);
 			});
 			$('.item-right .bubble').on('touchcancel', function(event) {
+				event.preventDefault();
 				clearTimeout(timer);
 			});
 			{% if t_name == '管理员' %}
@@ -178,16 +214,25 @@
 				button(this, event)
 			});
 			$('.item-left .bubble').on('touchstart', function(event) {
-				// clearTimeout(timer);
+				event.preventDefault();
 				timer = setTimeout(function(){button(this, event)}, 2000);
 			});
 			$('.item-left .bubble').on('touchend', function(event) {
+				event.preventDefault();
 				clearTimeout(timer);
 			});
 			$('.item-left .bubble').on('touchcancel', function(event) {
+				event.preventDefault();
 				clearTimeout(timer);
 			});
 			{% endif %}
+			$('.again').on('click', function(){
+				loading = setTimeout(function(){$('.loading').css('display', 'flex')}, 100)
+				socket.emit('resend', {
+					class: class1,
+					uuid: $(this).parent().children('.bubble').attr('id')
+				});
+			})
 		}
 		$('textarea').on('keydown', function(event) {
 			if (event.key === "Enter") {
@@ -220,8 +265,22 @@
 			if (data.class1 !== class1) return;
 			$('.content')[0].innerHTML += '<span class="time">' + data.time + '</span>'
 			let item = document.createElement('div');
-			item.className = 'item item-right';
-			item.innerHTML = `<span class="read">${data.isread}</span><div class="bubble" id="${data.uuid}">${data.content}</div><div class="avatar">${data.name}</div>`;
+			if (data.name == '{{t_name}}'){
+				item.className = 'item item-right';
+				item.innerHTML = `<span class="read">${data.isread}</span>`
+				if (data.state != ''){
+					item.innerHTML += `<span class="state">${data.state}</span><button class="again">!</button>`
+				}
+				item.innerHTML += `<div class="bubble" id="${data.uuid}">${data.content}</div><div class="avatar">${data.name}</div>`;
+			}
+			else{
+				item.className = 'item item-left';
+				item.innerHTML = `<div class="bubble" id="${data.uuid}">${data.content}</div><div class="avatar">${data.name}</div>`
+				if (data.state != ''){
+					item.innerHTML += `<button class="again">!</button><span class="state">${data.state}</span>`
+				}
+				item.innerHTML += `<span class="read">${data.isread}</span>`;
+			}
 			$('.content')[0].appendChild(item);
 			$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
 			back()
@@ -242,6 +301,14 @@
 		socket.on('update', (data) => {
 			if (data.class1 !== class1) return;
 			$('#'+data.uuid).parent().children('.read')[0].innerHTML = data.isread
+		});
+		socket.on('online', (data) => {
+			if (data.class !== class1) return;
+			if ($('.outline').length) $('.outline')[0].outerHTML += ""
+		});
+		socket.on('outline', (data) => {
+			if (data.class !== class1) return;
+			if (!$('.outline').length) $('.big_title')[0].innerHTML += "<span class='outline' style='color: red'>（未连接）</span>"
 		});
 		$('a').on('click', function(){
 			window.parent.postMessage({type: 'close'}, '*');

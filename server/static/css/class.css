@@ -28,8 +28,8 @@ a:hover {
 	margin: 0;
 }
 body{
-	height: 100vh;
-	width: 100vw;
+	height: 100dvh;
+	width: 100dvw;
 	display: flex;
 	flex-direction: column;
 }
@@ -93,6 +93,7 @@ body{
 	display: flex;
 	width: 100%;
 	align-items: flex-end;
+	flex-wrap: wrap;
 }
 .item.item-right{
 	justify-content: flex-end;
@@ -159,9 +160,27 @@ textarea{
 	position: absolute;
 	cursor: pointer;
 }
-.read{
+.read, .state{
 	color: gray;
 	margin: 0 5px;
+}
+.state{
+	color: red;
+}
+.again {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background-color: red;
+    border-radius: 100px;
+    color: white;
+    margin-left: -5px;
+    margin-right: 5px;
+	cursor: pointer;
+}
+.item-left .again{
+    margin-left: 5px;
+    margin-right: -5px;
 }
 .time {
 	position: relative;

@@ -37,7 +37,7 @@ body{
 /* 三栏布局设置 */
 .container {
 	display: flex;
-	height: 100vh;
+	height: 100dvh;
 }
 
 /* 编辑器区域 */
@@ -81,4 +81,7 @@ body{
 }
 video{
 	width: 100%;
+}
+th,td{
+	padding: 5px;
 }

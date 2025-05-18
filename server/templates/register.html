@@ -7,8 +7,8 @@
 	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
 </head>
 <body>
-	<a class='download_button' href="../static/file/MessageIn-Display Setup 1.6.5外网版.exe"><img src="../static/images/download.png" height="23" width="23">外网版</a>
-	<a class='download_button' href="../static/file/MessageIn-Display Setup 1.6.5内网版.exe"><img src="../static/images/download.png" height="23" width="23">内网版</a>
+	<a class='download_button' href="../static/file/MessageIn-Display Setup 1.6.7外网版.exe"><img src="../static/images/download.png" height="23" width="23">外网版</a>
+	<a class='download_button' href="../static/file/MessageIn-Display Setup 1.6.7内网版.exe"><img src="../static/images/download.png" height="23" width="23">内网版</a>
 	<p class="big_title">北大附中北医分校消息管理系统</p>
 	<hr>
 	<form action="/handle" method="post">
@@ -61,10 +61,13 @@
 		</select>
 		<div class="add">十</div>
 		<div class="choose"></div>
+		注册代表同意并遵守<a href="/help?name=04_教师使用守则.md" style="border: none; color: blue !important; background-color: white; margin: 3px 0;" target="_blank">教师使用守则</a>
+		<br>
 		<input type="hidden" name="type" value="注册">
 		<input type="submit" value="注册">
 		<div style="display: none;" class="hidden"></div>
 	</form>
+	<a href="/help?name=01_功能文档.md" class="help" target="_blank">?</a>
 	{% if t_alert == '1' %}
 	<script>alert('请选择班级（选择后点击加号）')</script>
 	{% elif t_alert == '2' %}

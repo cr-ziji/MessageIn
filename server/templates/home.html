@@ -22,8 +22,7 @@
 	<div class="main">
 		<div class="content">
 			{% for i in t_range %}
-			{% if i%2 == 1 %}
-			<div class="class" id="{{t_class[i][0]}}" style="background-color: white;">
+			<div class="class {% if t_class[i][0] not in t_user %}outline{% endif %}" id="{{t_class[i][0]}}" {% if i%2 == 1 %}style="background-color: white;"{% endif %}>
 				{{t_class[i][0]}}
 				<div class="{{t_class[i][1]}}">
 					<span>{{t_class[i][2]}}</span>
@@ -32,17 +31,6 @@
 					<span>{{t_class[i][5]}}</span>
 				</div>
 			</div>
-			{% else %}
-			<div class="class" id="{{t_class[i][0]}}">
-				{{t_class[i][0]}}
-				<div class="{{t_class[i][1]}}">
-					<span>{{t_class[i][2]}}</span>
-					<br>
-					<span>{{t_class[i][3]}}</span><span>{{t_class[i][4]}}</span>
-					<span>{{t_class[i][5]}}</span>
-				</div>
-			</div>
-			{% endif %}
 			{% endfor %}
 		</div>
 		<iframe src="/none"></iframe>
@@ -62,6 +50,7 @@
 			if (event.data.type === 'close' && flag) {
 				$('iframe').css('display', 'none')
 			}
+			$('iframe').attr('src', '/none')
 		});
 		// 横屏时执行的函数
 		function handleLandscape() {
@@ -81,7 +70,7 @@
 		// 竖屏时执行的函数
 		function handlePortrait() {
 			flag = 1
-			$('iframe').css('display', 'none')
+			if ($('iframe').attr('src') == '/none') $('iframe').css('display', 'none')
 			$(".class").off("click");
 			$('.class').on('click', function(){
 				s = $(this).attr('id')
@@ -175,9 +164,14 @@
 			}
 		});
 		socket.on('update', (data) => {
-			if ($('#'+data.class1+' .'+data.uuid+' span:nth-child(4)').length) $('#'+data.class1+' .'+data.uuid+' span:nth-child(4)').html(data.isread)
+			if ($('#'+data.class1+' .'+data.uuid+' span:nth-child(5)').length) $('#'+data.class1+' .'+data.uuid+' span:nth-child(5)').html(long(data.isread, 10))
 		});
-		
+		socket.on('online', (data) => {
+			$('#'+data.class).removeClass('outline')
+		});
+		socket.on('outline', (data) => {
+			$('#'+data.class).addClass('outline')
+		});
 		function long(str, l){
 			if (str.length > l) str = str.substr(0, l) + '...'
 			return str

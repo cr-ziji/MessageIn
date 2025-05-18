@@ -21,7 +21,9 @@ classlist = {
     '高二': ['一班', '二班', '三班', '四班'],
     '高三': ['一班', '二班', '三班', '四班']
 }
-video = {'01_功能文档.md': '', '02_学生端帮助文档.md': '学生端帮助视频.mp4', '03_教师端帮助文档.md': '教师端帮助视频.mp4'}
+video = {'01_功能文档.md': '', '02_学生端帮助文档.md': '学生端帮助视频.mp4', '03_教师端帮助文档.md': '教师端帮助视频.mp4', '04_教师使用守则.md': ''}
+user_ip = {}
+user_list = ['初一通知', '初二通知', '初三通知', '高一通知', '高二通知', '高三通知', '全校通知']
 
 
 @app.route('/login')
@@ -217,7 +219,8 @@ def home():
     return render_template('home.html',
                            t_name=session['用户名'],
                            t_class=l,
-                           t_range=range(len(l)))
+                           t_range=range(len(l)),
+                           t_user=user_list)
 
 
 @app.route('/home1')
@@ -240,7 +243,8 @@ def class1():
     return render_template('class.html',
                            t_data=data,
                            t_name=session['用户名'],
-                           t_class=request.args['class'])
+                           t_class=request.args['class'],
+                           t_user=user_list)
 
 
 @app.route('/none')
@@ -249,11 +253,32 @@ def none():
 
 @socketio.on('connect')
 def handle_connect():
+    if request.remote_addr in user_ip:
+        class1 = user_ip[request.remote_addr]
+        if class1 not in user_list:
+            user_list.append(class1)
+        emit('online', {'class': class1}, broadcast=True)
     print('客户端已连接')
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    if request.remote_addr in user_ip:
+        class1 = user_ip[request.remote_addr]
+        if class1 in user_list:
+            user_list.remove(class1)
+        emit('outline', {'class': class1}, broadcast=True)
     print('客户端断开连接')
+
+@socketio.on('init')
+def init(data):
+    class1 = data['class']
+    byte_values = [class1[k] for k in class1]
+    bytes_data = bytes(byte_values)
+    class1 = bytes_data.decode()
+    user_ip[request.remote_addr] = class1
+    if class1 not in user_list:
+        user_list.append(class1)
+    emit('online', {'class': class1}, broadcast=True)
 
 @socketio.on('send')
 def send(data):
@@ -263,7 +288,7 @@ def send(data):
     content = data['content']
     time1 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     if '通知' not in class1:
-        data_send(content, class1,uuid1,time1, '')
+        data_send(content, class1, uuid1, time1, '')
     elif class1 != '全校通知':
         isread += ' : '
         l = classlist[class1[0:2]]
@@ -274,15 +299,18 @@ def send(data):
             'content': data['content'],
             'time': time1,
             'isread': [],
-            'type': ''
+            'type': '',
+            'state': []
         })
         for i in l:
-            data_send(content, class1[0:2]+i, uuid1, time1, class1)
+            if not data_send(content, class1[0:2]+i, uuid1, time1, class1):
+                data1['message'][-1]['state'].append(class1[0:2] + i)
             data1['message'][-1]['isread'].append(class1[0:2]+i)
             isread += class1[0:2]+i + ' '
         db.data.update_one({'class': class1}, {'$set': data1})
         data1['message'][-1]['class1'] = class1
         data1['message'][-1]['isread'] = data_isread(data1['message'][-1]['isread'])
+        data1['message'][-1]['state'] = data_state(data1['message'][-1]['state'])
         emit('new', data1['message'][-1], broadcast=True)
     else:
         isread += ' : '
@@ -293,17 +321,52 @@ def send(data):
             'content': data['content'],
             'time': time1,
             'isread': [],
-            'type': ''
+            'type': '',
+            'state': []
         })
         for i in classlist:
             for j in classlist[i]:
-                data_send(content, i+j, uuid1, time1, class1)
+                if not data_send(content, i+j, uuid1, time1, class1):
+                    data1['message'][-1]['state'].append(i+j)
                 data1['message'][-1]['isread'].append(i+j)
                 isread += i+j + ' '
         db.data.update_one({'class': data['class']}, {'$set': data1})
         data1['message'][-1]['class1'] = class1
         data1['message'][-1]['isread'] = data_isread(data1['message'][-1]['isread'])
+        data1['message'][-1]['state'] = data_state(data1['message'][-1]['state'])
         emit('new', data1['message'][-1], broadcast=True)
+
+@socketio.on('resend')
+def resend(data):
+    class1 = data['class']
+    uuid1 = data['uuid']
+    time1 = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    data1 = db.data.find_one({'class': class1})
+    for i in data1['message']:
+        if i['uuid'] == uuid1:
+            if i['state'] == False:
+                data_delete(class1, uuid1)
+                data_send(i['content'], class1, uuid1, time1, '')
+            else:
+                data1['message'].remove(i)
+                data_delete(class1, uuid1)
+                l = i['state']
+                for j in l:
+                    data2 = db.data.find_one({'class': j})
+                    for k in data2['message']:
+                        if k['uuid'] == uuid1:
+                            data_delete(j, uuid1)
+                            if data_send(k['content'], j, uuid1, time1, class1):
+                                i['state'].remove(j)
+                            break
+                i['time'] = time1
+                data1['message'].append(i)
+                db.data.update_one({'class': data['class']}, {'$set': data1})
+                i['class1'] = class1
+                i['isread'] = data_isread(data1['message'][-1]['isread'])
+                i['state'] = data_state(data1['message'][-1]['state'])
+                emit('new', i, broadcast=True)
+            break
 
 @socketio.on('back_data')
 def back(data):
@@ -369,12 +432,15 @@ def data_send(content, class1, uuid1, time1, type1):
         'content': content,
         'time': time1,
         'isread': False,
-        'type': type1
+        'type': type1,
+        'state': class1 in user_list
     })
     db.data.update_one({'class': class1}, {'$set': data1})
     data1['message'][-1]['class1'] = class1
-    data1['message'][-1]['isread'] = '未读'
+    data1['message'][-1]['isread'] = data_isread(data1['message'][-1]['isread'])
+    data1['message'][-1]['state'] = data_state(data1['message'][-1]['state'])
     emit('new', data1['message'][-1], broadcast=True)
+    return class1 in user_list
 
 def data_back(class1, uuid1):
     data1 = db.data.find_one({'class': class1})
@@ -407,6 +473,7 @@ def data_delete(class1, uuid1):
         l1.append(data['message'][-1]['name'] + ': ')
         l1.append(long(data['message'][-1]['content'], 8-len(data['message'][-1]['name'])))
         l1.append(long(data_isread(data['message'][-1]['isread']), 10))
+    emit('back', {'uuid': uuid1, 'class1': class1}, broadcast=True)
     emit('delete', {'uuid': uuid1, 'class1': class1, 'last': l1}, broadcast=True)
 
 def data_isread(l):
@@ -417,6 +484,14 @@ def data_isread(l):
     else:
         return '未读 : ' + ' '.join(l)
 
+def data_state(l):
+    if l == [] or l == True:
+        return ''
+    elif l == False:
+        return '未发送成功'
+    else:
+        return '未发送成功 : ' + ' '.join(l)
+
 def long(t, n):
     if len(t) > n:
         t = t[:n]+'...'
@@ -424,7 +499,7 @@ def long(t, n):
 
 @app.errorhandler(404)
 def error_date_404(error):
-    return redirect('/login')
+    return redirect('/home')
 
 # @app.errorhandler(Exception)
 # def error_date_500(error):

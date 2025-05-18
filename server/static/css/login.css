@@ -2,7 +2,7 @@ body{
 	background: url("../images/1.jpg") repeat-x;
 	background-size: cover;
 	background-position: center;
-	height: calc(100vh - 16px);
+	height: calc(100dvh - 16px);
 }
 a{
 	display: inline-block;

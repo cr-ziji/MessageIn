@@ -159,6 +159,9 @@ class DanmakuSystem {
     if (status === 'error') {
       this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now());
     }
+    if (status === 'reconnect') {
+      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now());
+    }
   }
 
   showVerificationDialog() {
@@ -253,6 +256,11 @@ class DanmakuSystem {
           class: encoder.encode(this.classParam)
         });
         this.updateStatus('已连接', 'success');
+      });
+
+      this.socket.on('reconnect', (attemptNumber) => {
+        console.log('WebSocket重连成功');
+        this.updateStatus('重连成功', 'reconnect');
       });
 
       this.socket.on('new', (data) => {
@@ -525,20 +533,20 @@ class DanmakuSystem {
       }
 
       if (this.isOverlayMode) {
-        danmaku.style.pointerEvents = 'auto';
+        danmaku.style.pointerEvents = 'auto';        
+        danmakuArea.addEventListener('mouseenter', (e) => {
+          e.stopPropagation();
+          if (window.electronAPI) {
+            window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
+          }
+          document.body.style.pointerEvents = 'none';
+        });
         danmaku.addEventListener('mouseenter', (e) => {
           e.stopPropagation();
           if (window.electronAPI) {
             window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
           }
           document.body.style.pointerEvents = 'auto';
-        });
-        danmaku.addEventListener('mouseleave', (e) => {
-          e.stopPropagation();
-          if (window.electronAPI) {
-            window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
-          }
-          document.body.style.pointerEvents = 'none';
         });
       }
 

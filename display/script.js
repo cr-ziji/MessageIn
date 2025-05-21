@@ -19,6 +19,7 @@ class DanmakuSystem {
     this.processedMessages = new Set();
     this.socketUrl = 'http://www.cyupeng.com';
     this.socket = null;
+    this.timer = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
@@ -259,6 +260,7 @@ class DanmakuSystem {
       });
 
       this.socket.on('reconnect', (attemptNumber) => {
+        clearTimeout(this.timer);
         console.log('WebSocket重连成功');
         this.updateStatus('重连成功', 'reconnect');
       });
@@ -319,18 +321,24 @@ class DanmakuSystem {
       });
 
       this.socket.on('disconnect', () => {
-        console.log('WebSocket连接断开');
-        this.updateStatus('连接已断开', 'error');
+        this.timer = setTimeout(() => {    
+          console.log('WebSocket连接断开');
+          this.updateStatus('连接已断开', 'error');
+        }, 1000);
       });
 
       this.socket.on('error', (error) => {
-        console.error('WebSocket错误:', error);
-        this.updateStatus('连接错误', 'error');
+        this.timer = setTimeout(() => {    
+          console.error('WebSocket错误:', error);
+          this.updateStatus('连接错误', 'error');
+        }, 1000);
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('WebSocket连接错误:', error);
-        this.updateStatus('连接错误', 'error');
+        this.timer = setTimeout(() => {    
+           console.error('WebSocket连接错误:', error);
+           this.updateStatus('连接错误', 'error');
+          }, 1000);
       });
 
     } catch (error) {
@@ -533,20 +541,18 @@ class DanmakuSystem {
       }
 
       if (this.isOverlayMode) {
-        danmaku.style.pointerEvents = 'auto';        
-        danmakuArea.addEventListener('mouseenter', (e) => {
+        this.danmakuArea.style.pointerEvents = 'auto';        
+        danmaku.addEventListener('mouseleave', (e) => {
           e.stopPropagation();
           if (window.electronAPI) {
-            window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
+             window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
           }
-          document.body.style.pointerEvents = 'none';
         });
         danmaku.addEventListener('mouseenter', (e) => {
           e.stopPropagation();
           if (window.electronAPI) {
-            window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
+             window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
           }
-          document.body.style.pointerEvents = 'auto';
         });
       }
 
@@ -611,6 +617,9 @@ class DanmakuSystem {
           const uuid = danmaku.id;
           let playCount = parseInt(danmaku.getAttribute('data-play-count') || '0');
 
+          if (window.electronAPI) {
+            window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
+          }
           if (danmaku.classList.contains('ok') || !uuid) {
             danmaku.remove();
             return;
@@ -618,7 +627,6 @@ class DanmakuSystem {
 
           playCount++;
           if (playCount < this.cacheDuration) {
-            // 重新渲染弹幕，playCount递增
             this.addDanmaku(this.messageCache.get(uuid)?.content || danmaku.textContent, uuid, playCount);
           } else {
             if (uuid && this.messageCache.has(uuid)) {

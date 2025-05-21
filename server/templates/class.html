@@ -162,31 +162,31 @@
 			$('#textarea')[0].value = '';
 			$('#textarea')[0].focus();
 		}
-		function button(div, event){
+		function button(div, x, y){
 			if ($(div).parent().children('.state').length){
 				id = $(div).attr('id')
 				$('.delete').css('display', 'block')
-				$('.delete').css('left', event.clientX)
-				$('.delete').css('top', event.clientY)
+				$('.delete').css('left', x)
+				$('.delete').css('top', y)
 			}
 			else{
 				if ($(div)[0].innerHTML != '此消息已撤回'){
 					$('.back').css('display', 'block')
-					$('.back').css('left', event.clientX)
-					$('.back').css('top', event.clientY)
+					$('.back').css('left', x)
+					$('.back').css('top', y)
 					id = $(div).attr('id')
 					{% if t_name == '管理员' %}
 					$('.delete').css('display', 'block')
-					$('.delete').css('left', event.clientX)
-					$('.delete').css('top', event.clientY+20)
+					$('.delete').css('left', x)
+					$('.delete').css('top', y+20)
 					{% endif %}
 				}
 				else{
 					{% if t_name == '管理员' %}
 					id = $(div).attr('id')
 					$('.delete').css('display', 'block')
-					$('.delete').css('left', event.clientX)
-					$('.delete').css('top', event.clientY)
+					$('.delete').css('left', x)
+					$('.delete').css('top', y)
 					{% endif %}
 				}
 			}
@@ -194,11 +194,13 @@
 		function back(){
 			$('.item-right .bubble').on('contextmenu', function(event) {
 				event.preventDefault();
-				button(this, event)
+				button(this, event.clientX, event.clientY)
 			});
 			$('.item-right .bubble').on('touchstart', function(event) {
 				event.preventDefault();
-				timer = setTimeout(function(){button(this, event)}, 1000);
+				div = this
+				var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
+				timer = setTimeout(function(){button(div, touch.pageX, touch.pageY)}, 500);
 			});
 			$('.item-right .bubble').on('touchend', function(event) {
 				event.preventDefault();
@@ -211,11 +213,13 @@
 			{% if t_name == '管理员' %}
 			$('.item-left .bubble').on('contextmenu', function(event) {
 				event.preventDefault();
-				button(this, event)
+				button(this, event.clientX, event.clientY)
 			});
 			$('.item-left .bubble').on('touchstart', function(event) {
 				event.preventDefault();
-				timer = setTimeout(function(){button(this, event)}, 2000);
+				div = this
+				var touch = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0];
+				timer = setTimeout(function(){button(div, touch.pageX, touch.pageY)}, 500);
 			});
 			$('.item-left .bubble').on('touchend', function(event) {
 				event.preventDefault();

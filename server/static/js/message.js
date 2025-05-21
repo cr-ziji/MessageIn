@@ -4,6 +4,13 @@ function send(){
         alert('请输入内容');
         return ;
     }
+    var atext =text.trim();
+    if(atext.length <= 0){
+        alert('不能输入全是空格')
+        let x = document.getElementById("textarea");
+        x.value = "";
+        return ;
+    }
     let item = document.createElement('div');
     item.className = 'item item-right';
     item.innerHTML = `<div class="bubble bubble-left">${text}</div><div class="avatar"><img sr></div>`;

@@ -501,9 +501,9 @@ def long(t, n):
 def error_date_404(error):
     return redirect('/home')
 
-# @app.errorhandler(Exception)
-# def error_date_500(error):
-#     return redirect('/login')
+@app.errorhandler(Exception)
+def error_date_500(error):
+    return redirect('/login')
 
 
 if __name__ == '__main__':

@@ -253,16 +253,17 @@ class DanmakuSystem {
       this.socket.on('connect', () => {
         console.log('WebSocket连接成功');
         const encoder = new TextEncoder();
-        this.socket.emit('init',{
+        this.socket.emit('init', {
           class: encoder.encode(this.classParam)
         });
         this.updateStatus('已连接', 'success');
       });
 
       this.socket.on('reconnect', (attemptNumber) => {
-        clearTimeout(this.timer);
         console.log('WebSocket重连成功');
-        this.updateStatus('重连成功', 'reconnect');
+        if (this.timer != null) this.updateStatus('重连成功', 'reconnect');
+        clearTimeout(this.timer);
+        this.timer = null;
       });
 
       this.socket.on('new', (data) => {
@@ -321,24 +322,24 @@ class DanmakuSystem {
       });
 
       this.socket.on('disconnect', () => {
-        this.timer = setTimeout(() => {    
+        this.timer = setTimeout(() => {
           console.log('WebSocket连接断开');
           this.updateStatus('连接已断开', 'error');
-        }, 1000);
+        }, 3000);
       });
 
       this.socket.on('error', (error) => {
-        this.timer = setTimeout(() => {    
+        this.timer = setTimeout(() => {
           console.error('WebSocket错误:', error);
           this.updateStatus('连接错误', 'error');
-        }, 1000);
+        }, 3000);
       });
 
       this.socket.on('connect_error', (error) => {
-        this.timer = setTimeout(() => {    
-           console.error('WebSocket连接错误:', error);
-           this.updateStatus('连接错误', 'error');
-          }, 1000);
+        this.timer = setTimeout(() => {
+          console.error('WebSocket连接错误:', error);
+          this.updateStatus('连接错误', 'error');
+        }, 3000);
       });
 
     } catch (error) {
@@ -541,17 +542,17 @@ class DanmakuSystem {
       }
 
       if (this.isOverlayMode) {
-        this.danmakuArea.style.pointerEvents = 'auto';        
+        this.danmakuArea.style.pointerEvents = 'auto';
         danmaku.addEventListener('mouseleave', (e) => {
           e.stopPropagation();
           if (window.electronAPI) {
-             window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
+            window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
           }
         });
         danmaku.addEventListener('mouseenter', (e) => {
           e.stopPropagation();
           if (window.electronAPI) {
-             window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
+            window.electronAPI.handleDanmakuMouseEvent('mouseover', true);
           }
         });
       }
@@ -807,4 +808,3 @@ if (typeof window.electronAPI === 'undefined' && isElectron()) {
     setApiUrl: (url) => console.log('需要实现 setApiUrl:', url)
   };
 }
- 

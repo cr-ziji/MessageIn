@@ -19,7 +19,7 @@ class DanmakuSystem {
     this.processedMessages = new Set();
     this.socketUrl = 'http://www.cyupeng.com';
     this.socket = null;
-    this.timer = [];
+    this.timer = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
@@ -158,10 +158,10 @@ class DanmakuSystem {
       document.getElementById('debugStatus').textContent = text;
     }
     if (status === 'error') {
-      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now());
+      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now(), 3);
     }
     if (status === 'reconnect') {
-      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now());
+      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now(), 3);
     }
   }
 
@@ -261,8 +261,9 @@ class DanmakuSystem {
 
       this.socket.on('reconnect', (attemptNumber) => {
         console.log('WebSocket重连成功');
-        if (this.timer.length != 0) this.updateStatus('重连成功', 'reconnect');
-        for (i in this.timer) clearTimeout(this.timer[i]);
+        if (this.timer != null) this.updateStatus('重连成功', 'reconnect');
+        clearTimeout(this.timer);
+        this.timer = null;
       });
 
       this.socket.on('new', (data) => {
@@ -321,25 +322,25 @@ class DanmakuSystem {
       });
 
       this.socket.on('disconnect', () => {
-        this.timer.push(setTimeout(() => {    
+        this.timer = setTimeout(() => {    
           console.log('WebSocket连接断开');
           this.updateStatus('连接已断开', 'error');
         }, 3000);
-      }));
+      });
 
       this.socket.on('error', (error) => {
-        this.timer.push(setTimeout(() => {    
+        this.timer = setTimeout(() => {    
           console.error('WebSocket错误:', error);
           this.updateStatus('连接错误', 'error');
         }, 3000);
-      }));
+      });
 
       this.socket.on('connect_error', (error) => {
-        this.timer.push(setTimeout(() => {    
+        this.timer = setTimeout(() => {    
            console.error('WebSocket连接错误:', error);
            this.updateStatus('连接错误', 'error');
           }, 3000);
-      }));
+      });
 
     } catch (error) {
       console.error('启动连接时发生错误:', error);
@@ -648,7 +649,7 @@ class DanmakuSystem {
 
     const randomIndex = Math.floor(Math.random() * testMessages.length);
     this.addDanmaku(testMessages[randomIndex]);
-    this.messageCount++;
+    // this.messageCount++;
     this.updateDebugInfo();
   }
 
@@ -807,3 +808,4 @@ if (typeof window.electronAPI === 'undefined' && isElectron()) {
     setApiUrl: (url) => console.log('需要实现 setApiUrl:', url)
   };
 }
+ 

@@ -158,10 +158,10 @@ class DanmakuSystem {
       document.getElementById('debugStatus').textContent = text;
     }
     if (status === 'error') {
-      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now());
+      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now(), 3);
     }
     if (status === 'reconnect') {
-      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now());
+      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now(), 3);
     }
   }
 
@@ -336,10 +336,10 @@ class DanmakuSystem {
       });
 
       this.socket.on('connect_error', (error) => {
-        this.timer = setTimeout(() => {
-          console.error('WebSocket连接错误:', error);
-          this.updateStatus('连接错误', 'error');
-        }, 3000);
+        this.timer = setTimeout(() => {    
+           console.error('WebSocket连接错误:', error);
+           this.updateStatus('连接错误', 'error');
+          }, 3000);
       });
 
     } catch (error) {
@@ -649,7 +649,7 @@ class DanmakuSystem {
 
     const randomIndex = Math.floor(Math.random() * testMessages.length);
     this.addDanmaku(testMessages[randomIndex]);
-    this.messageCount++;
+    // this.messageCount++;
     this.updateDebugInfo();
   }
 
@@ -808,3 +808,4 @@ if (typeof window.electronAPI === 'undefined' && isElectron()) {
     setApiUrl: (url) => console.log('需要实现 setApiUrl:', url)
   };
 }
+ 

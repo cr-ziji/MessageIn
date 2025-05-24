@@ -158,10 +158,10 @@ class DanmakuSystem {
       document.getElementById('debugStatus').textContent = text;
     }
     if (status === 'error') {
-      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now(), 3);
+      this.addDanmaku('连接状态：' + text);
     }
     if (status === 'reconnect') {
-      this.addDanmaku('连接状态：' + text, 'status-' + status + '-' + Date.now(), 3);
+      this.addDanmaku('连接状态：' + text);
     }
   }
 

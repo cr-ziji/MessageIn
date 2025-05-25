@@ -1,6 +1,6 @@
 {
   "name": "MessageIn-Display",
-  "version": "1.6.9",
+  "version": "1.7.0",
   "description": "MessageIn显示端 - 实时消息展示系统",
   "author": "CyrilGuo",
   "main": "electron-danmaku.js",
@@ -10,8 +10,19 @@
     "dist": "electron-builder"
   },
   "license": "GNUV3",
+  "dependencies": {
+    "electron-updater": "^6.1.8"
+  },
   "devDependencies": {
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "http://www.cyupeng.com/download"
+      }
+    ]
   }
 } 

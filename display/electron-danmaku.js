@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, screen, Tray, Menu } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const url = require('url');
 
@@ -259,7 +260,16 @@ if (!gotTheLock) {
     }
   });
 
-  app.whenReady().then(() => {
+  ipcMain.on('disable-dev-tools', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.closeDevTools();
+    }
+    if (danmakuWindow && !danmakuWindow.isDestroyed()) {
+      danmakuWindow.webContents.closeDevTools();
+    }
+  });
+
+  app.on('ready', () => {
     setAutoLaunch(true);
 
     createWindow();
@@ -267,6 +277,26 @@ if (!gotTheLock) {
     if (mainWindow) {
       mainWindow.hide();
     }
+    autoUpdater.disableWebInstaller = false
+    autoUpdater.autoDownload = false //这个必须写成false，写成true时，会报没权限更新
+    autoUpdater.checkForUpdatesAndNotify();
+  });
+
+  autoUpdater.on('update-available', () => {
+    console.log('发现新版本，开始下载...');
+  });
+
+  autoUpdater.on("update-not-available", () => {
+    console.log('没有可用更新');
+  });
+
+  autoUpdater.on("error", (error) => {
+    console.log('检查更新失败', error);
+  });
+
+  autoUpdater.on('update-downloaded', () => {
+    console.log('新版本下载完成，将退出并安装。');
+    autoUpdater.quitAndInstall();
   });
 
   app.on('window-all-closed', () => {

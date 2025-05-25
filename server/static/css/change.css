@@ -1,3 +1,6 @@
+body{
+	overflow-x: hidden;
+}
 a{
 	display: inline-block;
 	color: gray;
@@ -47,6 +50,7 @@ input[type='submit'], .logoff{
 	height: 25px;
 	cursor: pointer;
 	line-height: 25px;
+	font-weight: 400;
 }
 .small_title{
 	text-align: center;
@@ -77,6 +81,7 @@ input[type='submit'], .logoff{
 	border-radius: 5px;
 	padding: 2px;
 	cursor: pointer;
+	color: black;
 }
 .choose div{
 	border: solid;
@@ -85,4 +90,11 @@ input[type='submit'], .logoff{
 	padding: 1px 2px;
 	margin: 2px;
 	padding-left: 4px;
+}
+select {
+    background-color: transparent;
+    color: black;
+    border: solid;
+    border-color: light-dark(#767676, #858585);
+    border-width: 1px;
 }

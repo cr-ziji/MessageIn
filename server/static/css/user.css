@@ -1,4 +1,7 @@
 body{
+	overflow: hidden;
+}
+body{
 	margin: 0;
 }
 .delete{
@@ -34,6 +37,7 @@ input[type='submit']{
 	height: 30px;
 	line-height: 30px;
 	padding: 0;
+	font-weight: 400;
 }
 input[type='submit']:hover {
 	background-color: #00d2ff;
@@ -50,6 +54,7 @@ form{
 	justify-content: space-evenly;
 	height: 64px;
 	overflow: auto;
+	border-width: 2px;
 }
 .add {
 	display: inline-block;
@@ -78,6 +83,7 @@ form{
 	border-radius: 5px;
 	padding: 2px;
 	cursor: pointer;
+	color: black;
 }
 .choose div{
 	border: solid;
@@ -90,6 +96,10 @@ form{
 input[type='text'], input[type='tel']{
 	width: 100px;
 }
-.item{
-	/* margin-left: 60px; */
+select {
+    background-color: white;
+    color: black;
+    border: solid;
+    border-color: light-dark(#767676, #858585);
+    border-width: 1px;
 }

@@ -1,4 +1,7 @@
 body{
+	overflow: hidden;
+}
+body{
 	background-color: white;
 }
 a{
@@ -151,8 +154,8 @@ textarea{
 	border-radius: 4px;
 	float: right;
 	cursor: pointer;
+	color: black;
 }
-
 .avatar{
 	line-height: 40px;
 }

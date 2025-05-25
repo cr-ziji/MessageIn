@@ -7,7 +7,8 @@
 	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
 </head>
 <body>
-	<script>if (prompt('请输入密码') != '{{t_password}}') location.href = '/home';</script>
+	<script>let password = prompt('请输入密码')</script>
+	<script>if (password != '{{t_password}}') location.href = '/home';</script>
 	<a href="home"><</a>
 	<p class="big_title">北大附中北医分校信息管理系统</p>
 	<hr>

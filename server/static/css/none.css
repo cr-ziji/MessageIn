@@ -1,4 +1,7 @@
 body{
+	overflow: hidden;
+}
+body{
 	height: calc(100dvh - 16px);
 }
 img{

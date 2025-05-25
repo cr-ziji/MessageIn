@@ -1,4 +1,7 @@
 body{
+	overflow: hidden;
+}
+body{
 	background: url("../images/1.jpg") repeat-x;
 	background-size: cover;
 	background-position: center;
@@ -56,6 +59,7 @@ input[type='submit']{
 	width: 150px;
 	height: 25px;
 	cursor: pointer;
+	font-weight: 400;
 }
 .choose{
 	min-height: 32px;
@@ -81,6 +85,7 @@ input[type='submit']{
 	border-radius: 5px;
 	padding: 2px;
 	cursor: pointer;
+	color: black;
 }
 .choose div{
 	border: solid;
@@ -99,4 +104,11 @@ input[type='submit']{
 	font-size: 25px;
 	line-height: 30px;
 	border-radius: 100px;
+}
+select {
+    background-color: transparent;
+    color: black;
+    border: solid;
+    border-color: light-dark(#767676, #858585);
+    border-width: 1px;
 }

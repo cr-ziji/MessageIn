@@ -1,3 +1,6 @@
+body{
+	overflow-x: hidden;
+}
 a{
 	display: inline-block;
 	color: gray;

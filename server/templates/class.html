@@ -122,25 +122,25 @@
 		let loading;
 		
 		
-		// 断开连接事件
-		socket.on('disconnect', (reason) => {
-			alert('连接断开，可等待自动重连或手动刷新页面')
-		});
-		// 重连尝试事件
-		socket.on('reconnect_attempt', (attemptNumber) => {
-			timer1 = setTimeout(function(){$('.loading1').css('display', 'flex')}, 100)
-		});
-		// 重连成功事件
-		socket.on('reconnect', (attemptNumber) => {
-			clearTimeout(timer1)
-			$('.loading1').css('display', 'none')
-		});
-		// 错误处理
-		socket.on('connect_error', (error) => {
-			alert('无法连接')
-			clearTimeout(timer1)
-			$('.loading1').css('display', 'none')
-		});
+		// // 断开连接事件
+		// socket.on('disconnect', (reason) => {
+		// 	alert('连接断开，可等待自动重连或手动刷新页面')
+		// });
+		// // 重连尝试事件
+		// socket.on('reconnect_attempt', (attemptNumber) => {
+		// 	timer1 = setTimeout(function(){$('.loading1').css('display', 'flex')}, 100)
+		// });
+		// // 重连成功事件
+		// socket.on('reconnect', (attemptNumber) => {
+		// 	clearTimeout(timer1)
+		// 	$('.loading1').css('display', 'none')
+		// });
+		// // 错误处理
+		// socket.on('connect_error', (error) => {
+		// 	alert('无法连接')
+		// 	clearTimeout(timer1)
+		// 	$('.loading1').css('display', 'none')
+		// });
 		$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
 		function send(){
 			{% if t_name == '访客' %}
@@ -148,7 +148,7 @@
 			return 
 			{% endif %}
 			let textMsg = $('#textarea').val();
-			if(!textMsg){
+			if(!textMsg.trim()){
 				$('#textarea')[0].innerHTML = '';
 				$('#textarea')[0].focus();
 				alert('请输入内容');

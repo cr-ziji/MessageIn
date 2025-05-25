@@ -1,4 +1,7 @@
 body{
+	overflow: hidden;
+}
+body{
 	height: calc(100dvh - 16px);
 }
 a{
@@ -40,6 +43,7 @@ a:hover {
 	background-color: #cfe5ec;
 	cursor: pointer;
 	width: calc(100% - 24px);
+	border-width: 2px;
 }
 .class div{
 	display: inline-block;

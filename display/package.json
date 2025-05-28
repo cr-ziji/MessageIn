@@ -20,8 +20,9 @@
   "build": {
     "publish": [
       {
-        "provider": "generic",
-        "url": "http://www.cyupeng.com/download"
+        "provider": "github",
+        "owner": "cyrilguocode",
+        "repo": "MessageIn"
       }
     ]
   }

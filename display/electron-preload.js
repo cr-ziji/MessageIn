@@ -47,5 +47,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   handleDanmakuMouseEvent: (type, isOverDanmaku) => {
     ipcRenderer.send('danmaku-mouse-event', { type, isOverDanmaku });
+  },
+
+  onUpdateStatus: (callback) => {
+    ipcRenderer.removeAllListeners('update-status');
+    ipcRenderer.on('update-status', (event, status) => {
+      callback(status);
+    });
+  },
+
+  toggleDevTools: () => {
+    ipcRenderer.send('toggle-dev-tools');
   }
 }); 

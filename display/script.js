@@ -97,6 +97,23 @@ class DanmakuSystem {
     }
 
     this.updateSocketUrlDisplay();
+
+    if (this.isElectronMode && window.electronAPI && window.electronAPI.onUpdateStatus) {
+      window.electronAPI.onUpdateStatus((status) => {
+        console.log('收到更新状态:', status);
+        if (status.status === 'error') {
+          this.updateStatus('更新错误: ' + status.message, 'error');
+        } else if (status.status === 'update-available') {
+          this.updateStatus('发现新版本，正在下载...', 'success');
+        } else if (status.status === 'update-not-available') {
+          this.updateStatus('已是最新版本', 'success');
+        } else if (status.status === 'update-downloaded') {
+          this.updateStatus('更新已下载，即将安装', 'success');
+        } else if (status.status === 'download-progress') {
+          this.updateStatus('下载进度: ' + Math.round(status.percent) + '%', 'success');
+        }
+      });
+    }
   }
 
   setupSpeedControl() {
@@ -789,6 +806,14 @@ class ElectronBridge {
       window.electronAPI.updateDanmakuStyle(style);
     } else {
       console.log('模拟更新弹幕样式:', style);
+    }
+  }
+
+  toggleDevTools() {
+    if (this.isElectron && window.electronAPI && window.electronAPI.toggleDevTools) {
+      window.electronAPI.toggleDevTools();
+    } else {
+      console.log('模拟切换开发者工具');
     }
   }
 }

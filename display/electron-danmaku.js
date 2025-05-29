@@ -269,6 +269,16 @@ if (!gotTheLock) {
     }
   });
 
+  ipcMain.on('toggle-dev-tools', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      if (mainWindow.webContents.isDevToolsOpened()) {
+        mainWindow.webContents.closeDevTools();
+      } else {
+        mainWindow.webContents.openDevTools({ mode: 'detach' });
+      }
+    }
+  });
+
   app.on('ready', () => {
     setAutoLaunch(true);
 
@@ -282,21 +292,70 @@ if (!gotTheLock) {
     autoUpdater.checkForUpdatesAndNotify();
   });
 
+  function downloadUpdate() {
+    autoUpdater.downloadUpdate().catch(err => {
+      console.error('下载更新失败:', err);
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('update-status', {
+          status: 'error',
+          message: '下载更新失败: ' + err.message
+        });
+      }
+    });
+  }
+
   autoUpdater.on('update-available', () => {
+    downloadUpdate();
     console.log('发现新版本，开始下载...');
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-status', {
+        status: 'update-available',
+        message: '发现新版本，开始下载...'
+      });
+    }
   });
 
   autoUpdater.on("update-not-available", () => {
     console.log('没有可用更新');
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-status', {
+        status: 'update-not-available',
+        message: '没有可用更新'
+      });
+    }
   });
 
   autoUpdater.on("error", (error) => {
     console.log('检查更新失败', error);
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-status', {
+        status: 'error',
+        message: '检查更新失败: ' + error.message
+      });
+    }
   });
 
   autoUpdater.on('update-downloaded', () => {
     console.log('新版本下载完成，将退出并安装。');
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-status', {
+        status: 'update-downloaded',
+        message: '新版本下载完成，将退出并安装'
+      });
+    }
     autoUpdater.quitAndInstall();
+  });
+
+  autoUpdater.on('download-progress', (progressObj) => {
+    const message = `下载进度: ${Math.round(progressObj.percent)}%`;
+    console.log(message);
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-status', {
+        status: 'download-progress',
+        message: message,
+        percent: progressObj.percent
+      });
+    }
   });
 
   app.on('window-all-closed', () => {

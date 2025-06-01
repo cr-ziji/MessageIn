@@ -1,6 +1,6 @@
 {
   "name": "MessageIn-Display",
-  "version": "1.7.2",
+  "version": "1.7.3",
   "description": "MessageIn显示端 - 实时消息展示系统",
   "author": "CyrilGuo",
   "main": "electron-danmaku.js",
@@ -20,11 +20,9 @@
   "build": {
     "appId": "com.messagein.app",
     "publish": [
-      {
-        "provider": "github",
-        "owner": "cyrilguocode",
-        "repo": "MessageIn",
-        "releaseType": "release"
+      {        
+        "provider": "generic",
+        "url": "http://www.cyupeng.com/download/"
       }
     ]
   }

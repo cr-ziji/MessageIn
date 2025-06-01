@@ -287,6 +287,7 @@ if (!gotTheLock) {
     if (mainWindow) {
       mainWindow.hide();
     }
+    autoUpdater.allowInsecure = true;
     autoUpdater.disableWebInstaller = false
     autoUpdater.autoDownload = false //这个必须写成false，写成true时，会报没权限更新
     autoUpdater.checkForUpdatesAndNotify();
@@ -333,6 +334,21 @@ if (!gotTheLock) {
         message: '检查更新失败: ' + error.message
       });
     }
+    // 设置备用源
+    autoUpdater.setFeedURL({
+      "provider": "github",
+      "owner": "cyrilguocode",
+      "repo": "MessageIn",
+      "releaseType": "release"  
+    });
+    console.log('开始尝试备用源');
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-status', {
+        status: 'restart',
+        message: '开始尝试备用源'
+      });
+    }
+    autoUpdater.checkForUpdates(); // 确保在这里调用
   });
 
   autoUpdater.on('update-downloaded', () => {
@@ -343,6 +359,7 @@ if (!gotTheLock) {
         message: '新版本下载完成，将退出并安装'
       });
     }
+    app.isQuiting = true;
     autoUpdater.quitAndInstall();
   });
 

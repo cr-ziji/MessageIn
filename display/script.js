@@ -111,6 +111,8 @@ class DanmakuSystem {
           this.updateStatus('更新已下载，即将安装', 'success');
         } else if (status.status === 'download-progress') {
           this.updateStatus('下载进度: ' + Math.round(status.percent) + '%', 'success');
+        } else if (status.status === 'restart') {
+          this.updateStatus('开始尝试备用源', 'success');
         }
       });
     }

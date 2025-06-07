@@ -151,6 +151,8 @@ if (!gotTheLock) {
       visualEffectState: 'active',
     });
 
+    mainWindow.setMenu(null);
+
     danmakuWindow.loadURL(url.format({
       pathname: path.join(__dirname, 'index.html'),
       protocol: 'file:',

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, Tray, Menu, shell } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const url = require('url');
@@ -277,6 +277,16 @@ if (!gotTheLock) {
         mainWindow.webContents.openDevTools({ mode: 'detach' });
       }
     }
+  });
+
+  ipcMain.on('danmaku-command', (event, command) => {
+    if (danmakuWindow && danmakuWindow.webContents) {
+      danmakuWindow.webContents.send('danmaku-command', command);
+    }
+  });
+
+  ipcMain.on('open-external', (event, url) => {
+    if (url) shell.openExternal(url);
   });
 
   app.on('ready', () => {

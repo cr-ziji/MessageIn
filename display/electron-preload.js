@@ -58,5 +58,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   toggleDevTools: () => {
     ipcRenderer.send('toggle-dev-tools');
+  },
+
+  sendDanmakuCommand: (command) => {
+    ipcRenderer.send('danmaku-command', command);
+  },
+
+  openExternal: (url) => {
+    ipcRenderer.send('open-external', url);
   }
 }); 

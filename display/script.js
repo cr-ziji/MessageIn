@@ -54,9 +54,24 @@ class DanmakuSystem {
     }
 
     if (!this.isOverlayMode) {
-      document.getElementById('toggleBtn').addEventListener('click', () => this.toggleRunning());
-      document.getElementById('testBtn').addEventListener('click', () => this.sendTestDanmaku());
-      document.getElementById('clearBtn').addEventListener('click', () => this.clearDanmaku());
+      document.getElementById('toggleBtn').addEventListener('click', () => {
+        this.toggleRunning();
+        if (this.isElectronMode && window.electronAPI) {
+          window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'toggle', value: this.isRunning });
+        }
+      });
+      document.getElementById('testBtn').addEventListener('click', () => {
+        this.sendTestDanmaku();
+        if (this.isElectronMode && window.electronAPI) {
+          window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'test' });
+        }
+      });
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        this.clearDanmaku();
+        if (this.isElectronMode && window.electronAPI) {
+          window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'clear' });
+        }
+      });
 
       if (this.isElectronMode && document.getElementById('createExternalBtn')) {
         document.getElementById('createExternalBtn').addEventListener('click', () => this.createExternalWindow());
@@ -65,15 +80,17 @@ class DanmakuSystem {
       this.setupSpeedControl();
       this.setupOpacityControl();
 
-      if (this.isElectronMode) {
-        this.topMostCheck.addEventListener('change', (e) => {
-          this.setAlwaysOnTop(e.target.checked);
+      const helpBtn = document.getElementById('helpBtn');
+      if (helpBtn) {
+        helpBtn.addEventListener('click', () => {
+          const helpUrl = this.socketUrl + '/help?name=02_学生端帮助文档.md';
+          if (this.isElectronMode && window.electronAPI && window.electronAPI.openExternal) {
+            window.electronAPI.openExternal(helpUrl);
+          } else {
+            window.open(helpUrl, '_blank');
+          }
         });
       }
-
-      this.transparentCheck.addEventListener('change', (e) => {
-        this.setTransparentBackground(e.target.checked);
-      });
 
       this.debugBtn.addEventListener('click', () => {
         this.toggleDebugMode();
@@ -116,6 +133,27 @@ class DanmakuSystem {
         }
       });
     }
+
+    if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
+      if (window.require) {
+        const { ipcRenderer } = window.require('electron');
+        ipcRenderer.on('danmaku-command', (event, command) => {
+          this.handleDanmakuCommand(command);
+        });
+      } else if (window.electronAPI && window.electronAPI.onDanmakuCommand) {
+        window.electronAPI.onDanmakuCommand((command) => {
+          this.handleDanmakuCommand(command);
+        });
+      } else if (window.electron && window.electron.ipcRenderer) {
+        window.electron.ipcRenderer.on('danmaku-command', (event, command) => {
+          this.handleDanmakuCommand(command);
+        });
+      } else {
+        window.addEventListener('danmaku-command', (e) => {
+          this.handleDanmakuCommand(e.detail);
+        });
+      }
+    }
   }
 
   setupSpeedControl() {
@@ -125,6 +163,9 @@ class DanmakuSystem {
       this.speed = parseInt(e.target.value);
       this.updateDanmakuSpeed();
       this.updateDebugInfo();
+      if (this.isElectronMode && window.electronAPI) {
+        window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'speed', value: this.speed });
+      }
     });
 
     this.updateDanmakuSpeed();
@@ -134,6 +175,9 @@ class DanmakuSystem {
     this.opacityRange.addEventListener('input', (e) => {
       this.opacity = parseFloat(e.target.value) / 10;
       this.updateDanmakuOpacity();
+      if (this.isElectronMode && window.electronAPI) {
+        window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'opacity', value: this.opacity });
+      }
     });
   }
 
@@ -772,6 +816,42 @@ class DanmakuSystem {
     const el = document.getElementById('apiUrlDisplay');
     if (el) {
       el.textContent = this.socketUrl;
+    }
+  }
+
+  handleDanmakuCommand(command) {
+    if (!command || typeof command !== 'object') return;
+    switch (command.type) {
+      case 'toggle':
+        if (typeof command.value === 'boolean') {
+          this.isRunning = command.value;
+          if (this.isRunning) {
+            this.startConnection();
+          } else if (this.socket) {
+            this.socket.disconnect();
+          }
+        }
+        break;
+      case 'clear':
+        this.clearDanmaku();
+        break;
+      case 'test':
+        this.sendTestDanmaku && this.sendTestDanmaku();
+        break;
+      case 'speed':
+        if (typeof command.value === 'number') {
+          this.speed = command.value;
+          this.updateDanmakuSpeed && this.updateDanmakuSpeed();
+        }
+        break;
+      case 'opacity':
+        if (typeof command.value === 'number') {
+          this.opacity = command.value;
+          this.updateDanmakuOpacity && this.updateDanmakuOpacity();
+        }
+        break;
+      default:
+        break;
     }
   }
 }

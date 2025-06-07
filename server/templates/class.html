@@ -81,7 +81,7 @@
 			{% endfor %}
 		</div>
 		<div class="input-area">
-			<textarea name="text" id="textarea" placeholder="请输入内容"></textarea>
+			<textarea name="text" id="textarea" placeholder="请输入内容" maxlength="100"></textarea>
 			<div class="button-area">
 				<button id="send-btn" onclick="send()" style="{% if t_name == '访客' %}cursor: no-drop;{% endif %}">发 送</button>
 			</div>

@@ -97,4 +97,5 @@ select {
     border: solid;
     border-color: light-dark(#767676, #858585);
     border-width: 1px;
+	border-radius: 2px;
 }

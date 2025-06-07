@@ -1,16 +1,21 @@
 # coding=UTF-8
-from flask import Flask, request, render_template, redirect, session
+from flask import Flask, request, render_template, redirect, session, send_from_directory, send_file, request, jsonify, Response
 from flask_socketio import SocketIO, emit, join_room, leave_room
-import pymongo
+import pymongo, os
 import uuid, time
+from werkzeug.utils import secure_filename
 
 client = pymongo.MongoClient()
 db = client.main
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'  # 加密密钥（生产环境需修改）
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')  # 允许跨域
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', ping_interval=5, ping_timeout=20)  # 允许跨域
 
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.secret_key = '123456'
 classlist = {
@@ -23,7 +28,10 @@ classlist = {
 }
 video = {'01_功能文档.md': '', '02_学生端帮助文档.md': '学生端帮助视频.mp4', '03_教师端帮助文档.md': '教师端帮助视频.mp4', '04_教师使用守则.md': ''}
 user_ip = {}
-user_list = ['初一通知', '初二通知', '初三通知', '高一通知', '高二通知', '高三通知', '全校通知']
+user_dict = {'初一通知': [], '初二通知': [], '初三通知': [], '高一通知': [], '高二通知': [], '高三通知': [], '全校通知': []}
+user_list = []
+gradel = {'初一': 1, '初二': 2, '初三': 3, '高一': 4, '高二': 5, '高三': 6, '全校': 7}
+classl = {'一班': 1, '二班': 2, '三班': 3, '四班': 4, '五班': 5, '六班': 6, '联培班': 7, '通知': 8}
 
 
 @app.route('/login')
@@ -71,11 +79,13 @@ def handle():
         if 'class' not in request.form:
             return redirect('/register?alert=1')
         name = request.form['subject']+request.form['name']+'老师'
+        l = dict(request.form)['class']
+        l = sorted(l, key=lambda x: gradel[x[0:2]]*10+classl[x[2:]])
         dict1 = {
             '用户名': name,
             '手机号': request.form['tel'],
             '密码': request.form['password'],
-            '班级': dict(request.form)['class']
+            '班级': l
         }
         have = db.teacher.find_one({'手机号': request.form['tel']})
         if have is not None:
@@ -84,7 +94,7 @@ def handle():
         session['用户名'] = name
         session['手机号'] = request.form['tel']
         session['密码'] = request.form['password']
-        session['班级'] = dict(request.form)['class']
+        session['班级'] = l
         return redirect('/home')
 
 @app.route('/help')
@@ -157,17 +167,19 @@ def alter():
         name = request.form['subject']+request.form['name']+'老师'
     else:
         name = '管理员'
+    l = dict(request.form)['class']
+    l = sorted(l, key=lambda x: gradel[x[0:2]]*10+classl[x[2:]])
     dict1 = {
         '用户名': name,
         '手机号': request.form['tel'],
         '密码': request.form['password'],
-        '班级': dict(request.form)['class']
+        '班级': l
     }
     db.teacher.update_one({'手机号': session['手机号']}, {'$set': dict1})
     session['用户名'] = name
     session['手机号'] = request.form['tel']
     session['密码'] = request.form['password']
-    session['班级'] = dict(request.form)['class']
+    session['班级'] = l
     # 需要实现：发消息人改变
     return redirect('/home')
 
@@ -178,18 +190,20 @@ def alter_admin():
         name = request.form['subject']+request.form['name']+'老师'
     else:
         name = '管理员'
+    l = dict(request.form)['class']
+    l = sorted(l, key=lambda x: gradel[x[0:2]]*10+classl[x[2:]])
     dict1 = {
         '用户名': name,
         '手机号': request.form['tel'],
         '密码': request.form['password'],
-        '班级': dict(request.form)['class']
+        '班级': l
     }
     db.teacher.update_one({'手机号': request.form['old_tel']}, {'$set': dict1})
     if request.form['old_tel'] == session['手机号']:
         session['用户名'] = name
         session['手机号'] = request.form['tel']
         session['密码'] = request.form['password']
-        session['班级'] = dict(request.form)['class']
+        session['班级'] = l
     # 需要实现：发消息人改变
     return redirect('/user?tel='+request.form['old_tel'])
 
@@ -223,12 +237,71 @@ def home():
                            t_user=user_list)
 
 
-@app.route('/home1')
-def home1():
-    return render_template('home_1.html',
-                           t_name=session['用户名'],
-                           t_class=session['班级'],
-                           t_range=range(len(session['班级'])))
+@app.route('/connect')
+def connect():
+    l = user_dict
+    l = sorted(l, key=lambda x: gradel[x[0:2]] * 10 + classl[x[2:]])
+    s = ''
+    for i in l:
+        s += i + '   ' + str(user_dict[i]) + '<br>'
+    return s
+
+
+@app.route('/file')
+def file():
+    """显示文件列表"""
+    if session['用户名'] != '管理员':
+        return redirect('/home')
+    files = os.listdir(app.config['UPLOAD_FOLDER'])
+    return render_template('file.html', files=files)
+
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    """处理文件上传"""
+    if 'file' not in request.files:
+        return '<link rel="stylesheet" href="../static/css/file.css"><link rel="icon" type="image/svg+xml" href="../static/images/icon.ico"><a href="/file">返回</a><br><h1>没有文件</h1>', 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return '<link rel="stylesheet" href="../static/css/file.css"><link rel="icon" type="image/svg+xml" href="../static/images/icon.ico"><a href="/file">返回</a><br><h1>未选择文件</h1>', 400
+
+    if file:
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
+        return '<link rel="stylesheet" href="../static/css/file.css"><link rel="icon" type="image/svg+xml" href="../static/images/icon.ico"><a href="/file">返回</a><br><h1>文件上传成功</h1>', 200
+
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    """处理文件下载"""
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(filename))
+    range_header = request.headers.get('Range')
+    if range_header:
+        # 解析Range头部
+        file_size = os.path.getsize(filepath)
+        start, end = parse_range_header(range_header, file_size)
+
+        # 发送部分文件
+        def generate():
+            with open(filepath, 'rb') as f:
+                f.seek(start)
+                remaining = end - start + 1
+                while remaining > 0:
+                    chunk_size = min(4096, remaining)
+                    data = f.read(chunk_size)
+                    if not data:
+                        break
+                    remaining -= len(data)
+                    yield data
+
+        response = Response(generate(), 206)
+        response.headers['Content-Range'] = f'bytes {start}-{end}/{file_size}'
+        response.headers['Content-Length'] = str(end - start + 1)
+        return response
+    else:
+        # 完整文件下载
+        return send_file(filepath)
+    # return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
 
 
 @app.route('/class')
@@ -253,20 +326,27 @@ def none():
 
 @socketio.on('connect')
 def handle_connect():
-    if request.remote_addr in user_ip:
-        class1 = user_ip[request.remote_addr]
-        if class1 not in user_list:
-            user_list.append(class1)
-        emit('online', {'class': class1}, broadcast=True)
     print('客户端已连接')
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    if request.remote_addr in user_ip:
-        class1 = user_ip[request.remote_addr]
-        if class1 in user_list:
-            user_list.remove(class1)
-        emit('outline', {'class': class1}, broadcast=True)
+    if request.sid in user_ip:
+        class1 = user_ip[request.sid]
+        user_ip.pop(request.sid)
+        if class1 in user_dict:
+            user_dict[class1] -= 1
+            if user_dict[class1] <= 0:
+                user_dict.pop(class1)
+                user_dict[class1[0:2]+'通知'].remove(class1)
+                user_dict['全校通知'].remove(class1)
+                user_list.remove(class1)
+                emit('outline', {'class': class1}, broadcast=True)
+                if len(user_dict[class1[0:2]+'通知']) == 0:
+                    user_list.remove(class1[0:2]+'通知')
+                    emit('outline', {'class': class1[0:2]+'通知'}, broadcast=True)
+                if len(user_dict['全校通知']) == 0:
+                    user_list.remove('全校通知')
+                    emit('outline', {'class': '全校通知'}, broadcast=True)
     print('客户端断开连接')
 
 @socketio.on('init')
@@ -275,10 +355,21 @@ def init(data):
     byte_values = [class1[k] for k in class1]
     bytes_data = bytes(byte_values)
     class1 = bytes_data.decode()
-    user_ip[request.remote_addr] = class1
-    if class1 not in user_list:
+    user_ip[request.sid] = class1
+    if class1 not in user_dict:
+        user_dict[class1] = 1
+        user_dict[class1[0:2]+'通知'].append(class1)
+        user_dict['全校通知'].append(class1)
         user_list.append(class1)
-    emit('online', {'class': class1}, broadcast=True)
+        emit('online', {'class': class1}, broadcast=True)
+        if len(user_dict[class1[0:2]+'通知']) == len(classlist[class1[0:2]]):
+            user_list.append(class1[0:2]+'通知')
+            emit('online', {'class': class1[0:2]+'通知'}, broadcast=True)
+        if len(user_dict['全校通知']) == 25:
+            user_list.append('全校通知')
+            emit('online', {'class': '全校通知'}, broadcast=True)
+    else:
+        user_dict[class1] += 1
 
 @socketio.on('send')
 def send(data):
@@ -496,6 +587,18 @@ def long(t, n):
     if len(t) > n:
         t = t[:n]+'...'
     return t
+
+def parse_range_header(range_header, file_size):
+    """解析Range头部并返回起始和结束字节位置"""
+    unit, ranges = range_header.split('=')
+    if unit != 'bytes':
+        raise ValueError('Invalid range unit')
+
+    start, end = ranges.split('-')
+    start = int(start) if start else 0
+    end = int(end) if end else file_size - 1
+
+    return start, end
 
 @app.errorhandler(404)
 def error_date_404(error):

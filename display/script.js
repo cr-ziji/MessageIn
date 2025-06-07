@@ -134,25 +134,11 @@ class DanmakuSystem {
       });
     }
 
-    if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
-      if (window.require) {
-        const { ipcRenderer } = window.require('electron');
-        ipcRenderer.on('danmaku-command', (event, command) => {
-          this.handleDanmakuCommand(command);
-        });
-      } else if (window.electronAPI && window.electronAPI.onDanmakuCommand) {
-        window.electronAPI.onDanmakuCommand((command) => {
-          this.handleDanmakuCommand(command);
-        });
-      } else if (window.electron && window.electron.ipcRenderer) {
-        window.electron.ipcRenderer.on('danmaku-command', (event, command) => {
-          this.handleDanmakuCommand(command);
-        });
-      } else {
-        window.addEventListener('danmaku-command', (e) => {
-          this.handleDanmakuCommand(e.detail);
-        });
-      }
+    if (this.isOverlayMode && this.isElectronMode && window.electronAPI && window.electronAPI.onDanmakuCommand) {
+      window.electronAPI.onDanmakuCommand((command) => {
+        console.log('[overlay] 收到 danmaku-command:', command);
+        this.handleDanmakuCommand(command);
+      });
     }
   }
 
@@ -820,6 +806,7 @@ class DanmakuSystem {
   }
 
   handleDanmakuCommand(command) {
+    console.log('[overlay] handleDanmakuCommand:', command);
     if (!command || typeof command !== 'object') return;
     switch (command.type) {
       case 'toggle':

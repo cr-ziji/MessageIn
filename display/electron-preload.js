@@ -66,5 +66,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   openExternal: (url) => {
     ipcRenderer.send('open-external', url);
+  },
+
+  onDanmakuCommand: (callback) => {
+    ipcRenderer.removeAllListeners('danmaku-command');
+    ipcRenderer.on('danmaku-command', (event, command) => {
+      callback(command);
+    });
   }
 }); 

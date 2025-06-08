@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: http: ws: " + socketUrl>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' data: http: ws: www.cyupeng.com">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,6 +32,16 @@
     <div class="wave-container">
       <div class="wave"></div>
       <div class="wave"></div>
+    </div>
+    
+    <div class="verification-dialog" id="verificationDialog" style="display: none;">
+      <div class="dialog-content">
+        <h2 id="verificationTitle">请输入班级验证码</h2>
+        <input type="text" id="verificationInput" placeholder="请输入验证码">
+        <button id="submitVerification">确认</button>
+        <button id="skipVerification" style="margin-left:10px;">取消</button>
+        <p class="error-message" id="verificationError" style="display: none; color: red; margin-top: 10px;">验证码无效，请重新输入</p>
+      </div>
     </div>
     
     <div class="debug-panel" id="debugPanel">
@@ -97,7 +107,6 @@
   </div>
   
   <script src="socket.io.min.js"></script>
-<!--   <script src="jquery-3.3.1.min.js"></script> -->
   <script src="script.js"></script>
 </body>
 </html> 

@@ -79,6 +79,11 @@ if (!gotTheLock) {
         danmakuWindow = null;
       }
     });
+	
+	mainWindow.webContents.on('render-process-gone', () => {
+	  app.relaunch(); 
+	  app.exit(0);
+	});
   }
 
   function createTray() {
@@ -98,8 +103,7 @@ if (!gotTheLock) {
       {
         label: '退出',
         click: () => {
-          app.isQuiting = true;
-          app.quit();
+		  createPasswordWindow('verify');
         }
       }
     ]);
@@ -193,7 +197,7 @@ if (!gotTheLock) {
 
       console.log('弹幕窗口已创建并显示');
 
-      //danmakuWindow.webContents.openDevTools({ mode: 'detach' });
+      // danmakuWindow.webContents.openDevTools({ mode: 'detach' });
 
     });
 
@@ -204,7 +208,7 @@ if (!gotTheLock) {
 
   ipcMain.on('set-always-on-top', (event, value) => {
     if (mainWindow) {
-      mainWindow.setAlwaysOnTop(value);
+      // mainWindow.setAlwaysOnTop(value);
     }
   });
 
@@ -213,6 +217,18 @@ if (!gotTheLock) {
       createDanmakuWindow();
     } else {
       danmakuWindow.show();
+    }
+  });
+
+  ipcMain.on('create-class-window', () => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('show-verification', 'class');
+    }
+  });
+
+  ipcMain.on('create-password-window', () => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('show-verification', 'password');
     }
   });
 
@@ -281,6 +297,12 @@ if (!gotTheLock) {
     }
   });
 
+  ipcMain.on('set-class-param', (event, classParam) => {
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('set-class-param', classParam);
+    }
+  });
+  
   ipcMain.on('danmaku-command', (event, command) => {
     if (danmakuWindow && danmakuWindow.webContents) {
       danmakuWindow.webContents.send('danmaku-command', command);
@@ -290,6 +312,11 @@ if (!gotTheLock) {
   ipcMain.on('open-external', (event, url) => {
     if (url) shell.openExternal(url);
   });
+  
+  ipcMain.on('quit', () => {
+	app.isQuiting = true;
+	app.quit();
+  })
 
   app.on('ready', () => {
     setAutoLaunch(true);
@@ -315,6 +342,12 @@ if (!gotTheLock) {
         });
       }
     });
+  }
+  
+  function createPasswordWindow(mode){
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('show-verification', mode);
+    }
   }
 
   autoUpdater.on('update-available', () => {

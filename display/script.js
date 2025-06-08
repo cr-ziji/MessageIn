@@ -19,6 +19,12 @@ class DanmakuSystem {
     this.processedMessages = new Set();
     this.socketUrl = 'http://www.cyupeng.com';
     this.socket = null;
+    this.verificationDialog = document.getElementById('verificationDialog');
+    this.verificationTitle = document.getElementById('verificationTitle');
+    this.verificationInput = document.getElementById('verificationInput');
+    this.verificationError = document.getElementById('verificationError');
+    this.submitVerification = document.getElementById('submitVerification');
+    this.skipVerification = document.getElementById('skipVerification');
 
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
@@ -57,6 +63,12 @@ class DanmakuSystem {
         this.toggleRunning();
         if (this.isElectronMode && window.electronAPI) {
           window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'toggle', value: this.isRunning });
+        }
+      });
+      document.getElementById('changeBtn').addEventListener('click', () => {
+        this.changeClass();
+        if (this.isElectronMode && window.electronAPI) {
+          window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'change'});
         }
       });
       document.getElementById('testBtn').addEventListener('click', () => {
@@ -132,6 +144,14 @@ class DanmakuSystem {
         }
       });
     }
+	
+	if (this.isElectronMode && window.electronAPI && window.electronAPI.changeClassParam) {
+	  window.electronAPI.changeClassParam((classParam) => {
+	    console.log('收到班级更改:', classParam);
+	    this.classParam = classParam;
+		this.startConnection()
+	  });
+	}
 
     if (this.isOverlayMode && this.isElectronMode && window.electronAPI && window.electronAPI.onDanmakuCommand) {
       window.electronAPI.onDanmakuCommand((command) => {
@@ -213,71 +233,75 @@ class DanmakuSystem {
     }
   }
 
-  showVerificationDialog() {
-    const dialog = document.createElement('div');
-    dialog.className = 'verification-dialog';
-    dialog.innerHTML = `
-      <div class="dialog-content">
-        <h2>请输入班级验证码</h2>
-        <input type="text" id="verificationInput" placeholder="请输入班级验证码">
-        <button id="submitVerification">确认</button>
-        <button id="skipVerification" style="margin-left:10px;">跳过</button>
-        <p class="error-message" id="verificationError" style="display: none; color: red; margin-top: 10px;">验证码无效，请重新输入</p>
-      </div>
-    `;
-
-    const style = document.createElement('style');
-    style.textContent = `
-      .verification-dialog {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
+  showVerificationDialog(type = 'class') {
+    this.verificationDialog.style.display = 'flex';
+    this.verificationTitle.textContent = type === 'class' ? '请输入班级验证码' : '请输入管理密码';
+    this.verificationInput.value = '';
+    this.verificationError.style.display = 'none';
+    
+    this.submitVerification.onclick = () => {
+      const value = this.verificationInput.value.trim();
+      if (!value) {
+        alert('请输入验证码');
+        return;
       }
-      .dialog-content {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-      }
-      .dialog-content input {
-        margin: 10px 0;
-        padding: 5px;
-        width: 200px;
-      }
-      .dialog-content button {
-        margin: 5px;
-        padding: 5px 15px;
-        cursor: pointer;
-      }
-    `;
-
-    document.head.appendChild(style);
-    document.body.appendChild(dialog);
-
-    document.getElementById('submitVerification').addEventListener('click', () => {
-      const classParam = document.getElementById('verificationInput').value.trim();
-      if (classParam) {
-        localStorage.setItem('classParam', classParam);
-        this.classParam = classParam;
-        dialog.remove();
-        this.startConnection();
+      
+      if (type === 'class') {
+        const classlist = ['初一一班', '初一二班', '初一三班', '初一四班', '初一五班', '初一六班', '初一通知', '初二一班', '初二二班', '初二三班', '初二四班', '初二通知', '初三一班', '初三二班', '初三三班', '初三联培班', '初三通知', '高一一班', '高一二班', '高一三班', '高一通知', '高二一班', '高二二班', '高二三班', '高二四班', '高二通知', '高三一班', '高三二班', '高三三班', '高三四班', '高三通知', '全校通知'];
+        if (classlist.includes(value)) {
+          localStorage.setItem('classParam', value);
+          this.classParam = value;
+          this.verificationDialog.style.display = 'none';
+          this.startConnection();
+        } else {
+          this.verificationError.style.display = 'block';
+        }
       } else {
-        document.getElementById('verificationError').style.display = 'block';
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'http://www.cyupeng.com/password', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              try {
+                const response = JSON.parse(xhr.responseText);
+                if (response.result) {
+                  this.verificationDialog.style.display = 'none';
+                  if (window.electronAPI) {
+                    window.electronAPI.checkPassword(true);
+                  }
+                } else {
+                  this.verificationError.style.display = 'block';
+                }
+              } catch (e) {
+                console.error('解析响应失败:', e);
+                alert('服务器响应格式错误');
+              }
+            } else {
+              console.error('请求失败:', xhr.status, xhr.statusText);
+              alert('请求失败: ' + xhr.status);
+            }
+          }
+        };
+        
+        xhr.onerror = () => {
+          console.error('网络错误');
+          alert('网络连接失败');
+        };
+        
+        try {
+          xhr.send(JSON.stringify({password: value}));
+        } catch (e) {
+          console.error('发送请求失败:', e);
+          alert('发送请求失败');
+        }
       }
-    });
-    document.getElementById('skipVerification').addEventListener('click', () => {
-      localStorage.setItem('classParam', '__SKIP__');
-      this.classParam = '__SKIP__';
-      dialog.remove();
-      this.startConnection();
-    });
+    };
+    
+    this.skipVerification.onclick = () => {
+      this.verificationDialog.style.display = 'none';
+    };
   }
 
   startConnection() {
@@ -309,7 +333,9 @@ class DanmakuSystem {
 
       this.socket.on('reconnect', (attemptNumber) => {
         console.log('WebSocket重连成功');
-        this.updateStatus('重连成功', 'reconnect');
+        if (this.timer != null) this.updateStatus('重连成功', 'reconnect');
+        clearTimeout(this.timer);
+        this.timer = null;
       });
 
       this.socket.on('new', (data) => {
@@ -393,6 +419,10 @@ class DanmakuSystem {
         this.socket.disconnect();
       }
     }
+  }
+
+  changeClass() {
+    this.showVerificationDialog('class');
   }
 
   updateDanmakuSpeed() {

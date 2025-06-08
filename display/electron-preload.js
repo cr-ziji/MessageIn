@@ -9,6 +9,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('create-external-window');
   },
 
+  createClassWindow: () => {
+    ipcRenderer.send('create-class-window');
+  },
+
+  createPasswordWindow: () => {
+    ipcRenderer.send('create-password-window');
+  },
+  
+  checkPassword: (check) => {
+	if (check == true){
+	  ipcRenderer.send('create-class-window');
+	}
+  },
+  
+  checkQuit: (check) => {
+	if (check == true){
+	  ipcRenderer.send('quit');
+	}
+  },
+
   testTransparentWindow: () => {
     console.log('调用测试透明背景API');
     ipcRenderer.send('test-transparent-window');
@@ -72,6 +92,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.removeAllListeners('danmaku-command');
     ipcRenderer.on('danmaku-command', (event, command) => {
       callback(command);
+    });
+  },
+  
+  setClassParam: (classParam) => {
+	ipcRenderer.send('set-class-param', classParam);
+  },
+  
+  changeClassParam: (callback) => {
+    ipcRenderer.removeAllListeners('set-class-param');
+	ipcRenderer.on('set-class-param', (event, classParam) => {
+      callback(classParam);
     });
   }
 }); 

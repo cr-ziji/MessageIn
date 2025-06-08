@@ -56,6 +56,12 @@ class DanmakuSystem {
       if (window.electronAPI && window.electronAPI.disableDevTools) {
         window.electronAPI.disableDevTools();
       }
+
+      if (window.electronAPI && window.electronAPI.onShowVerification) {
+        window.electronAPI.onShowVerification((type) => {
+          this.showVerificationDialog(type);
+        });
+      }
     }
 
     if (!this.isOverlayMode) {
@@ -235,7 +241,9 @@ class DanmakuSystem {
 
   showVerificationDialog(type = 'class') {
     this.verificationDialog.style.display = 'flex';
-    this.verificationTitle.textContent = type === 'class' ? '请输入班级验证码' : '请输入管理密码';
+    this.verificationTitle.textContent = type === 'class' ? '请输入班级验证码' : 
+                                       type === 'verify' ? '请输入管理密码' : 
+                                       '请输入管理密码';
     this.verificationInput.value = '';
     this.verificationError.style.display = 'none';
     
@@ -276,7 +284,11 @@ class DanmakuSystem {
                 if (response.result) {
                   this.verificationDialog.style.display = 'none';
                   if (window.electronAPI) {
-                    window.electronAPI.checkPassword(true);
+                    if (type === 'verify') {
+                      window.electronAPI.checkQuit(true);
+                    } else {
+                      window.electronAPI.checkPassword(true);
+                    }
                   }
                 } else {
                   this.verificationError.style.display = 'block';

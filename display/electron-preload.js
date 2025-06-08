@@ -23,11 +23,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	}
   },
   
-  checkQuit: (check) => {
-	if (check == true){
-	  ipcRenderer.send('quit');
-	}
-  },
+  checkQuit: (value) => ipcRenderer.send('check-quit', value),
 
   testTransparentWindow: () => {
     console.log('调用测试透明背景API');
@@ -107,4 +103,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 
   recreateDanmakuWindow: () => ipcRenderer.send('recreate-danmaku-window'),
+
+  onShowVerification: (callback) => ipcRenderer.on('show-verification', (event, type) => callback(type)),
 }); 

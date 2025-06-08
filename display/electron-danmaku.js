@@ -84,6 +84,12 @@ if (!gotTheLock) {
 	  app.relaunch(); 
 	  app.exit(0);
 	});
+
+    ipcMain.on('show-verification', (event, type) => {
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('show-verification', type);
+      }
+    });
   }
 
   function createTray() {
@@ -103,7 +109,9 @@ if (!gotTheLock) {
       {
         label: '退出',
         click: () => {
-		  createPasswordWindow('verify');
+          if (mainWindow && mainWindow.webContents) {
+            mainWindow.webContents.send('show-verification', 'verify');
+          }
         }
       }
     ]);
@@ -315,10 +323,12 @@ if (!gotTheLock) {
     if (url) shell.openExternal(url);
   });
   
-  ipcMain.on('quit', () => {
-	app.isQuiting = true;
-	app.quit();
-  })
+  ipcMain.on('check-quit', (event, value) => {
+    if (value) {
+      app.isQuiting = true;
+      app.quit();
+    }
+  });
 
   ipcMain.on('recreate-danmaku-window', () => {
     try {

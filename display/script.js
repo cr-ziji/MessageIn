@@ -19,7 +19,6 @@ class DanmakuSystem {
     this.processedMessages = new Set();
     this.socketUrl = 'http://www.cyupeng.com';
     this.socket = null;
-    this.timer = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
@@ -310,9 +309,7 @@ class DanmakuSystem {
 
       this.socket.on('reconnect', (attemptNumber) => {
         console.log('WebSocket重连成功');
-        if (this.timer != null) this.updateStatus('重连成功', 'reconnect');
-        clearTimeout(this.timer);
-        this.timer = null;
+        this.updateStatus('重连成功', 'reconnect');
       });
 
       this.socket.on('new', (data) => {
@@ -371,24 +368,8 @@ class DanmakuSystem {
       });
 
       this.socket.on('disconnect', () => {
-        this.timer = setTimeout(() => {
-          console.log('WebSocket连接断开');
-          this.updateStatus('连接已断开', 'error');
-        }, 3000);
-      });
-
-      this.socket.on('error', (error) => {
-        this.timer = setTimeout(() => {
-          console.error('WebSocket错误:', error);
-          this.updateStatus('连接错误', 'error');
-        }, 3000);
-      });
-
-      this.socket.on('connect_error', (error) => {
-        this.timer = setTimeout(() => {    
-           console.error('WebSocket连接错误:', error);
-           this.updateStatus('连接错误', 'error');
-          }, 3000);
+        console.log('WebSocket连接断开');
+        this.updateStatus('连接已断开', 'error');
       });
 
     } catch (error) {
@@ -404,7 +385,7 @@ class DanmakuSystem {
     if (this.isRunning) {
       toggleBtn.textContent = '暂停弹幕';
       if (!this.socket || !this.socket.connected) {
-        this.startConnection();
+		this.socket.connect();
       }
     } else {
       toggleBtn.textContent = '恢复弹幕';
@@ -813,7 +794,7 @@ class DanmakuSystem {
         if (typeof command.value === 'boolean') {
           this.isRunning = command.value;
           if (this.isRunning) {
-            this.startConnection();
+            this.socket.connect();
           } else if (this.socket) {
             this.socket.disconnect();
           }

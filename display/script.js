@@ -253,8 +253,15 @@ class DanmakuSystem {
           this.classParam = value;
           this.verificationDialog.style.display = 'none';
           this.startConnection();
+          
+          if (this.isElectronMode && window.electronAPI) {
+            if (window.electronAPI.recreateDanmakuWindow) {
+              window.electronAPI.recreateDanmakuWindow();
+            }
+          }
         } else {
           this.verificationError.style.display = 'block';
+          this.verificationError.textContent = '无效的班级验证码，请重新输入';
         }
       } else {
         const xhr = new XMLHttpRequest();
@@ -273,6 +280,7 @@ class DanmakuSystem {
                   }
                 } else {
                   this.verificationError.style.display = 'block';
+                  this.verificationError.textContent = '管理密码错误，请重新输入';
                 }
               } catch (e) {
                 console.error('解析响应失败:', e);
@@ -301,6 +309,12 @@ class DanmakuSystem {
     
     this.skipVerification.onclick = () => {
       this.verificationDialog.style.display = 'none';
+    };
+
+    this.verificationInput.onkeypress = (e) => {
+      if (e.key === 'Enter') {
+        this.submitVerification.click();
+      }
     };
   }
 

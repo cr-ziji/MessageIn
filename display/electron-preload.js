@@ -104,5 +104,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 	ipcRenderer.on('set-class-param', (event, classParam) => {
       callback(classParam);
     });
-  }
+  },
+
+  recreateDanmakuWindow: () => ipcRenderer.send('recreate-danmaku-window'),
 }); 

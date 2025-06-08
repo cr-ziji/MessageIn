@@ -167,7 +167,7 @@ if (!gotTheLock) {
     danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
     
     ipcMain.on('danmaku-mouse-event', (event, { type, isOverDanmaku }) => {
-      if (danmakuWindow) {
+      if (danmakuWindow && !danmakuWindow.isDestroyed()) {
         if (type === 'mouseover') {
           danmakuWindow.setIgnoreMouseEvents(false);
         } else if (type === 'mouseout') {
@@ -183,22 +183,24 @@ if (!gotTheLock) {
     danmakuWindow.setFullScreenable(false);
 
     danmakuWindow.once('ready-to-show', () => {
-      danmakuWindow.setBackgroundColor('#00000000');
-
-      if (process.platform === 'win32') {
+      if (danmakuWindow && !danmakuWindow.isDestroyed()) {
         try {
-          danmakuWindow.setOpacity(1.0);
+          danmakuWindow.setBackgroundColor('#00000000');
+
+          if (process.platform === 'win32') {
+            try {
+              danmakuWindow.setOpacity(1.0);
+            } catch (e) {
+              console.error('设置Windows透明度失败:', e);
+            }
+          }
+          
+          danmakuWindow.show();
+          console.log('弹幕窗口已创建并显示');
         } catch (e) {
-          console.error('设置Windows透明度失败:', e);
+          console.error('设置弹幕窗口属性失败:', e);
         }
       }
-      
-      danmakuWindow.show();
-
-      console.log('弹幕窗口已创建并显示');
-
-      // danmakuWindow.webContents.openDevTools({ mode: 'detach' });
-
     });
 
     danmakuWindow.on('closed', () => {
@@ -208,7 +210,7 @@ if (!gotTheLock) {
 
   ipcMain.on('set-always-on-top', (event, value) => {
     if (mainWindow) {
-      // mainWindow.setAlwaysOnTop(value);
+      mainWindow.setAlwaysOnTop(value);
     }
   });
 
@@ -317,6 +319,20 @@ if (!gotTheLock) {
 	app.isQuiting = true;
 	app.quit();
   })
+
+  ipcMain.on('recreate-danmaku-window', () => {
+    try {
+      if (danmakuWindow && !danmakuWindow.isDestroyed()) {
+        danmakuWindow.close();
+      }
+      danmakuWindow = null;
+      setTimeout(() => {
+        createDanmakuWindow();
+      }, 100);
+    } catch (e) {
+      console.error('重新创建弹幕窗口失败:', e);
+    }
+  });
 
   app.on('ready', () => {
     setAutoLaunch(true);

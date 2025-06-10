@@ -272,49 +272,19 @@ class DanmakuSystem {
           this.verificationError.textContent = '无效的班级验证码，请重新输入';
         }
       } else {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', 'http://www.cyupeng.com/password', true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        
-        xhr.onreadystatechange = () => {
-          if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-              try {
-                const response = JSON.parse(xhr.responseText);
-                if (response.result) {
-                  this.verificationDialog.style.display = 'none';
-                  if (window.electronAPI) {
-                    if (type === 'verify') {
-                      window.electronAPI.checkQuit(true);
-                    } else {
-                      window.electronAPI.checkPassword(true);
-                    }
-                  }
-                } else {
-                  this.verificationError.style.display = 'block';
-                  this.verificationError.textContent = '管理密码错误，请重新输入';
-                }
-              } catch (e) {
-                console.error('解析响应失败:', e);
-                alert('服务器响应格式错误');
-              }
+        const adminPassword = 'noquit';
+        if (value === adminPassword) {
+          this.verificationDialog.style.display = 'none';
+          if (window.electronAPI) {
+            if (type === 'verify') {
+              window.electronAPI.checkQuit(true);
             } else {
-              console.error('请求失败:', xhr.status, xhr.statusText);
-              alert('请求失败: ' + xhr.status);
+              window.electronAPI.checkPassword(true);
             }
           }
-        };
-        
-        xhr.onerror = () => {
-          console.error('网络错误');
-          alert('网络连接失败');
-        };
-        
-        try {
-          xhr.send(JSON.stringify({password: value}));
-        } catch (e) {
-          console.error('发送请求失败:', e);
-          alert('发送请求失败');
+        } else {
+          this.verificationError.style.display = 'block';
+          this.verificationError.textContent = '管理密码错误，请重新输入';
         }
       }
     };

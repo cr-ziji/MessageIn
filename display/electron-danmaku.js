@@ -80,7 +80,7 @@ if (!gotTheLock) {
       }
     });
 	
-	mainWindow.webContents.on('render-process-gone', () => {
+	mainWindow.webContents.on('crashed', () => {
 	  app.relaunch(); 
 	  app.exit(0);
 	});
@@ -109,8 +109,13 @@ if (!gotTheLock) {
       {
         label: '退出',
         click: () => {
-          if (mainWindow && mainWindow.webContents) {
-            mainWindow.webContents.send('show-verification', 'verify');
+          if (mainWindow) {
+            mainWindow.show();
+            setTimeout(() => {
+              if (mainWindow && mainWindow.webContents) {
+                mainWindow.webContents.send('show-verification', 'verify');
+              }
+            }, 300);
           }
         }
       }

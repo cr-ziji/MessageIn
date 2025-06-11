@@ -13,17 +13,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.send('create-class-window');
   },
 
-  createPasswordWindow: () => {
-    ipcRenderer.send('create-password-window');
+  createPasswordWindow: (type) => {
+    ipcRenderer.send('create-password-window', type);
   },
   
   checkPassword: (check) => {
-	if (check == true){
-	  ipcRenderer.send('create-class-window');
-	}
+    if (check == true){
+      ipcRenderer.send('create-class-window');
+    }
   },
   
-  checkQuit: (value) => ipcRenderer.send('check-quit', value),
+  checkQuit: (check) => {
+    if (check == true){
+      ipcRenderer.send('quit');
+    }
+  },
 
   testTransparentWindow: () => {
     console.log('调用测试透明背景API');
@@ -92,17 +96,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   
   setClassParam: (classParam) => {
-	ipcRenderer.send('set-class-param', classParam);
+    ipcRenderer.send('set-class-param', classParam);
   },
   
   changeClassParam: (callback) => {
     ipcRenderer.removeAllListeners('set-class-param');
-	ipcRenderer.on('set-class-param', (event, classParam) => {
+    ipcRenderer.on('set-class-param', (event, classParam) => {
       callback(classParam);
     });
-  },
-
-  recreateDanmakuWindow: () => ipcRenderer.send('recreate-danmaku-window'),
-
-  onShowVerification: (callback) => ipcRenderer.on('show-verification', (event, type) => callback(type)),
+  }
 }); 

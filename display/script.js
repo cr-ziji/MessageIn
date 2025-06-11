@@ -19,12 +19,6 @@ class DanmakuSystem {
     this.processedMessages = new Set();
     this.socketUrl = 'http://www.cyupeng.com';
     this.socket = null;
-    this.verificationDialog = document.getElementById('verificationDialog');
-    this.verificationTitle = document.getElementById('verificationTitle');
-    this.verificationInput = document.getElementById('verificationInput');
-    this.verificationError = document.getElementById('verificationError');
-    this.submitVerification = document.getElementById('submitVerification');
-    this.skipVerification = document.getElementById('skipVerification');
 
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
@@ -56,12 +50,6 @@ class DanmakuSystem {
       if (window.electronAPI && window.electronAPI.disableDevTools) {
         window.electronAPI.disableDevTools();
       }
-
-      if (window.electronAPI && window.electronAPI.onShowVerification) {
-        window.electronAPI.onShowVerification((type) => {
-          this.showVerificationDialog(type);
-        });
-      }
     }
 
     if (!this.isOverlayMode) {
@@ -82,6 +70,9 @@ class DanmakuSystem {
         if (this.isElectronMode && window.electronAPI) {
           window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'test' });
         }
+      });
+      document.getElementById('quitBtn').addEventListener('click', () => {
+        window.electronAPI.createPasswordWindow('verify');
       });
       document.getElementById('clearBtn').addEventListener('click', () => {
         this.clearDanmaku();
@@ -125,12 +116,13 @@ class DanmakuSystem {
     }
 
     if (!this.classParam) {
-      this.showVerificationDialog();
+      if (!this.isOverlayMode) this.showVerificationDialog();
     } else {
       this.startConnection();
     }
 
     this.updateSocketUrlDisplay();
+    this.updateClassParamDisplay();
 
     if (this.isElectronMode && window.electronAPI && window.electronAPI.onUpdateStatus) {
       window.electronAPI.onUpdateStatus((status) => {
@@ -150,14 +142,19 @@ class DanmakuSystem {
         }
       });
     }
-	
-	if (this.isElectronMode && window.electronAPI && window.electronAPI.changeClassParam) {
-	  window.electronAPI.changeClassParam((classParam) => {
-	    console.log('收到班级更改:', classParam);
-	    this.classParam = classParam;
-		this.startConnection()
-	  });
-	}
+    
+    if (this.isElectronMode && window.electronAPI && window.electronAPI.changeClassParam) {
+      window.electronAPI.changeClassParam((classParam) => {
+        console.log('收到班级更改:', classParam);
+        this.classParam = classParam;
+        this.updateClassParamDisplay();
+        if (!this.socket) this.startConnection();
+        else {
+          this.socket.disconnect();
+          this.socket.connect();
+        }
+      });
+    }
 
     if (this.isOverlayMode && this.isElectronMode && window.electronAPI && window.electronAPI.onDanmakuCommand) {
       window.electronAPI.onDanmakuCommand((command) => {
@@ -239,65 +236,8 @@ class DanmakuSystem {
     }
   }
 
-  showVerificationDialog(type = 'class') {
-    this.verificationDialog.style.display = 'flex';
-    this.verificationTitle.textContent = type === 'class' ? '请输入班级验证码' : 
-                                       type === 'verify' ? '请输入管理密码' : 
-                                       '请输入管理密码';
-    this.verificationInput.value = '';
-    this.verificationError.style.display = 'none';
-    
-    this.submitVerification.onclick = () => {
-      const value = this.verificationInput.value.trim();
-      if (!value) {
-        alert('请输入验证码');
-        return;
-      }
-      
-      if (type === 'class') {
-        const classlist = ['初一一班', '初一二班', '初一三班', '初一四班', '初一五班', '初一六班', '初一通知', '初二一班', '初二二班', '初二三班', '初二四班', '初二通知', '初三一班', '初三二班', '初三三班', '初三联培班', '初三通知', '高一一班', '高一二班', '高一三班', '高一通知', '高二一班', '高二二班', '高二三班', '高二四班', '高二通知', '高三一班', '高三二班', '高三三班', '高三四班', '高三通知', '全校通知'];
-        if (classlist.includes(value)) {
-          localStorage.setItem('classParam', value);
-          this.classParam = value;
-          this.verificationDialog.style.display = 'none';
-          this.startConnection();
-          
-          if (this.isElectronMode && window.electronAPI) {
-            if (window.electronAPI.recreateDanmakuWindow) {
-              window.electronAPI.recreateDanmakuWindow();
-            }
-          }
-        } else {
-          this.verificationError.style.display = 'block';
-          this.verificationError.textContent = '无效的班级验证码，请重新输入';
-        }
-      } else {
-        const adminPassword = 'noquit';
-        if (value === adminPassword) {
-          this.verificationDialog.style.display = 'none';
-          if (window.electronAPI) {
-            if (type === 'verify') {
-              window.electronAPI.checkQuit(true);
-            } else {
-              window.electronAPI.checkPassword(true);
-            }
-          }
-        } else {
-          this.verificationError.style.display = 'block';
-          this.verificationError.textContent = '管理密码错误，请重新输入';
-        }
-      }
-    };
-    
-    this.skipVerification.onclick = () => {
-      this.verificationDialog.style.display = 'none';
-    };
-
-    this.verificationInput.onkeypress = (e) => {
-      if (e.key === 'Enter') {
-        this.submitVerification.click();
-      }
-    };
+  showVerificationDialog() {
+    window.electronAPI.createPasswordWindow('password');
   }
 
   startConnection() {
@@ -407,7 +347,7 @@ class DanmakuSystem {
     if (this.isRunning) {
       toggleBtn.textContent = '暂停弹幕';
       if (!this.socket || !this.socket.connected) {
-		this.socket.connect();
+        this.socket.connect();
       }
     } else {
       toggleBtn.textContent = '恢复弹幕';
@@ -418,7 +358,7 @@ class DanmakuSystem {
   }
 
   changeClass() {
-    this.showVerificationDialog('class');
+    window.electronAPI.createPasswordWindow('password');
   }
 
   updateDanmakuSpeed() {
@@ -809,6 +749,14 @@ class DanmakuSystem {
     const el = document.getElementById('apiUrlDisplay');
     if (el) {
       el.textContent = this.socketUrl;
+    }
+  }
+
+  updateClassParamDisplay() {
+    const el = document.getElementById('classParamDisplay');
+    if (el) {
+      if (this.classParam) el.textContent = this.classParam;
+      else el.textContent = '空';
     }
   }
 

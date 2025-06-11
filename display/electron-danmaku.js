@@ -4,6 +4,9 @@ const path = require('path');
 const url = require('url');
 
 const gotTheLock = app.requestSingleInstanceLock();
+let isFocusCycling = false
+let cycleCount = 0
+const MAX_CYCLES = 6
 
 if (!gotTheLock) {
   app.quit();
@@ -17,6 +20,8 @@ if (!gotTheLock) {
   });
 
   let mainWindow;
+  let passwordWindow;
+  let classWindow;
   let danmakuWindow;
   let tray = null;
 
@@ -79,16 +84,10 @@ if (!gotTheLock) {
         danmakuWindow = null;
       }
     });
-	
-	mainWindow.webContents.on('crashed', () => {
-	  app.relaunch(); 
-	  app.exit(0);
-	});
-
-    ipcMain.on('show-verification', (event, type) => {
-      if (mainWindow && mainWindow.webContents) {
-        mainWindow.webContents.send('show-verification', type);
-      }
+    
+    mainWindow.webContents.on('render-process-gone', () => {
+      app.relaunch(); 
+      app.exit(0);
     });
   }
 
@@ -109,14 +108,7 @@ if (!gotTheLock) {
       {
         label: '退出',
         click: () => {
-          if (mainWindow) {
-            mainWindow.show();
-            setTimeout(() => {
-              if (mainWindow && mainWindow.webContents) {
-                mainWindow.webContents.send('show-verification', 'verify');
-              }
-            }, 300);
-          }
+          createPasswordWindow('verify');
         }
       }
     ]);
@@ -180,7 +172,7 @@ if (!gotTheLock) {
     danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
     
     ipcMain.on('danmaku-mouse-event', (event, { type, isOverDanmaku }) => {
-      if (danmakuWindow && !danmakuWindow.isDestroyed()) {
+      if (danmakuWindow) {
         if (type === 'mouseover') {
           danmakuWindow.setIgnoreMouseEvents(false);
         } else if (type === 'mouseout') {
@@ -196,24 +188,22 @@ if (!gotTheLock) {
     danmakuWindow.setFullScreenable(false);
 
     danmakuWindow.once('ready-to-show', () => {
-      if (danmakuWindow && !danmakuWindow.isDestroyed()) {
-        try {
-          danmakuWindow.setBackgroundColor('#00000000');
+      danmakuWindow.setBackgroundColor('#00000000');
 
-          if (process.platform === 'win32') {
-            try {
-              danmakuWindow.setOpacity(1.0);
-            } catch (e) {
-              console.error('设置Windows透明度失败:', e);
-            }
-          }
-          
-          danmakuWindow.show();
-          console.log('弹幕窗口已创建并显示');
+      if (process.platform === 'win32') {
+        try {
+          danmakuWindow.setOpacity(1.0);
         } catch (e) {
-          console.error('设置弹幕窗口属性失败:', e);
+          console.error('设置Windows透明度失败:', e);
         }
       }
+      
+      danmakuWindow.show();
+
+      console.log('弹幕窗口已创建并显示');
+
+      // danmakuWindow.webContents.openDevTools({ mode: 'detach' });
+
     });
 
     danmakuWindow.on('closed', () => {
@@ -223,7 +213,7 @@ if (!gotTheLock) {
 
   ipcMain.on('set-always-on-top', (event, value) => {
     if (mainWindow) {
-      mainWindow.setAlwaysOnTop(value);
+      // mainWindow.setAlwaysOnTop(value);
     }
   });
 
@@ -236,15 +226,72 @@ if (!gotTheLock) {
   });
 
   ipcMain.on('create-class-window', () => {
-    if (mainWindow && mainWindow.webContents) {
-      mainWindow.webContents.send('show-verification', 'class');
+    if (classWindow){
+      classWindow.show()
+      return;
     }
+    
+    classWindow = new BrowserWindow({
+      width: 500,
+      height: 250,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'electron-preload.js')
+      },
+      icon: path.join(__dirname, 'icon.png'),
+      show: false 
+    });
+    
+    classWindow.loadURL(url.format({
+      pathname: path.join(__dirname, 'input.html'),
+      protocol: 'file:',
+      slashes: true
+    }));
+    
+
+
+    classWindow.setMenu(null);
+    classWindow.setVisibleOnAllWorkspaces(true, {visibleOnFullScreen: true});
+    classWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+    
+    classWindow.on('blur', () => {
+      if (!isFocusCycling) {
+        startFocusCycle()
+        shell.beep()
+      }
+      classWindow.flashFrame(true); // 启动任务栏闪烁
+    });
+  
+    function startFocusCycle() {
+      isFocusCycling = true
+      cycleCount = 0
+      performFocusCycle()
+    }
+  
+    function performFocusCycle() {
+      if (cycleCount >= MAX_CYCLES) {
+        isFocusCycling = false
+        classWindow.flashFrame(false); // 停止闪烁
+        return
+      }
+  
+      classWindow.blur()
+      
+      setTimeout(() => {
+        classWindow.focus()
+        cycleCount++
+        setTimeout(performFocusCycle, 50)
+      }, 50)
+    }
+    
+    classWindow.once('ready-to-show', () => {
+      classWindow.show();
+    });
   });
 
-  ipcMain.on('create-password-window', () => {
-    if (mainWindow && mainWindow.webContents) {
-      mainWindow.webContents.send('show-verification', 'password');
-    }
+  ipcMain.on('create-password-window', (event, type) => {
+    createPasswordWindow(type)
   });
 
   ipcMain.on('minimize-to-tray', () => {
@@ -316,6 +363,9 @@ if (!gotTheLock) {
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('set-class-param', classParam);
     }
+    if (danmakuWindow && danmakuWindow.webContents) {
+      danmakuWindow.webContents.send('set-class-param', classParam);
+    }
   });
   
   ipcMain.on('danmaku-command', (event, command) => {
@@ -328,26 +378,10 @@ if (!gotTheLock) {
     if (url) shell.openExternal(url);
   });
   
-  ipcMain.on('check-quit', (event, value) => {
-    if (value) {
-      app.isQuiting = true;
-      app.quit();
-    }
-  });
-
-  ipcMain.on('recreate-danmaku-window', () => {
-    try {
-      if (danmakuWindow && !danmakuWindow.isDestroyed()) {
-        danmakuWindow.close();
-      }
-      danmakuWindow = null;
-      setTimeout(() => {
-        createDanmakuWindow();
-      }, 100);
-    } catch (e) {
-      console.error('重新创建弹幕窗口失败:', e);
-    }
-  });
+  ipcMain.on('quit', () => {
+    app.isQuiting = true;
+    app.quit();
+  })
 
   app.on('ready', () => {
     setAutoLaunch(true);
@@ -376,9 +410,74 @@ if (!gotTheLock) {
   }
   
   function createPasswordWindow(mode){
-    if (mainWindow && mainWindow.webContents) {
-      mainWindow.webContents.send('show-verification', mode);
+    if (passwordWindow){
+      passwordWindow.show()
+      return;
     }
+    
+    passwordWindow = new BrowserWindow({
+      width: 500,
+      height: 250,
+      modal: true,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'electron-preload.js')
+      },
+      icon: path.join(__dirname, 'icon.png'),
+      show: false 
+    });
+    
+
+    passwordWindow.loadURL(url.format({
+      pathname: path.join(__dirname, 'password.html'),
+      protocol: 'file:',
+      slashes: true,
+      search: '?mode='+mode
+    }));
+    
+    passwordWindow.setMenu(null);
+    passwordWindow.setVisibleOnAllWorkspaces(true, {visibleOnFullScreen: true});
+    passwordWindow.setAlwaysOnTop(true, 'screen-saver', 1);
+    
+    // 监听窗口失焦
+    passwordWindow.on('blur', () => {
+      if (!isFocusCycling) {
+        startFocusCycle()
+        shell.beep()
+      }
+      passwordWindow.flashFrame(true); // 启动任务栏闪烁
+    });
+
+    function startFocusCycle() {
+      isFocusCycling = true
+      cycleCount = 0
+      performFocusCycle()
+    }
+
+    function performFocusCycle() {
+      if (cycleCount >= MAX_CYCLES) {
+        isFocusCycling = false
+        passwordWindow.flashFrame(false); // 停止闪烁
+        return
+      }
+
+      passwordWindow.blur()
+    
+      setTimeout(() => {
+        passwordWindow.focus()
+        cycleCount++
+        setTimeout(performFocusCycle, 50)
+      }, 50)
+    }
+
+    passwordWindow.once('ready-to-show', () => {
+      passwordWindow.show();
+    });
+    
+    passwordWindow.on('closed', () => {
+      passwordWindow = null;
+    });
   }
 
   autoUpdater.on('update-available', () => {

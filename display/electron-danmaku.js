@@ -84,6 +84,11 @@ if (!gotTheLock) {
         danmakuWindow = null;
       }
     });
+
+    mainWindow.webContents.on('crashed', () => {
+      app.relaunch();
+      app.exit(0);
+    });
     
     mainWindow.webContents.on('render-process-gone', () => {
       app.relaunch(); 

@@ -288,6 +288,10 @@ if (!gotTheLock) {
     classWindow.once('ready-to-show', () => {
       classWindow.show();
     });
+    
+    classWindow.on('closed', () => {
+      classWindow = null;
+    });
   });
 
   ipcMain.on('create-password-window', (event, type) => {

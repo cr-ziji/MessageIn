@@ -10,6 +10,7 @@ class DanmakuSystem {
     this.danmakuArea = document.getElementById('danmakuArea');
     this.speed = 2;
     this.opacity = 0.8;
+    this.fontSize = 20;
     this.isElectronMode = isElectron();
     this.externalWindow = null;
     this.messageCount = 0;
@@ -40,6 +41,7 @@ class DanmakuSystem {
     this.statusText = document.getElementById('statusText');
     this.speedRange = document.getElementById('speedRange');
     this.opacityRange = document.getElementById('opacityRange');
+    this.fontSizeRange = document.getElementById('fontSizeRange');
     this.topMostCheck = document.getElementById('topMostCheck');
     this.transparentCheck = document.getElementById('transparentCheck');
     this.debugPanel = document.getElementById('debugPanel');
@@ -87,6 +89,7 @@ class DanmakuSystem {
 
       this.setupSpeedControl();
       this.setupOpacityControl();
+      this.setupFontSizeControl();
 
       const helpBtn = document.getElementById('helpBtn');
       if (helpBtn) {
@@ -187,6 +190,20 @@ class DanmakuSystem {
         window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'opacity', value: this.opacity });
       }
     });
+  }
+
+  setupFontSizeControl() {
+    this.fontSizeRange.value = this.fontSize;
+
+    this.fontSizeRange.addEventListener('input', (e) => {
+      this.fontSize = parseInt(e.target.value);
+      this.updateDanmakuFontSize();
+      if (this.isElectronMode && window.electronAPI) {
+        window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'fontSize', value: this.fontSize });
+      }
+    });
+
+    this.updateDanmakuFontSize();
   }
 
   initDebugInfo() {
@@ -396,6 +413,21 @@ class DanmakuSystem {
       .danmaku-item {
         background-color: rgba(0, 0, 0, ${this.opacity}) !important;
         pointer-events: auto;
+      }
+    `;
+  }
+
+  updateDanmakuFontSize() {
+    let style = document.getElementById('danmakuFontSizeStyle');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'danmakuFontSizeStyle';
+      document.head.appendChild(style);
+    }
+
+    style.textContent = `
+      .danmaku-item {
+        font-size: ${this.fontSize}px !important;
       }
     `;
   }
@@ -790,6 +822,12 @@ class DanmakuSystem {
         if (typeof command.value === 'number') {
           this.opacity = command.value;
           this.updateDanmakuOpacity && this.updateDanmakuOpacity();
+        }
+        break;
+      case 'fontSize':
+        if (typeof command.value === 'number') {
+          this.fontSize = command.value;
+          this.updateDanmakuFontSize && this.updateDanmakuFontSize();
         }
         break;
       default:

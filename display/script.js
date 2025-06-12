@@ -8,9 +8,9 @@ class DanmakuSystem {
     this.classParam = localStorage.getItem('classParam') ? localStorage.getItem('classParam') : null;
     this.isRunning = true;
     this.danmakuArea = document.getElementById('danmakuArea');
-    this.speed = 2;
-    this.opacity = 0.8;
-    this.fontSize = 20;
+    this.speed = localStorage.getItem('speed') ? localStorage.getItem('speed') : 2;
+    this.opacity = localStorage.getItem('opacity') ? localStorage.getItem('opacity') : 0.8;
+    this.fontSize = localStorage.getItem('fontSize') ? localStorage.getItem('fontSize') : 20;
     this.isElectronMode = isElectron();
     this.externalWindow = null;
     this.messageCount = 0;
@@ -172,6 +172,7 @@ class DanmakuSystem {
 
     this.speedRange.addEventListener('input', (e) => {
       this.speed = parseInt(e.target.value);
+	  localStorage.setItem('speed', this.speed);
       this.updateDanmakuSpeed();
       this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {
@@ -183,9 +184,13 @@ class DanmakuSystem {
   }
 
   setupOpacityControl() {
+	this.opacityRange.value = this.opacity;
+	
     this.opacityRange.addEventListener('input', (e) => {
       this.opacity = parseFloat(e.target.value) / 10;
+	  localStorage.setItem('opacity', this.opacity);
       this.updateDanmakuOpacity();
+      this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {
         window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'opacity', value: this.opacity });
       }
@@ -197,7 +202,9 @@ class DanmakuSystem {
 
     this.fontSizeRange.addEventListener('input', (e) => {
       this.fontSize = parseInt(e.target.value);
+	  localStorage.setItem('fontSize', this.fontSize);
       this.updateDanmakuFontSize();
+      this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {
         window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'fontSize', value: this.fontSize });
       }
@@ -206,21 +213,15 @@ class DanmakuSystem {
     this.updateDanmakuFontSize();
   }
 
-  initDebugInfo() {
-    if (document.getElementById('speedValue')) {
-      document.getElementById('speedValue').textContent = this.speed;
-    }
-    if (document.getElementById('opacityValue')) {
-      document.getElementById('opacityValue').textContent = this.opacity;
-    }
-  }
-
   updateDebugInfo() {
     if (document.getElementById('speedValue')) {
       document.getElementById('speedValue').textContent = this.speed;
     }
     if (document.getElementById('opacityValue')) {
       document.getElementById('opacityValue').textContent = this.opacity;
+    }
+    if (document.getElementById('fontSizeValue')) {
+      document.getElementById('fontSizeValue').textContent = this.fontSize;
     }
     if (document.getElementById('messageCount')) {
       document.getElementById('messageCount').textContent = this.messageCount;
@@ -398,7 +399,7 @@ class DanmakuSystem {
       }
     `;
 
-    console.log('弹幕速度已更新:', duration.toFixed(2) + 's');
+    // console.log('弹幕速度已更新:', duration.toFixed(2) + 's');
   }
 
   updateDanmakuOpacity() {
@@ -427,6 +428,9 @@ class DanmakuSystem {
 
     style.textContent = `
       .danmaku-item {
+        font-size: ${this.fontSize}px !important;
+      }
+      .danmaku-item button {
         font-size: ${this.fontSize}px !important;
       }
     `;

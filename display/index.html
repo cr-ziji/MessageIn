@@ -55,6 +55,9 @@
         <strong>字体大小：</strong> <span id="fontSizeValue">20</span>
       </div>
       <div>
+        <strong>轮播次数：</strong> <span id="pollingValue">3</span>
+      </div>
+      <div>
         <strong>当前班级：</strong> <span id="classParamDisplay">空</span>
       </div>
     </div>
@@ -77,6 +80,7 @@
       <div class="control-row">
         <button id="toggleBtn">暂停弹幕</button>
         <button id="testBtn">发送测试消息</button>
+        <button id="historyBtn" class="purple">查看历史消息</button>
         <button id="clearBtn" class="red">清空弹幕</button>
       </div>
       
@@ -84,29 +88,47 @@
         <label class="tooltip">
           速度:
           <span class="tooltiptext">移动速度（1-最慢，10-最快）</span>
-          <input type="range" id="speedRange" min="1" max="10" value="5">
+          1<input type="range" id="speedRange" min="1" max="10" value="5">10
         </label>
         
         <label class="tooltip">
           透明度:
           <span class="tooltiptext">背景透明度（1-最透明，10-最不透明）</span>
-          <input type="range" id="opacityRange" min="1" max="10" value="8">
+          1<input type="range" id="opacityRange" min="1" max="10" value="8">10
         </label>
       </div>
       
       <div class="control-row">
         <label class="tooltip">
-          字号：
-          <span class="tooltiptext">字号（12-36） </span>
-          <input type="range" id="fontSizeRange" min="12" max="36" value="18">
+          字号:
+          <span class="tooltiptext">字号（1-最小，25-最大） </span>
+          1<input type="range" id="fontSizeRange" min="12" max="36" value="18">25
         </label>
+
+        <label class="tooltip">
+          轮播次数:
+          <span class="tooltiptext">轮播次数（1-最少，10-最多） </span>
+          1<input type="range" id="pollingRange" min="1" max="10" value="3">10
+        </label>
+      </div>
+      
+      <div class="control-row" style="justify-content: space-around;">
+        <label for="pollingAfterIsread">
+          <input type="checkbox" id="pollingAfterIsread">
+          已读后仍然轮播
+		</label>
+
+        <label for="infinitePolling">
+          <input type="checkbox" id="infinitePolling">
+          无限轮播
+		</label>
       </div>
       
       <div class="control-row">
         <button id="helpBtn" class="blue">帮助</button>
         <button id="changeBtn" class="blue">更改班级</button>
         <button id="debugBtn" class="purple">调试</button>
-        <button id="quitBtn" class="purple">退出</button>
+        <button id="quitBtn" class="red">退出</button>
       </div>
     </div>
   </div>

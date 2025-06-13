@@ -35,6 +35,9 @@ class DanmakuSystem {
       if (danmakuArea) {
         danmakuArea.style.pointerEvents = 'none';
       }
+      this.updateDanmakuSpeed();
+      this.updateDanmakuOpacity();
+      this.updateDanmakuFontSize();
     }
 
     this.statusDot = document.getElementById('statusDot');
@@ -172,7 +175,7 @@ class DanmakuSystem {
 
     this.speedRange.addEventListener('input', (e) => {
       this.speed = parseInt(e.target.value);
-	  localStorage.setItem('speed', this.speed);
+	    localStorage.setItem('speed', this.speed);
       this.updateDanmakuSpeed();
       this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {
@@ -184,17 +187,19 @@ class DanmakuSystem {
   }
 
   setupOpacityControl() {
-	this.opacityRange.value = this.opacity;
+	  this.opacityRange.value = this.opacity * 10;
 	
     this.opacityRange.addEventListener('input', (e) => {
       this.opacity = parseFloat(e.target.value) / 10;
-	  localStorage.setItem('opacity', this.opacity);
+	    localStorage.setItem('opacity', this.opacity);
       this.updateDanmakuOpacity();
       this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {
         window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'opacity', value: this.opacity });
       }
     });
+
+    this.updateDanmakuOpacity();
   }
 
   setupFontSizeControl() {
@@ -202,7 +207,7 @@ class DanmakuSystem {
 
     this.fontSizeRange.addEventListener('input', (e) => {
       this.fontSize = parseInt(e.target.value);
-	  localStorage.setItem('fontSize', this.fontSize);
+	    localStorage.setItem('fontSize', this.fontSize);
       this.updateDanmakuFontSize();
       this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {

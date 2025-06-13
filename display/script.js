@@ -292,9 +292,7 @@ class DanmakuSystem {
 
       this.socket.on('reconnect', (attemptNumber) => {
         console.log('WebSocket重连成功');
-        if (this.timer != null) this.updateStatus('重连成功', 'reconnect');
-        clearTimeout(this.timer);
-        this.timer = null;
+        this.updateStatus('重连成功', 'reconnect');
       });
 
       this.socket.on('new', (data) => {

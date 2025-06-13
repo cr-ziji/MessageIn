@@ -230,7 +230,7 @@
 				clearTimeout(timer);
 			});
 			{% endif %}
-			$('.again').on('click', function(){
+			$('.item-right .again').on('click', function(){
 				loading = setTimeout(function(){$('.loading').css('display', 'flex')}, 100)
 				socket.emit('resend', {
 					class: class1,

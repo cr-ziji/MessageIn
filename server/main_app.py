@@ -34,6 +34,13 @@ gradel = {'初一': 1, '初二': 2, '初三': 3, '高一': 4, '高二': 5, '高�
 classl = {'一班': 1, '二班': 2, '三班': 3, '四班': 4, '五班': 5, '六班': 6, '联培班': 7, '通知': 8}
 
 
+@app.after_request
+def add_security_headers(response):
+    # 设置CSP头，允许WebSocket连接
+    response.headers.set('Content-Security-Policy', "connect-src 'self' ws://* wss://*")
+    return response
+
+
 @app.route('/login')
 def login():
     if 'alert' not in request.args:
@@ -208,6 +215,11 @@ def alter_admin():
     return redirect('/user?tel='+request.form['old_tel'])
 
 
+@app.route('/password', methods=['post'])
+def password():
+    return {'result': request.form['password'] == 'admin_123456'}
+
+
 @app.route('/home')
 def home():
     l = []
@@ -341,10 +353,10 @@ def handle_disconnect():
                 user_dict['全校通知'].remove(class1)
                 user_list.remove(class1)
                 emit('outline', {'class': class1}, broadcast=True)
-                if len(user_dict[class1[0:2]+'通知']) == 0:
+                if class1[0:2]+'通知' in user_list and len(user_dict[class1[0:2]+'通知']) < len(classlist[class1[0:2]]):
                     user_list.remove(class1[0:2]+'通知')
                     emit('outline', {'class': class1[0:2]+'通知'}, broadcast=True)
-                if len(user_dict['全校通知']) == 0:
+                if '全校通知' in user_list and len(user_dict['全校通知']) < 25:
                     user_list.remove('全校通知')
                     emit('outline', {'class': '全校通知'}, broadcast=True)
     print('客户端断开连接')

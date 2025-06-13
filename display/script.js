@@ -12,8 +12,8 @@ class DanmakuSystem {
     this.opacity = localStorage.getItem('opacity') ? localStorage.getItem('opacity') : 0.8;
     this.fontSize = localStorage.getItem('fontSize') ? localStorage.getItem('fontSize') : 20;
     this.polling = localStorage.getItem('polling') ? localStorage.getItem('polling') : 3;
-    this.pollingAfterIsread = localStorage.getItem('pollingAfterIsread') ? localStorage.getItem('pollingAfterIsread') : false;
-    this.infinitePolling = localStorage.getItem('infinitePolling') ? localStorage.getItem('infinitePolling') : false;
+    this.pollingAfterIsread = localStorage.getItem('pollingAfterIsread') ? (localStorage.getItem('pollingAfterIsread').trim()=='true'?true:false) : false;
+    this.infinitePolling = localStorage.getItem('infinitePolling') ? (localStorage.getItem('infinitePolling').trim()=='true'?true:false) : false;
     this.isElectronMode = isElectron();
     this.externalWindow = null;
     this.messageCount = 0;
@@ -894,12 +894,12 @@ class DanmakuSystem {
         }
         break;
       case 'pollingAfterIsread':
-        if (typeof command.value === 'bool') {
+        if (typeof command.value === 'boolean') {
           this.pollingAfterIsread = command.value;
         }
         break;
       case 'infinitePolling':
-        if (typeof command.value === 'bool') {
+        if (typeof command.value === 'boolean') {
           this.infinitePolling = command.value;
         }
         break;

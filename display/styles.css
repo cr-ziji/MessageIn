@@ -176,6 +176,7 @@ body, html {
   background: #e2e8f0;
   border-radius: 3px;
   outline: none;
+  margin: 0 -5px;
 }
 
 .control-panel input[type="range"]::-webkit-slider-thumb {
@@ -203,7 +204,7 @@ body, html {
 
 .info-area {
   margin-top: auto;
-  margin-bottom: 120px;
+  margin-bottom: 200px;
   text-align: center;
 }
 
@@ -392,6 +393,7 @@ body.transparent-mode .wave-container {
 
 .electron-active .electron-info {
   display: block;
+  opacity: 0;
 }
 
 .small-note {

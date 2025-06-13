@@ -74,6 +74,19 @@
           document.getElementById('verificationError').style.display = 'block';
         }
       });
+	  document.addEventListener('keydown', function(event) {
+	    if (event.keyCode === 13) {
+	      const classParam = document.getElementById('verificationInput').value.trim();
+	      
+	      if (classParam && classlist.includes(classParam)) {
+	        localStorage.setItem('classParam', classParam);
+	        window.electronAPI.setClassParam(classParam);
+	        window.close();
+	      } else {
+	        document.getElementById('verificationError').style.display = 'block';
+	      }
+		}
+	  });
       document.getElementById('skipVerification').addEventListener('click', () => {
         // localStorage.setItem('classParam', '__SKIP__');
         // this.classParam = '__SKIP__';

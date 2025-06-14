@@ -16,6 +16,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   createPasswordWindow: (type) => {
     ipcRenderer.send('create-password-window', type);
   },
+
+  createHistoryWindow: (sid) => {
+    ipcRenderer.send('create-history-window', sid);
+  },
   
   checkPassword: (check) => {
     if (check == true){
@@ -104,5 +108,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('set-class-param', (event, classParam) => {
       callback(classParam);
     });
-  }
+  },
+  
+  setSid: (sid) => {
+    ipcRenderer.send('set-sid', sid);
+  },
+  
+  changeSid: (callback, sid) => {
+    ipcRenderer.removeAllListeners('set-sid');
+    ipcRenderer.on('set-sid', (event, sid) => {
+      callback(sid);
+    });
+  },
 }); 

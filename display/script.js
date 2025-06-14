@@ -11,15 +11,18 @@ class DanmakuSystem {
     this.speed = localStorage.getItem('speed') ? localStorage.getItem('speed') : 2;
     this.opacity = localStorage.getItem('opacity') ? localStorage.getItem('opacity') : 0.8;
     this.fontSize = localStorage.getItem('fontSize') ? localStorage.getItem('fontSize') : 20;
+    this.polling = localStorage.getItem('polling') ? localStorage.getItem('polling') : 3;
+    this.pollingAfterIsread = localStorage.getItem('pollingAfterIsread') ? (localStorage.getItem('pollingAfterIsread').trim()=='true'?true:false) : false;
+    this.infinitePolling = localStorage.getItem('infinitePolling') ? (localStorage.getItem('infinitePolling').trim()=='true'?true:false) : false;
     this.isElectronMode = isElectron();
     this.externalWindow = null;
     this.messageCount = 0;
     this.isDebugMode = false;
     this.messageCache = new Map();
-    this.cacheDuration = 3;
     this.processedMessages = new Set();
-    this.socketUrl = 'http://www.cyupeng.com';
+    this.socketUrl = 'www.cyupeng.com';
     this.socket = null;
+	this.sid = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
@@ -35,6 +38,9 @@ class DanmakuSystem {
       if (danmakuArea) {
         danmakuArea.style.pointerEvents = 'none';
       }
+      this.updateDanmakuSpeed();
+      this.updateDanmakuOpacity();
+      this.updateDanmakuFontSize();
     }
 
     this.statusDot = document.getElementById('statusDot');
@@ -42,8 +48,9 @@ class DanmakuSystem {
     this.speedRange = document.getElementById('speedRange');
     this.opacityRange = document.getElementById('opacityRange');
     this.fontSizeRange = document.getElementById('fontSizeRange');
-    this.topMostCheck = document.getElementById('topMostCheck');
-    this.transparentCheck = document.getElementById('transparentCheck');
+    this.pollingRange = document.getElementById('pollingRange');
+    this.pollingAfterIsreadCheck = document.getElementById('pollingAfterIsread');
+    this.infinitePollingCheck = document.getElementById('infinitePolling');
     this.debugPanel = document.getElementById('debugPanel');
     this.debugBtn = document.getElementById('debugBtn');
 
@@ -76,6 +83,9 @@ class DanmakuSystem {
       document.getElementById('quitBtn').addEventListener('click', () => {
         window.electronAPI.createPasswordWindow('verify');
       });
+      document.getElementById('historyBtn').addEventListener('click', () => {
+        window.electronAPI.createHistoryWindow(this.sid);
+      });
       document.getElementById('clearBtn').addEventListener('click', () => {
         this.clearDanmaku();
         if (this.isElectronMode && window.electronAPI) {
@@ -90,16 +100,13 @@ class DanmakuSystem {
       this.setupSpeedControl();
       this.setupOpacityControl();
       this.setupFontSizeControl();
+      this.setupPollingControl();
 
       const helpBtn = document.getElementById('helpBtn');
       if (helpBtn) {
         helpBtn.addEventListener('click', () => {
           const helpUrl = this.socketUrl + '/help?name=02_学生端帮助文档.md';
-          if (this.isElectronMode && window.electronAPI && window.electronAPI.openExternal) {
-            window.electronAPI.openExternal(helpUrl);
-          } else {
-            window.open(helpUrl, '_blank');
-          }
+          window.open(helpUrl, '_blank', "width=1200,height=700,status=no");
         });
       }
 
@@ -172,7 +179,7 @@ class DanmakuSystem {
 
     this.speedRange.addEventListener('input', (e) => {
       this.speed = parseInt(e.target.value);
-	  localStorage.setItem('speed', this.speed);
+      localStorage.setItem('speed', this.speed);
       this.updateDanmakuSpeed();
       this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {
@@ -184,17 +191,19 @@ class DanmakuSystem {
   }
 
   setupOpacityControl() {
-	this.opacityRange.value = this.opacity;
-	
+      this.opacityRange.value = this.opacity * 10;
+    
     this.opacityRange.addEventListener('input', (e) => {
       this.opacity = parseFloat(e.target.value) / 10;
-	  localStorage.setItem('opacity', this.opacity);
+      localStorage.setItem('opacity', this.opacity);
       this.updateDanmakuOpacity();
       this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {
         window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'opacity', value: this.opacity });
       }
     });
+
+    this.updateDanmakuOpacity();
   }
 
   setupFontSizeControl() {
@@ -202,7 +211,7 @@ class DanmakuSystem {
 
     this.fontSizeRange.addEventListener('input', (e) => {
       this.fontSize = parseInt(e.target.value);
-	  localStorage.setItem('fontSize', this.fontSize);
+      localStorage.setItem('fontSize', this.fontSize);
       this.updateDanmakuFontSize();
       this.updateDebugInfo();
       if (this.isElectronMode && window.electronAPI) {
@@ -213,12 +222,46 @@ class DanmakuSystem {
     this.updateDanmakuFontSize();
   }
 
+  setupPollingControl() {
+    this.pollingRange.value = this.polling;
+    this.pollingAfterIsreadCheck.checked = this.pollingAfterIsread;
+    this.infinitePollingCheck.checked = this.infinitePolling;
+
+    this.pollingRange.addEventListener('input', (e) => {
+      this.polling = parseInt(e.target.value);
+      localStorage.setItem('polling', this.polling);
+      this.updateDebugInfo();
+      if (this.isElectronMode && window.electronAPI) {
+        window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'polling', value: this.polling });
+      }
+    });
+    
+    this.pollingAfterIsreadCheck.addEventListener('change', (e) => {
+      this.pollingAfterIsread = e.target.checked;
+      localStorage.setItem('pollingAfterIsread', this.pollingAfterIsread);
+      if (this.isElectronMode && window.electronAPI) {
+        window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'pollingAfterIsread', value: this.pollingAfterIsread });
+      }
+    });
+    
+    this.infinitePollingCheck.addEventListener('change', (e) => {
+      this.infinitePolling = e.target.checked;
+      localStorage.setItem('infinitePolling', this.infinitePolling);
+      if (this.isElectronMode && window.electronAPI) {
+        window.electronAPI.sendDanmakuCommand && window.electronAPI.sendDanmakuCommand({ type: 'infinitePolling', value: this.infinitePolling });
+      }
+    });
+  }
+
   updateDebugInfo() {
     if (document.getElementById('speedValue')) {
       document.getElementById('speedValue').textContent = this.speed;
     }
     if (document.getElementById('opacityValue')) {
       document.getElementById('opacityValue').textContent = this.opacity;
+    }
+    if (document.getElementById('pollingValue')) {
+      document.getElementById('pollingValue').textContent = this.polling;
     }
     if (document.getElementById('fontSizeValue')) {
       document.getElementById('fontSizeValue').textContent = this.fontSize;
@@ -282,14 +325,16 @@ class DanmakuSystem {
         this.socket.emit('init', {
           class: encoder.encode(this.classParam)
         });
+		this.sid = this.socket.id;
+		if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
+          window.electronAPI.setSid(this.sid);
+        }
         this.updateStatus('已连接', 'success');
       });
 
       this.socket.on('reconnect', (attemptNumber) => {
         console.log('WebSocket重连成功');
-        if (this.timer != null) this.updateStatus('重连成功', 'reconnect');
-        clearTimeout(this.timer);
-        this.timer = null;
+        this.updateStatus('重连成功', 'reconnect');
       });
 
       this.socket.on('new', (data) => {
@@ -349,6 +394,10 @@ class DanmakuSystem {
 
       this.socket.on('disconnect', () => {
         console.log('WebSocket连接断开');
+		this.sid = null
+		if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
+          window.electronAPI.setSid(this.sid);
+        }
         this.updateStatus('连接已断开', 'error');
       });
 
@@ -653,14 +702,26 @@ class DanmakuSystem {
           if (window.electronAPI) {
             window.electronAPI.handleDanmakuMouseEvent('mouseout', false);
           }
-          if (danmaku.classList.contains('ok') || !uuid) {
+          if (!this.pollingAfterIsread && danmaku.classList.contains('ok') || !uuid) {
             danmaku.remove();
             return;
           }
 
           playCount++;
-          if (playCount < this.cacheDuration) {
-            this.addDanmaku(this.messageCache.get(uuid)?.content || danmaku.textContent, uuid, playCount);
+          if (this.infinitePolling || playCount < this.polling) {
+            let newDanmaku = this.addDanmaku(this.messageCache.get(uuid)?.content || danmaku.textContent, uuid, playCount);
+            if (danmaku.classList.contains('ok')){
+              const button = newDanmaku.querySelector('button');
+              if (button) {
+                button.click();
+              } else {
+                newDanmaku.classList.add('ok');
+                const uuid = newDanmaku.id;
+                if (uuid && this.messageCache.has(uuid)) {
+                  this.messageCache.delete(uuid);
+                }
+              }
+            }
           } else {
             if (uuid && this.messageCache.has(uuid)) {
               this.messageCache.delete(uuid);
@@ -669,6 +730,7 @@ class DanmakuSystem {
           danmaku.remove();
         }
       });
+      return danmaku
     } catch (error) {
       console.error('添加弹幕时发生错误:', error);
     }
@@ -697,7 +759,7 @@ class DanmakuSystem {
 
     const pendingMessages = [];
     for (const [uuid, messageData] of this.messageCache.entries()) {
-      if (!visibleDanmaku.has(uuid) && messageData.playCount < this.cacheDuration) {
+      if (!visibleDanmaku.has(uuid) && messageData.playCount < this.polling) {
         pendingMessages.push({ uuid, messageData });
       }
     }
@@ -759,7 +821,7 @@ class DanmakuSystem {
     }
 
     for (const [uuid, messageData] of this.messageCache.entries()) {
-      if (messageData.playCount >= this.cacheDuration) {
+      if (messageData.playCount >= this.polling) {
         this.messageCache.delete(uuid);
       }
     }
@@ -832,6 +894,21 @@ class DanmakuSystem {
         if (typeof command.value === 'number') {
           this.fontSize = command.value;
           this.updateDanmakuFontSize && this.updateDanmakuFontSize();
+        }
+        break;
+      case 'polling':
+        if (typeof command.value === 'number') {
+          this.polling = command.value;
+        }
+        break;
+      case 'pollingAfterIsread':
+        if (typeof command.value === 'boolean') {
+          this.pollingAfterIsread = command.value;
+        }
+        break;
+      case 'infinitePolling':
+        if (typeof command.value === 'boolean') {
+          this.infinitePolling = command.value;
         }
         break;
       default:

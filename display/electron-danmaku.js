@@ -23,6 +23,7 @@ if (!gotTheLock) {
   let passwordWindow;
   let classWindow;
   let danmakuWindow;
+  let historyWindow;
   let tray = null;
 
   function setAutoLaunch(enable) {
@@ -76,6 +77,16 @@ if (!gotTheLock) {
         createDanmakuWindow();
       }, 500);
     });
+	
+	mainWindow.webContents.setWindowOpenHandler(details => {
+      return {
+		action: 'allow',
+        overrideBrowserWindowOptions: {
+          autoHideMenuBar: true,
+		  icon: path.join(__dirname, 'icon.png'),
+        }
+      };
+	});
 
     mainWindow.on('closed', () => {
       mainWindow = null;
@@ -303,6 +314,43 @@ if (!gotTheLock) {
     createPasswordWindow(type)
   });
 
+  ipcMain.on('create-history-window', (event, sid) => {
+    if (historyWindow){
+      historyWindow.show()
+      return;
+    }
+    
+    historyWindow = new BrowserWindow({
+      width: 700,
+      height: 700,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'electron-preload.js')
+      },
+      icon: path.join(__dirname, 'icon.png'),
+      show: false 
+    });
+    
+    historyWindow.loadURL(url.format({
+      pathname: path.join(__dirname, 'history.html'),
+      protocol: 'file:',
+      slashes: true,
+      search: '?sid='+sid
+    }));
+
+    historyWindow.setMenu(null);
+    historyWindow.setVisibleOnAllWorkspaces(true, {visibleOnFullScreen: true});
+    
+    historyWindow.once('ready-to-show', () => {
+      historyWindow.show();
+    });
+    
+    historyWindow.on('closed', () => {
+      historyWindow = null;
+    });
+  });
+
   ipcMain.on('minimize-to-tray', () => {
     if (mainWindow) {
       mainWindow.hide();
@@ -374,6 +422,12 @@ if (!gotTheLock) {
     }
     if (danmakuWindow && danmakuWindow.webContents) {
       danmakuWindow.webContents.send('set-class-param', classParam);
+    }
+  });
+
+  ipcMain.on('set-sid', (event, sid) => {
+    if (historyWindow && historyWindow.webContents) {
+      historyWindow.webContents.send('set-sid', sid);
     }
   });
   

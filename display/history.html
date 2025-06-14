@@ -24,7 +24,7 @@
     </style>
 </head>
 <body>
-  <iframe src="www.cyupeng.com/history" id="history"></iframe>
+  <iframe src="http://www.cyupeng.com/history" id="history"></iframe>
   <script>
       const isElectron = () => {
         return window.navigator.userAgent.toLowerCase().indexOf('electron') > -1 ||
@@ -33,11 +33,11 @@
 	  const typeParams = new URLSearchParams(window.location.search);
 	  let iframe = document.getElementById('history')
 	  
-	  if (iframe) iframe.src = 'www.cyupeng.com/history?sid=' + typeParams.get('sid')
+	  if (iframe) iframe.src = 'http://www.cyupeng.com/history?sid=' + typeParams.get('sid')
 	  
 	  if (window.electronAPI && window.electronAPI.changeSid) {
 	    window.electronAPI.changeSid((sid) => {
-	      if (iframe) iframe.src = 'www.cyupeng.com/history?sid=' + sid
+	      if (iframe) iframe.src = 'http://www.cyupeng.com/history?sid=' + sid
 	    });
 	  }
   </script>

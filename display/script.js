@@ -20,7 +20,7 @@ class DanmakuSystem {
     this.isDebugMode = false;
     this.messageCache = new Map();
     this.processedMessages = new Set();
-    this.socketUrl = 'www.cyupeng.com';
+    this.socketUrl = 'http://www.cyupeng.com';
     this.socket = null;
 	this.sid = null;
 

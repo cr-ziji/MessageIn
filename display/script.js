@@ -20,7 +20,8 @@ class DanmakuSystem {
     this.isDebugMode = false;
     this.messageCache = new Map();
     this.processedMessages = new Set();
-    this.socketUrl = 'http://www.cyupeng.com';
+    this.socketUrl = 'ws://www.cyupeng.com';
+    this.url = 'http://www.cyupeng.com';
     this.socket = null;
 	this.sid = null;
 
@@ -105,7 +106,7 @@ class DanmakuSystem {
       const helpBtn = document.getElementById('helpBtn');
       if (helpBtn) {
         helpBtn.addEventListener('click', () => {
-          const helpUrl = this.socketUrl + '/help?name=02_学生端帮助文档.md';
+          const helpUrl = this.url + '/help?name=02_学生端帮助文档.md';
           window.open(helpUrl, '_blank', "width=1200,height=700,status=no");
         });
       }

@@ -150,6 +150,8 @@ class DanmakuSystem {
           this.updateStatus('下载进度: ' + Math.round(status.percent) + '%', 'success');
         } else if (status.status === 'restart') {
           this.updateStatus('开始尝试备用源', 'success');
+        } else if (status.status === 'update-checking') {
+          this.updateStatus('检查更新中', 'success');
         }
       });
     }

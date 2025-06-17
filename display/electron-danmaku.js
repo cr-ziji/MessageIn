@@ -7,6 +7,8 @@ const gotTheLock = app.requestSingleInstanceLock();
 let isFocusCycling = false
 let cycleCount = 0
 const MAX_CYCLES = 6
+let isUsingBackupSource = false;
+let updateCheckInterval = null;
 
 if (!gotTheLock) {
   app.quit();
@@ -446,18 +448,68 @@ if (!gotTheLock) {
     app.quit();
   })
 
+  function startUpdateCheck() {
+    if (updateCheckInterval) {
+      clearInterval(updateCheckInterval);
+    }
+    
+    updateCheckInterval = setInterval(() => {
+      checkForUpdates();
+    }, 10 * 60 * 1000); // 10分钟检查一次
+  }
+
+  function checkForUpdates() {
+    if (isUsingBackupSource) {
+      // 使用备用源
+      autoUpdater.setFeedURL({
+        "provider": "github",
+        "owner": "cyrilguocode",
+        "repo": "MessageIn",
+        "releaseType": "release"  
+      });
+      console.log('使用备用源检查更新');
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('update-status', {
+          status: 'restart',
+          message: '使用备用源检查更新'
+        });
+      }
+    } else {
+      // 使用主源
+      autoUpdater.setFeedURL({
+        "provider": "generic",
+        "url": "http://www.cyupeng.com/download/"
+      });
+      console.log('使用主源检查更新');
+      if (mainWindow && mainWindow.webContents) {
+        mainWindow.webContents.send('update-status', {
+          status: 'restart',
+          message: '使用主源检查更新'
+        });
+      }
+    }
+    
+    autoUpdater.checkForUpdates();
+  }
+
   app.on('ready', () => {
     setAutoLaunch(true);
-
     createWindow();
-
     if (mainWindow) {
       mainWindow.hide();
     }
     autoUpdater.allowInsecure = true;
-    autoUpdater.disableWebInstaller = false
-    autoUpdater.autoDownload = false //这个必须写成false，写成true时，会报没权限更新
     autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.disableWebInstaller = false;
+    autoUpdater.autoDownload = false;
+    if (mainWindow && mainWindow.webContents) {
+      mainWindow.webContents.send('update-status', {
+        status: 'update-checking',
+        message: '检查更新中'
+      });
+    }
+    autoUpdater.checkForUpdates();
+    startUpdateCheck();
   });
 
   function downloadUpdate() {
@@ -572,21 +624,16 @@ if (!gotTheLock) {
         message: '检查更新失败: ' + error.message
       });
     }
-    // 设置备用源
-    autoUpdater.setFeedURL({
-      "provider": "github",
-      "owner": "cyrilguocode",
-      "repo": "MessageIn",
-      "releaseType": "release"  
-    });
-    console.log('开始尝试备用源');
+    
+    // 切换更新源
+    isUsingBackupSource = !isUsingBackupSource;
+    console.log('切换更新源');
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('update-status', {
         status: 'restart',
-        message: '开始尝试备用源'
+        message: '切换更新源'
       });
     }
-    autoUpdater.checkForUpdates(); // 确保在这里调用
   });
 
   autoUpdater.on('update-downloaded', () => {

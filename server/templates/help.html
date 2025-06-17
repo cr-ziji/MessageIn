@@ -2,6 +2,7 @@
 <html>
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>帮助</title>
 	<link rel="stylesheet" href="../static/css/highlight.css">
 	<link rel="stylesheet" href="../static/css/help.css">
@@ -44,52 +45,45 @@
 		marked.setOptions({
 			highlight: code => hljs.highlightAuto(code).value
 		});// 初始化元素引用
-	
-	
-	const editor = document.getElementById('editor');
-	const preview = document.getElementById('preview');
-	const outlineList = document.getElementsByClassName('outline-list')[0];
-
-	// 实时渲染功能
-	// editor.addEventListener('input', () => {
-	//	 const markdown = editor.value;
-	//	 preview.innerHTML = marked.parse(markdown);
-	//	 generateOutline();
-	// });
-
-	// 大纲生成算法
-	function generateOutline() {
-		const headings = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
-		outlineList.innerHTML = '';
 		
-		headings.forEach(heading => {
-		const li = document.createElement('li');
-		li.innerHTML = `
-			<a href="#${heading.id}" class="level-${heading.tagName.slice(1)}">
-			${heading.textContent}
-			</a>
-		`;
-		outlineList.appendChild(li);
-		});
-	}
+		
+		const editor = document.getElementById('editor');
+		const preview = document.getElementById('preview');
+		const outlineList = document.getElementsByClassName('outline-list')[0];
 
-	// 自动锚点生成
-	let headingCounter = 0;
-	marked.use({
-		renderer: {
-		heading(text, level) {
-			const id = `heading-${++headingCounter}`;
-			return `<h${level} id="${id}">${text}</h${level}>`;
+		// 大纲生成算法
+		function generateOutline() {
+			const headings = preview.querySelectorAll('h1, h2, h3, h4, h5, h6');
+			outlineList.innerHTML = '';
+			
+			headings.forEach(heading => {
+				const li = document.createElement('li');
+				li.innerHTML = `
+					<a href="#${heading.id}" class="level-${heading.tagName.slice(1)}">
+					${heading.textContent}
+					</a>
+				`;
+				outlineList.appendChild(li);
+			});
 		}
-		}
-	});
-	
-	let text = `{{t_text}}`;
-	preview.innerHTML = marked.parse(text);
-	{% if t_name != '' %}
-	preview.innerHTML += '<video src="../static/file/{{t_name}}" controls></video>';
-	{% endif %}
-	generateOutline()
+
+		// 自动锚点生成
+		let headingCounter = 0;
+		marked.use({
+			renderer: {
+				heading(text, level) {
+					const id = `heading-${++headingCounter}`;
+					return `<h${level} id="${id}">${text}</h${level}>`;
+				}
+			}
+		});
+		
+		let text = `{{t_text}}`;
+		preview.innerHTML = marked.parse(text);
+		{% if t_name != '' %}
+		preview.innerHTML += '<video src="../static/file/{{t_name}}" controls></video>';
+		{% endif %}
+		generateOutline()
 	</script>
 </body>
 </html>

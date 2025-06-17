@@ -37,7 +37,7 @@ form{
 	position: absolute;
 	top: 50%;
 	background-color: white;
-	left: 25%;
+	left: max(25%, 155px);
 	padding: 30px;
 	width: 250px;
 	transform: translateX(-50%) translateY(-50%);

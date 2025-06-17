@@ -43,12 +43,7 @@ def add_security_headers(response):
 
 @app.route('/login')
 def login():
-    if 'alert' not in request.args:
-        a = 0
-    else:
-        a = request.args['alert']
-    return render_template('login.html',
-                           t_alert=a)
+    return render_template('login.html')
 
 
 @app.route('/logout')
@@ -59,12 +54,7 @@ def logout():
 
 @app.route('/register')
 def register():
-    if 'alert' not in request.args:
-        a = 0
-    else:
-        a = request.args['alert']
-    return render_template('register.html',
-                           t_alert=a)
+    return render_template('register.html')
 
 
 @app.route('/handle', methods=['post'])
@@ -76,7 +66,7 @@ def handle():
         }
         have = db.teacher.find_one(dict1)
         if have is None:
-            return redirect('/login?alert=1')
+            return '<script>alert("用户名或密码错误");history.back()</script>'
         session['用户名'] = have['用户名']
         session['手机号'] = have['手机号']
         session['密码'] = have['密码']
@@ -84,7 +74,7 @@ def handle():
         return redirect('/home')
     elif request.form['type'] == '注册':
         if 'class' not in request.form:
-            return redirect('/register?alert=1')
+            return '<script>alert("请选择班级（选择后点击加号）");history.back()</script>'
         name = request.form['subject']+request.form['name']+'老师'
         l = dict(request.form)['class']
         l = sorted(l, key=lambda x: gradel[x[0:2]]*10+classl[x[2:]])
@@ -96,7 +86,7 @@ def handle():
         }
         have = db.teacher.find_one({'手机号': request.form['tel']})
         if have is not None:
-            return redirect('/register?alert=2')
+            return '<script>alert("手机号重复");history.back()</script>'
         db.teacher.insert_one(dict1)
         session['用户名'] = name
         session['手机号'] = request.form['tel']
@@ -212,7 +202,7 @@ def alter_admin():
         session['密码'] = request.form['password']
         session['班级'] = l
     # 需要实现：发消息人改变
-    return redirect('/user?tel='+request.form['old_tel'])
+    return redirect('/user?tel='+request.form['tel'])
 
 
 @app.route('/password', methods=['post'])
@@ -257,6 +247,26 @@ def connect():
     for i in l:
         s += i + '   ' + str(user_dict[i]) + '<br>'
     return s
+
+
+@app.route('/feedback')
+def feedback():
+    return render_template('feedback.html')
+
+
+@app.route('/send_feedback', methods=['post'])
+def send_feedback():
+    dict1 = {'用户': session['用户名'], '意见': request.form['feed']}
+    db.feedback.insert_one(dict1)
+    return '<script>alert("意见反馈成功，感谢您的宝贵意见，我们将尽快修复");location.href="/home"</script>'
+
+
+@app.route('/see_feedback')
+def see_feedback():
+    if session['用户名'] != '管理员':
+        return redirect('/home')
+    l = db.feedback.find()
+    return render_template('see_feedback.html', feedback=l)
 
 
 @app.route('/file')
@@ -335,6 +345,21 @@ def class1():
 @app.route('/none')
 def none():
     return render_template('none.html')
+
+
+@app.route('/history')
+def history():
+    if ('sid' not in request.args) or (request.args['sid'] not in user_ip):
+        return '<html><head></head><body style="margin: 0;"><p style="text-align: center;line-height: 100vh;margin: 0;font-size: 20px;">当前未连接，请连接后重试</p></body></html>'
+    class1 = user_ip[request.args['sid']]
+    data = db.data.find_one({'class': class1})
+    if data is None:
+        data = {'class': class1, 'message':[]}
+        db.data.insert_one(data)
+    data = data['message']
+    return render_template('history.html',
+                           t_data=data,
+                           t_class=class1)
 
 @socketio.on('connect')
 def handle_connect():

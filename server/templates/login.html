@@ -2,12 +2,13 @@
 <html lang="UTF-8">
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>登录</title>
 	<link rel="stylesheet" href="../static/css/login.css">
 	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
 </head>
 <body>
-	<a class='download_button' href="/download/MessageIn-Display-Setup-1.7.5.exe"><img src="../static/images/download.png" height="23" width="23">下载</a>
+	<a class='download_button' href="/download/MessageIn-Display-Setup-1.7.7.exe"><img src="../static/images/download.png" height="23" width="23">下载</a>
 	<p class="big_title">北大附中北医分校消息管理系统</p>
 	<hr>
 	<form action="/handle" method="post">
@@ -23,8 +24,5 @@
 		<a href="/visitor" class="visitor">我是访客</a>
 	</form>
 	<a href="/help?name=01_功能文档.md" class="help" target="_blank">?</a>
-	{% if t_alert %}
-	<script>alert('用户名或密码错误')</script>
-	{% endif %}
 </body>
 </html>

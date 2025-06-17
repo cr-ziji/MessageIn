@@ -2,6 +2,8 @@ body{
 	overflow: hidden;
 }
 body{
+	display: grid;
+	grid-template-rows: auto auto auto 1fr;
 	height: calc(100dvh - 16px);
 }
 a{
@@ -19,18 +21,25 @@ a:hover {
 	color: white;
 }
 .big_title{
-	text-align: center;
+	margin: 0;
+    text-align: left;
+    grid-row: 1;
 	text-decoration:none;
 	font-size: 40px;
 	color: #008CBA;
 	display: inline;
 }
 .user{
+	grid-row: 2;
 	position: absolute;
     font-size: 20px;
     margin-top: 10px;
     top: 10px;
     right: 8px;
+}
+hr{
+	grid-row: 3;
+	width: 100%;
 }
 .class{
 	font-size: 25px;
@@ -61,7 +70,8 @@ iframe{
 .main{
 	display: flex;
 	width: 100%;
-	height: calc(100% - 70px);
+	grid-row: 4;
+    overflow: auto;
 }
 .content{
 	overflow: auto;
@@ -92,13 +102,9 @@ iframe{
 	width: 100px;
 	height: 100px;
 }
-.heng iframe{
-	position: absolute;
-	height: calc(100% - 86px);
-	width: calc(100% - 16px);
-}
 .heng .content{
 	width: 100%;
+	min-width: 0;
 }
 .outline{
 	background-color: #f18282 !important;

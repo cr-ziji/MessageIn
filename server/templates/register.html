@@ -2,12 +2,13 @@
 <html lang="UTF-8">
 <head>
 	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>注册</title>
 	<link rel="stylesheet" href="../static/css/register.css">
 	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
 </head>
 <body>
-	<a class='download_button' href="/download/MessageIn-Display-Setup-1.7.5.exe"><img src="../static/images/download.png" height="23" width="23">下载</a>
+	<a class='download_button' href="/download/MessageIn-Display-Setup-1.7.7.exe"><img src="../static/images/download.png" height="23" width="23">下载</a>
 	<p class="big_title">北大附中北医分校消息管理系统</p>
 	<hr>
 	<form action="/handle" method="post">
@@ -67,11 +68,6 @@
 		<div style="display: none;" class="hidden"></div>
 	</form>
 	<a href="/help?name=01_功能文档.md" class="help" target="_blank">?</a>
-	{% if t_alert == '1' %}
-	<script>alert('请选择班级（选择后点击加号）')</script>
-	{% elif t_alert == '2' %}
-	<script>alert('手机号重复')</script>
-	{% endif %}
 	<script src="../static/js/jquery-3.3.1.min.js"></script>
 	<script>
 		l = {}

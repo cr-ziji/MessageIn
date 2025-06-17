@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="utf-8">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>查看意见</title>
+	<link rel="stylesheet" href="../static/css/feedback.css">
+</head>
+<body>
+	<a class='a' href="/home"><</a>
+	<p class="big_title">北大附中北医分校信息管理系统</p>
+	<hr>
+	{% for i in feedback %}
+	<div class="user">
+		<span>{{i['用户']}}</span>
+		<span>{{i['意见']}}</span>
+	</div>
+	{% endfor %}
+</body>
+</html>

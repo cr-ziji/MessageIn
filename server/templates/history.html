@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="UTF-8">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>历史记录</title>
+	<link rel="stylesheet" href="../static/css/class.css">
+	<link rel="icon" type="image/svg+xml" href="../static/images/icon.ico">
+</head>
+<body>
+	<div class="container">
+		<div class="content">
+			{% for i in t_data %}
+			{% if i['state'] == True or i['state'] == [] %}
+			<span class="time">{{i['time']}}</span>
+			<div class="item item-left">
+				<div class="avatar">{{i['name']}}</div>
+				<div class="bubble" id="{{i['uuid']}}">{{i['content']}}</div>
+				
+				{% if i['isread'] == True or i['isread'] == [] %}
+				<span class="read">已读</span>
+				{% else %}
+				<span class="read">未读
+				{% if i['isread'] != False %}
+				:
+				{% for j in i['isread'] %}
+				{{j}}
+				{% endfor %}
+				{% endif %}
+				</span>
+				{% endif %}
+			</div>
+			{% endif %}
+			{% endfor %}
+		</div>
+	</div>
+	<div class="loading" style="display: none;">
+		<div>
+			<img src="../static/images/loading.png">
+			<br>
+			加载中
+		</div>
+	</div>
+	<div class="loading1" style="display: none;">
+		<div>
+			<img src="../static/images/loading.png">
+			<br>
+			连接断开，正在重新连接
+		</div>
+	</div>
+	<script src="../static/js/jquery-3.3.1.min.js"></script>
+	<script src="../static/js/socket.io.min.js"></script>
+	<script>
+		const socket = io({
+			reconnection: true,        // 启用自动重连
+			reconnectionAttempts: 10,  // 最大重试次数
+			reconnectionDelay: 1000,   // 初始重试间隔（毫秒）
+			reconnectionDelayMax: 5000,// 最大重试间隔
+			randomizationFactor: 0.5,  // 随机化因子（0-1）
+			timeout: 20000,            // 连接超时时间
+			autoConnect: true          // 自动连接
+		});
+		let timer
+		let class1 = '{{t_class}}';
+		let id = ''
+		let timer1;
+		
+		
+		// // 断开连接事件
+		// socket.on('disconnect', (reason) => {
+		// 	alert('连接断开，可等待自动重连或手动刷新页面')
+		// });
+		// // 重连尝试事件
+		// socket.on('reconnect_attempt', (attemptNumber) => {
+		// 	timer1 = setTimeout(function(){$('.loading1').css('display', 'flex')}, 100)
+		// });
+		// // 重连成功事件
+		// socket.on('reconnect', (attemptNumber) => {
+		// 	clearTimeout(timer1)
+		// 	$('.loading1').css('display', 'none')
+		// });
+		// // 错误处理
+		// socket.on('connect_error', (error) => {
+		// 	alert('无法连接')
+		// 	clearTimeout(timer1)
+		// 	$('.loading1').css('display', 'none')
+		// });
+		$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
+		socket.on('new', (data) => {
+			$('.loading').css('display', 'none')
+			if (data.class1 !== class1) return;
+			if (data.state != '') return
+			$('.content')[0].innerHTML += '<span class="time">' + data.time + '</span>'
+			let item = document.createElement('div');
+			item.className = 'item item-left';
+			item.innerHTML = `<div class="avatar">${data.name}</div><div class="bubble" id="${data.uuid}">${data.content}</div>`
+			item.innerHTML += `<span class="read">${data.isread}</span>`;
+			$('.content')[0].appendChild(item);
+			$('.content')[0].scrollTo(0, $('.content')[0].scrollHeight)
+		});
+		socket.on('back', (data) => {
+			$('.loading').css('display', 'none')
+			if (data.class1 !== class1) return;
+			$('#'+data.uuid)[0].innerHTML = '此消息已撤回'
+		});
+		socket.on('delete', (data) => {
+			$('.loading').css('display', 'none')
+			if (data.class1 !== class1) return;
+			$('#'+data.uuid).parent()[0].previousElementSibling.outerHTML = ''
+			$('#'+data.uuid).parent()[0].outerHTML = ''
+		});
+		socket.on('update', (data) => {
+			if (data.class1 !== class1) return;
+			$('#'+data.uuid).parent().children('.read')[0].innerHTML = data.isread
+		});
+	</script>
+</body>
+</html>

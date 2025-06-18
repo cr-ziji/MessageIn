@@ -139,7 +139,7 @@ class DanmakuSystem {
       window.electronAPI.onUpdateStatus((status) => {
         console.log('收到更新状态:', status);
         if (status.status === 'error') {
-          this.updateStatus('更新错误: ' + status.message, 'error');
+          this.updateStatus(status.message, 'error');
         } else if (status.status === 'update-available') {
           this.updateStatus('发现新版本，正在下载...', 'success');
         } else if (status.status === 'update-not-available') {
@@ -149,7 +149,7 @@ class DanmakuSystem {
         } else if (status.status === 'download-progress') {
           this.updateStatus('下载进度: ' + Math.round(status.percent) + '%', 'success');
         } else if (status.status === 'restart') {
-          this.updateStatus('开始尝试备用源', 'success');
+          this.updateStatus(status.message, 'success');
         } else if (status.status === 'update-checking') {
           this.updateStatus('检查更新中', 'success');
         }
@@ -292,7 +292,7 @@ class DanmakuSystem {
     if (document.getElementById('debugStatus')) {
       document.getElementById('debugStatus').textContent = text;
     }
-    if (status === 'error') {
+    if (status === 'error' && text.indexOf('更新') == -1) {
       this.addDanmaku('连接状态：' + text);
     }
     if (status === 'reconnect') {

@@ -50,7 +50,7 @@ if (!gotTheLock) {
         preload: path.join(__dirname, 'electron-preload.js')
       },
       icon: path.join(__dirname, 'icon.png'),
-      show: false 
+      show: false
     });
 
     mainWindow.loadURL(url.format({
@@ -79,7 +79,7 @@ if (!gotTheLock) {
         createDanmakuWindow();
       }, 500);
     });
-	
+
 	mainWindow.webContents.setWindowOpenHandler(details => {
       return {
 		action: 'allow',
@@ -102,9 +102,9 @@ if (!gotTheLock) {
       app.relaunch();
       app.exit(0);
     });
-    
+
     mainWindow.webContents.on('render-process-gone', () => {
-      app.relaunch(); 
+      app.relaunch();
       app.exit(0);
     });
   }
@@ -112,7 +112,7 @@ if (!gotTheLock) {
   function createTray() {
     const iconPath = path.join(__dirname, 'icon.png');
     tray = new Tray(iconPath);
-    
+
     const contextMenu = Menu.buildFromTemplate([
       {
         label: '显示主窗口',
@@ -130,7 +130,7 @@ if (!gotTheLock) {
         }
       }
     ]);
-    
+
     tray.setToolTip('MessageIn');
     tray.setContextMenu(contextMenu);
 
@@ -188,7 +188,7 @@ if (!gotTheLock) {
     }));
 
     danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
-    
+
     ipcMain.on('danmaku-mouse-event', (event, { type, isOverDanmaku }) => {
       if (danmakuWindow) {
         if (type === 'mouseover') {
@@ -198,7 +198,7 @@ if (!gotTheLock) {
         }
       }
     });
-    
+
     danmakuWindow.setVisibleOnAllWorkspaces(true, {visibleOnFullScreen: true});
 
     danmakuWindow.setAlwaysOnTop(true, 'screen-saver', 1);
@@ -215,7 +215,7 @@ if (!gotTheLock) {
           console.error('设置Windows透明度失败:', e);
         }
       }
-      
+
       danmakuWindow.show();
 
       console.log('弹幕窗口已创建并显示');
@@ -248,7 +248,7 @@ if (!gotTheLock) {
       classWindow.show()
       return;
     }
-    
+
     classWindow = new BrowserWindow({
       width: 500,
       height: 250,
@@ -258,21 +258,21 @@ if (!gotTheLock) {
         preload: path.join(__dirname, 'electron-preload.js')
       },
       icon: path.join(__dirname, 'icon.png'),
-      show: false 
+      show: false
     });
-    
+
     classWindow.loadURL(url.format({
       pathname: path.join(__dirname, 'input.html'),
       protocol: 'file:',
       slashes: true
     }));
-    
+
 
 
     classWindow.setMenu(null);
     classWindow.setVisibleOnAllWorkspaces(true, {visibleOnFullScreen: true});
     classWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-    
+
     classWindow.on('blur', () => {
       if (!isFocusCycling) {
         startFocusCycle()
@@ -280,33 +280,33 @@ if (!gotTheLock) {
       }
       classWindow.flashFrame(true); // 启动任务栏闪烁
     });
-  
+
     function startFocusCycle() {
       isFocusCycling = true
       cycleCount = 0
       performFocusCycle()
     }
-  
+
     function performFocusCycle() {
       if (cycleCount >= MAX_CYCLES) {
         isFocusCycling = false
         classWindow.flashFrame(false); // 停止闪烁
         return
       }
-  
+
       classWindow.blur()
-      
+
       setTimeout(() => {
         classWindow.focus()
         cycleCount++
         setTimeout(performFocusCycle, 50)
       }, 50)
     }
-    
+
     classWindow.once('ready-to-show', () => {
       classWindow.show();
     });
-    
+
     classWindow.on('closed', () => {
       classWindow = null;
     });
@@ -321,7 +321,7 @@ if (!gotTheLock) {
       historyWindow.show()
       return;
     }
-    
+
     historyWindow = new BrowserWindow({
       width: 700,
       height: 700,
@@ -331,9 +331,9 @@ if (!gotTheLock) {
         preload: path.join(__dirname, 'electron-preload.js')
       },
       icon: path.join(__dirname, 'icon.png'),
-      show: false 
+      show: false
     });
-    
+
     historyWindow.loadURL(url.format({
       pathname: path.join(__dirname, 'history.html'),
       protocol: 'file:',
@@ -343,11 +343,11 @@ if (!gotTheLock) {
 
     historyWindow.setMenu(null);
     historyWindow.setVisibleOnAllWorkspaces(true, {visibleOnFullScreen: true});
-    
+
     historyWindow.once('ready-to-show', () => {
       historyWindow.show();
     });
-    
+
     historyWindow.on('closed', () => {
       historyWindow = null;
     });
@@ -372,7 +372,7 @@ if (!gotTheLock) {
         danmakuWindow.setOpacity(opacity);
         console.log('设置弹幕窗口透明度:', opacity);
       }
-      
+
       if (style.height !== undefined) {
         const { width } = screen.getPrimaryDisplay().workAreaSize;
         danmakuWindow.setBounds({
@@ -432,7 +432,7 @@ if (!gotTheLock) {
       historyWindow.webContents.send('set-sid', sid);
     }
   });
-  
+
   ipcMain.on('danmaku-command', (event, command) => {
     if (danmakuWindow && danmakuWindow.webContents) {
       danmakuWindow.webContents.send('danmaku-command', command);
@@ -442,7 +442,7 @@ if (!gotTheLock) {
   ipcMain.on('open-external', (event, url) => {
     if (url) shell.openExternal(url);
   });
-  
+
   ipcMain.on('quit', () => {
     app.isQuiting = true;
     app.quit();
@@ -452,7 +452,7 @@ if (!gotTheLock) {
     if (updateCheckInterval) {
       clearInterval(updateCheckInterval);
     }
-    
+
     updateCheckInterval = setInterval(() => {
       checkForUpdates();
     }, 10 * 60 * 1000); // 10分钟检查一次
@@ -465,7 +465,7 @@ if (!gotTheLock) {
         "provider": "github",
         "owner": "cyrilguocode",
         "repo": "MessageIn",
-        "releaseType": "release"  
+        "releaseType": "release"
       });
       console.log('使用备用源检查更新');
       if (mainWindow && mainWindow.webContents) {
@@ -488,7 +488,7 @@ if (!gotTheLock) {
         });
       }
     }
-    
+
     autoUpdater.checkForUpdates();
   }
 
@@ -518,18 +518,18 @@ if (!gotTheLock) {
       if (mainWindow && mainWindow.webContents) {
         mainWindow.webContents.send('update-status', {
           status: 'error',
-          message: '下载更新失败: ' + err.message
+          message: '下载更新失败'
         });
       }
     });
   }
-  
+
   function createPasswordWindow(mode){
     if (passwordWindow){
       passwordWindow.show()
       return;
     }
-    
+
     passwordWindow = new BrowserWindow({
       width: 500,
       height: 250,
@@ -540,9 +540,9 @@ if (!gotTheLock) {
         preload: path.join(__dirname, 'electron-preload.js')
       },
       icon: path.join(__dirname, 'icon.png'),
-      show: false 
+      show: false
     });
-    
+
 
     passwordWindow.loadURL(url.format({
       pathname: path.join(__dirname, 'password.html'),
@@ -550,11 +550,11 @@ if (!gotTheLock) {
       slashes: true,
       search: '?mode='+mode
     }));
-    
+
     passwordWindow.setMenu(null);
     passwordWindow.setVisibleOnAllWorkspaces(true, {visibleOnFullScreen: true});
     passwordWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-    
+
     // 监听窗口失焦
     passwordWindow.on('blur', () => {
       if (!isFocusCycling) {
@@ -578,7 +578,7 @@ if (!gotTheLock) {
       }
 
       passwordWindow.blur()
-    
+
       setTimeout(() => {
         passwordWindow.focus()
         cycleCount++
@@ -589,7 +589,7 @@ if (!gotTheLock) {
     passwordWindow.once('ready-to-show', () => {
       passwordWindow.show();
     });
-    
+
     passwordWindow.on('closed', () => {
       passwordWindow = null;
     });
@@ -598,6 +598,9 @@ if (!gotTheLock) {
   autoUpdater.on('update-available', () => {
     downloadUpdate();
     console.log('发现新版本，开始下载...');
+    if (updateCheckInterval) {
+      clearInterval(updateCheckInterval);
+    }
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('update-status', {
         status: 'update-available',
@@ -621,19 +624,32 @@ if (!gotTheLock) {
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('update-status', {
         status: 'error',
-        message: '检查更新失败: ' + error.message
+        message: '检查更新失败'
       });
     }
-    
-    // 切换更新源
-    isUsingBackupSource = !isUsingBackupSource;
-    console.log('切换更新源');
-    if (mainWindow && mainWindow.webContents) {
-      mainWindow.webContents.send('update-status', {
-        status: 'restart',
-        message: '切换更新源'
-      });
-    }
+
+    // 开始尝试备用源
+	if (!isUsingBackupSource){
+		isUsingBackupSource = !isUsingBackupSource;
+		console.log('开始尝试备用源');
+		if (mainWindow && mainWindow.webContents) {
+		  mainWindow.webContents.send('update-status', {
+		    status: 'restart',
+		    message: '开始尝试备用源'
+		  });
+		}
+		checkForUpdates()
+	}
+	else{
+		isUsingBackupSource = !isUsingBackupSource;
+		console.log('检查更新失败');
+		if (mainWindow && mainWindow.webContents) {
+		  mainWindow.webContents.send('update-status', {
+		    status: 'error',
+		    message: '主源和备用源更新均失败'
+		  });
+		}
+	}
   });
 
   autoUpdater.on('update-downloaded', () => {
@@ -671,4 +687,4 @@ if (!gotTheLock) {
       createWindow();
     }
   });
-} 
+}

@@ -80,15 +80,15 @@ if (!gotTheLock) {
       }, 500);
     });
 
-	mainWindow.webContents.setWindowOpenHandler(details => {
+    mainWindow.webContents.setWindowOpenHandler(details => {
       return {
-		action: 'allow',
+        action: 'allow',
         overrideBrowserWindowOptions: {
           autoHideMenuBar: true,
-		  icon: path.join(__dirname, 'icon.png'),
+          icon: path.join(__dirname, 'icon.png'),
         }
       };
-	});
+    });
 
     mainWindow.on('closed', () => {
       mainWindow = null;
@@ -252,6 +252,7 @@ if (!gotTheLock) {
     classWindow = new BrowserWindow({
       width: 500,
       height: 250,
+      resizable: false,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -278,7 +279,7 @@ if (!gotTheLock) {
         startFocusCycle()
         shell.beep()
       }
-      classWindow.flashFrame(true); // 启动任务栏闪烁
+      if (classWindow) classWindow.flashFrame(true); // 启动任务栏闪烁
     });
 
     function startFocusCycle() {
@@ -290,14 +291,14 @@ if (!gotTheLock) {
     function performFocusCycle() {
       if (cycleCount >= MAX_CYCLES) {
         isFocusCycling = false
-        classWindow.flashFrame(false); // 停止闪烁
+        if (classWindow) classWindow.flashFrame(false); // 停止闪烁
         return
       }
 
-      classWindow.blur()
+      if (classWindow) classWindow.blur()
 
       setTimeout(() => {
-        classWindow.focus()
+        if (classWindow) classWindow.focus()
         cycleCount++
         setTimeout(performFocusCycle, 50)
       }, 50)
@@ -478,7 +479,7 @@ if (!gotTheLock) {
       // 使用主源
       autoUpdater.setFeedURL({
         "provider": "generic",
-        "url": "http://www.cyupeng.com/download/"
+        "url": "https://www.cyupeng.com/download/"
       });
       console.log('使用主源检查更新');
       if (mainWindow && mainWindow.webContents) {
@@ -533,7 +534,7 @@ if (!gotTheLock) {
     passwordWindow = new BrowserWindow({
       width: 500,
       height: 250,
-      modal: true,
+      resizable: false,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
@@ -561,7 +562,7 @@ if (!gotTheLock) {
         startFocusCycle()
         shell.beep()
       }
-      passwordWindow.flashFrame(true); // 启动任务栏闪烁
+      if (passwordWindow) passwordWindow.flashFrame(true); // 启动任务栏闪烁
     });
 
     function startFocusCycle() {
@@ -573,14 +574,14 @@ if (!gotTheLock) {
     function performFocusCycle() {
       if (cycleCount >= MAX_CYCLES) {
         isFocusCycling = false
-        passwordWindow.flashFrame(false); // 停止闪烁
+        if (passwordWindow) passwordWindow.flashFrame(false); // 停止闪烁
         return
       }
 
-      passwordWindow.blur()
+      if (passwordWindow) passwordWindow.blur()
 
       setTimeout(() => {
-        passwordWindow.focus()
+        if (passwordWindow) passwordWindow.focus()
         cycleCount++
         setTimeout(performFocusCycle, 50)
       }, 50)
@@ -611,6 +612,7 @@ if (!gotTheLock) {
 
   autoUpdater.on("update-not-available", () => {
     console.log('没有可用更新');
+    isUsingBackupSource = 0;
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('update-status', {
         status: 'update-not-available',
@@ -629,27 +631,27 @@ if (!gotTheLock) {
     }
 
     // 开始尝试备用源
-	if (!isUsingBackupSource){
-		isUsingBackupSource = !isUsingBackupSource;
-		console.log('开始尝试备用源');
-		if (mainWindow && mainWindow.webContents) {
-		  mainWindow.webContents.send('update-status', {
-		    status: 'restart',
-		    message: '开始尝试备用源'
-		  });
-		}
-		checkForUpdates()
-	}
-	else{
-		isUsingBackupSource = !isUsingBackupSource;
-		console.log('检查更新失败');
-		if (mainWindow && mainWindow.webContents) {
-		  mainWindow.webContents.send('update-status', {
-		    status: 'error',
-		    message: '主源和备用源更新均失败'
-		  });
-		}
-	}
+    if (!isUsingBackupSource){
+        isUsingBackupSource = !isUsingBackupSource;
+        console.log('开始尝试备用源');
+        if (mainWindow && mainWindow.webContents) {
+          mainWindow.webContents.send('update-status', {
+            status: 'restart',
+            message: '开始尝试备用源'
+          });
+        }
+        checkForUpdates()
+    }
+    else{
+        isUsingBackupSource = !isUsingBackupSource;
+        console.log('检查更新失败');
+        if (mainWindow && mainWindow.webContents) {
+          mainWindow.webContents.send('update-status', {
+            status: 'error',
+            message: '主源和备用源更新均失败'
+          });
+        }
+    }
   });
 
   autoUpdater.on('update-downloaded', () => {

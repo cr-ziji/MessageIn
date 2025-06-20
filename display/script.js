@@ -20,10 +20,10 @@ class DanmakuSystem {
     this.isDebugMode = false;
     this.messageCache = new Map();
     this.processedMessages = new Set();
-    this.socketUrl = 'ws://www.cyupeng.com';
-    this.url = 'http://www.cyupeng.com';
+    this.socketUrl = 'wss://www.cyupeng.com';
+    this.url = 'https://www.cyupeng.com';
     this.socket = null;
-	this.sid = null;
+    this.sid = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
@@ -326,10 +326,11 @@ class DanmakuSystem {
         console.log('WebSocket连接成功');
         const encoder = new TextEncoder();
         this.socket.emit('init', {
-          class: encoder.encode(this.classParam)
+          class: encoder.encode(this.classParam),
+          version: 'v1.7.9'
         });
-		this.sid = this.socket.id;
-		if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
+        this.sid = this.socket.id;
+        if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
           window.electronAPI.setSid(this.sid);
         }
         this.updateStatus('已连接', 'success');
@@ -397,8 +398,8 @@ class DanmakuSystem {
 
       this.socket.on('disconnect', () => {
         console.log('WebSocket连接断开');
-		this.sid = null
-		if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
+        this.sid = null
+        if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
           window.electronAPI.setSid(this.sid);
         }
         this.updateStatus('连接已断开', 'error');

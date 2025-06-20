@@ -479,7 +479,7 @@ if (!gotTheLock) {
       // 使用主源
       autoUpdater.setFeedURL({
         "provider": "generic",
-        "url": "https://www.cyupeng.com/download/"
+        "url": "http://www.cyupeng.com/download/"
       });
       console.log('使用主源检查更新');
       if (mainWindow && mainWindow.webContents) {

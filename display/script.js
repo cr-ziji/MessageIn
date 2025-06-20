@@ -20,8 +20,8 @@ class DanmakuSystem {
     this.isDebugMode = false;
     this.messageCache = new Map();
     this.processedMessages = new Set();
-    this.socketUrl = 'wss://www.cyupeng.com';
-    this.url = 'https://www.cyupeng.com';
+    this.socketUrl = 'ws://www.cyupeng.com';
+    this.url = 'http://www.cyupeng.com';
     this.socket = null;
     this.sid = null;
 
@@ -327,7 +327,7 @@ class DanmakuSystem {
         const encoder = new TextEncoder();
         this.socket.emit('init', {
           class: encoder.encode(this.classParam),
-          version: 'v1.7.9'
+          version: 'v' + require('../package.json').version
         });
         this.sid = this.socket.id;
         if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {

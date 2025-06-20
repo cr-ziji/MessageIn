@@ -1,6 +1,6 @@
 {
   "name": "MessageIn-Display",
-  "version": "1.7.8",
+  "version": "1.7.9",
   "description": "MessageIn显示端 - 实时消息展示系统",
   "author": "CyrilGuo",
   "main": "electron-danmaku.js",
@@ -22,7 +22,7 @@
     "publish": [
       {        
         "provider": "generic",
-        "url": "http://www.cyupeng.com/download/"
+        "url": "https://www.cyupeng.com/download/"
       }
     ]
   }

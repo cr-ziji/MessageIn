@@ -369,6 +369,30 @@ if (!gotTheLock) {
     }
   });
 
+  ipcMain.on('refresh-all-windows', () => {
+    if (danmakuWindow) {
+      danmakuWindow.reload();
+    }
+    if (passwordWindow) {
+      passwordWindow.reload();
+    }
+    if (classWindow) {
+      classWindow.reload();
+    }
+    if (historyWindow) {
+      historyWindow.reload();
+    }
+    if (mainWindow) {
+      mainWindow.reload();
+    }
+    
+    setTimeout(() => {
+      if (!danmakuWindow) {
+        createDanmakuWindow();
+      }
+    }, 500);
+  });
+
   ipcMain.on('update-danmaku-style', (event, style) => {
     if (danmakuWindow) {
       if (style.transparent !== undefined) {

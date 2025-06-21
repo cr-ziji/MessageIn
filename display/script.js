@@ -164,6 +164,17 @@ class DanmakuSystem {
         this.handleDanmakuCommand(command);
       });
     }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        this.toggleDebugMode();
+      }
+
+      if (e.ctrlKey && e.key === 'r') {
+        e.preventDefault();
+        this.refreshAllWindows();
+      }
+    });
   }
 
   setupSpeedControl() {
@@ -906,6 +917,12 @@ class DanmakuSystem {
         break;
       default:
         break;
+    }
+  }
+
+  refreshAllWindows() {
+    if (this.isElectronMode && window.electronAPI) {
+      window.electronAPI.refreshAllWindows();
     }
   }
 }

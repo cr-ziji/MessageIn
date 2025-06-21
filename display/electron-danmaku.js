@@ -2,6 +2,10 @@ const { app, BrowserWindow, ipcMain, screen, Tray, Menu, shell } = require('elec
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const url = require('url');
+const package = require('./package.json')
+const version = 'v' + package.version
+const serverUrl = package.serverUrl
+const connectUrl = package.connectUrl
 
 const gotTheLock = app.requestSingleInstanceLock();
 let isFocusCycling = false
@@ -56,7 +60,8 @@ if (!gotTheLock) {
     mainWindow.loadURL(url.format({
       pathname: path.join(__dirname, 'index.html'),
       protocol: 'file:',
-      slashes: true
+      slashes: true,
+      search: '?version='+version+'&serverUrl='+serverUrl+'&connectUrl='+connectUrl
     }));
 
     createTray();
@@ -98,7 +103,7 @@ if (!gotTheLock) {
       }
     });
 
-    mainWindow.webContents.on('crashed', () => {
+    mainWindow.on('crashed', () => {
       app.relaunch();
       app.exit(0);
     });
@@ -184,7 +189,7 @@ if (!gotTheLock) {
       pathname: path.join(__dirname, 'index.html'),
       protocol: 'file:',
       slashes: true,
-      search: '?mode=overlay'
+      search: '?mode=overlay&version=' + version
     }));
 
     danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
@@ -339,7 +344,7 @@ if (!gotTheLock) {
       pathname: path.join(__dirname, 'history.html'),
       protocol: 'file:',
       slashes: true,
-      search: '?sid='+sid
+      search: '?sid='+sid+'&url='+serverUrl
     }));
 
     historyWindow.setMenu(null);
@@ -479,7 +484,7 @@ if (!gotTheLock) {
       // 使用主源
       autoUpdater.setFeedURL({
         "provider": "generic",
-        "url": "http://www.cyupeng.com/download/"
+        "url": "http://" + serverUrl + "/download/"
       });
       console.log('使用主源检查更新');
       if (mainWindow && mainWindow.webContents) {
@@ -549,7 +554,7 @@ if (!gotTheLock) {
       pathname: path.join(__dirname, 'password.html'),
       protocol: 'file:',
       slashes: true,
-      search: '?mode='+mode
+      search: '?mode='+mode+'&url='+serverUrl
     }));
 
     passwordWindow.setMenu(null);

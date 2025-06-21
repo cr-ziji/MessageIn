@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>历史消息</title>
-  <!-- <link rel="stylesheet" href="styles.css"> -->
   <link rel="icon" type="png" href="icon.png">
   <style>
       body, html {
@@ -24,7 +23,7 @@
     </style>
 </head>
 <body>
-  <iframe src="http://www.cyupeng.com/history" id="history"></iframe>
+  <iframe src="" id="history"></iframe>
   <script>
       const isElectron = () => {
         return window.navigator.userAgent.toLowerCase().indexOf('electron') > -1 ||
@@ -33,11 +32,11 @@
 	  const typeParams = new URLSearchParams(window.location.search);
 	  let iframe = document.getElementById('history')
 	  
-	  if (iframe) iframe.src = 'http://www.cyupeng.com/history?sid=' + typeParams.get('sid')
+	  if (iframe) iframe.src = typeParams.get('url') + '/history?sid=' + typeParams.get('sid')
 	  
 	  if (window.electronAPI && window.electronAPI.changeSid) {
 	    window.electronAPI.changeSid((sid) => {
-	      if (iframe) iframe.src = 'http://www.cyupeng.com/history?sid=' + sid
+	      if (iframe) iframe.src = typeParams.get('url') + '/history?sid=' + sid
 	    });
 	  }
   </script>

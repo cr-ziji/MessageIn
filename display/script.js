@@ -3,6 +3,7 @@ const isElectron = () => {
     typeof window.electronAPI !== 'undefined';
 };
 
+const urlParams = new URLSearchParams(window.location.search);
 class DanmakuSystem {
   constructor() {
     this.classParam = localStorage.getItem('classParam') ? localStorage.getItem('classParam') : null;
@@ -20,12 +21,10 @@ class DanmakuSystem {
     this.isDebugMode = false;
     this.messageCache = new Map();
     this.processedMessages = new Set();
-    this.socketUrl = 'ws://www.cyupeng.com';
-    this.url = 'http://www.cyupeng.com';
+    this.socketUrl = urlParams.get('connectUrl');
+    this.url = urlParams.get('serverUrl');
     this.socket = null;
     this.sid = null;
-
-    const urlParams = new URLSearchParams(window.location.search);
     this.isOverlayMode = urlParams.get('mode') === 'overlay';
 
     if (this.isOverlayMode) {
@@ -327,7 +326,7 @@ class DanmakuSystem {
         const encoder = new TextEncoder();
         this.socket.emit('init', {
           class: encoder.encode(this.classParam),
-          version: 'v' + require('../package.json').version
+          version: urlParams.get('version')
         });
         this.sid = this.socket.id;
         if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {

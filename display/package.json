@@ -1,6 +1,8 @@
 {
   "name": "MessageIn-Display",
   "version": "1.7.9",
+  "serverUrl": "http://www.cyupeng.com",
+  "connectUrl": "ws://www.cyupeng.com",
   "description": "MessageIn显示端 - 实时消息展示系统",
   "author": "CyrilGuo",
   "main": "electron-danmaku.js",

@@ -113,16 +113,6 @@ class DanmakuSystem {
       this.debugBtn.addEventListener('click', () => {
         this.toggleDebugMode();
       });
-
-      document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-          this.toggleDebugMode();
-        }
-
-        if (e.ctrlKey && e.shiftKey && e.key === 'I' && this.isElectronMode && window.electronAPI) {
-          window.electronAPI.toggleDevTools();
-        }
-      });
     }
 
     if (!this.classParam) {
@@ -954,14 +944,6 @@ class ElectronBridge {
       console.log('模拟更新弹幕样式:', style);
     }
   }
-
-  toggleDevTools() {
-    if (this.isElectron && window.electronAPI && window.electronAPI.toggleDevTools) {
-      window.electronAPI.toggleDevTools();
-    } else {
-      console.log('模拟切换开发者工具');
-    }
-  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -974,7 +956,6 @@ if (typeof window.electronAPI === 'undefined' && isElectron()) {
     setAlwaysOnTop: (value) => console.log('需要实现 setAlwaysOnTop:', value),
     createExternalWindow: () => console.log('需要实现 createExternalWindow'),
     updateDanmakuStyle: (style) => console.log('需要实现 updateDanmakuStyle:', style),
-    toggleDevTools: () => console.log('需要实现 toggleDevTools'),
     showMainWindow: () => console.log('需要实现 showMainWindow'),
     setApiUrl: (url) => console.log('需要实现 setApiUrl:', url)
   };

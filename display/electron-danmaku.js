@@ -225,8 +225,6 @@ if (!gotTheLock) {
 
       console.log('弹幕窗口已创建并显示');
 
-      // danmakuWindow.webContents.openDevTools({ mode: 'detach' });
-
     });
 
     danmakuWindow.on('closed', () => {
@@ -236,7 +234,7 @@ if (!gotTheLock) {
 
   ipcMain.on('set-always-on-top', (event, value) => {
     if (mainWindow) {
-      // mainWindow.setAlwaysOnTop(value);
+      mainWindow.setAlwaysOnTop(value);
     }
   });
 
@@ -402,25 +400,6 @@ if (!gotTheLock) {
     }
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('api-url-changed', url);
-    }
-  });
-
-  ipcMain.on('disable-dev-tools', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.closeDevTools();
-    }
-    if (danmakuWindow && !danmakuWindow.isDestroyed()) {
-      danmakuWindow.webContents.closeDevTools();
-    }
-  });
-
-  ipcMain.on('toggle-dev-tools', () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      if (mainWindow.webContents.isDevToolsOpened()) {
-        mainWindow.webContents.closeDevTools();
-      } else {
-        mainWindow.webContents.openDevTools({ mode: 'detach' });
-      }
     }
   });
 

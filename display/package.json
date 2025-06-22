@@ -1,8 +1,8 @@
 {
   "name": "MessageIn-Display",
   "version": "1.7.9",
-  "serverUrl": "http://www.cyupeng.com",
-  "connectUrl": "ws://www.cyupeng.com",
+  "serverUrl": "https://www.cyupeng.com",
+  "connectUrl": "wss://www.cyupeng.com",
   "description": "MessageIn显示端 - 实时消息展示系统",
   "author": "CyrilGuo",
   "main": "electron-danmaku.js",
@@ -13,6 +13,7 @@
   },
   "license": "GNUV3",
   "dependencies": {
+    "electron-sudo": "^4.0.12",
     "electron-updater": "^6.1.8"
   },
   "devDependencies": {
@@ -22,10 +23,10 @@
   "build": {
     "appId": "com.messagein.app",
     "publish": [
-      {        
+      {
         "provider": "generic",
-        "url": "http://www.cyupeng.com/download/"
+        "url": "https://www.cyupeng.com/download/"
       }
     ]
   }
-} 
+}

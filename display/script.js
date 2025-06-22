@@ -7,7 +7,7 @@ const urlParams = new URLSearchParams(window.location.search);
 class DanmakuSystem {
   constructor() {
     this.classParam = localStorage.getItem('classParam') ? localStorage.getItem('classParam') : null;
-    this.isRunning = true;
+    this.isRunning = false;
     this.danmakuArea = document.getElementById('danmakuArea');
     this.speed = localStorage.getItem('speed') ? localStorage.getItem('speed') : 2;
     this.opacity = localStorage.getItem('opacity') ? localStorage.getItem('opacity') : 0.8;
@@ -93,10 +93,6 @@ class DanmakuSystem {
         }
       });
 
-      if (this.isElectronMode && document.getElementById('createExternalBtn')) {
-        document.getElementById('createExternalBtn').addEventListener('click', () => this.createExternalWindow());
-      }
-
       this.setupSpeedControl();
       this.setupOpacityControl();
       this.setupFontSizeControl();
@@ -121,7 +117,6 @@ class DanmakuSystem {
       this.startConnection();
     }
 
-    this.updateSocketUrlDisplay();
     this.updateClassParamDisplay();
 
     if (this.isElectronMode && window.electronAPI && window.electronAPI.onUpdateStatus) {
@@ -320,7 +315,6 @@ class DanmakuSystem {
         randomizationFactor: 0.5
       });
 
-      this.updateSocketUrlDisplay();
 
       this.socket.on('connect', () => {
         console.log('WebSocket连接成功');
@@ -333,11 +327,13 @@ class DanmakuSystem {
         if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
           window.electronAPI.setSid(this.sid);
         }
+        this.toggleRunningBtn(1)
         this.updateStatus('已连接', 'success');
       });
 
       this.socket.on('reconnect', (attemptNumber) => {
         console.log('WebSocket重连成功');
+        this.toggleRunningBtn(1)
         this.updateStatus('重连成功', 'reconnect');
       });
 
@@ -402,6 +398,7 @@ class DanmakuSystem {
         if (this.isOverlayMode && this.isElectronMode && window.electronAPI) {
           window.electronAPI.setSid(this.sid);
         }
+        this.toggleRunningBtn(0)
         this.updateStatus('连接已断开', 'error');
       });
 
@@ -412,19 +409,26 @@ class DanmakuSystem {
   }
 
   toggleRunning() {
-    this.isRunning = !this.isRunning;
+    const toggleBtn = document.getElementById('toggleBtn');
+
+    if (!this.isRunning) {
+      if (!this.socket) this.startConnection();
+      else this.socket.connect();
+    } else {
+      if (this.socket) {
+        this.socket.disconnect();
+      }
+    }
+  }
+
+  toggleRunningBtn(isRunning) {
+    this.isRunning = isRunning
     const toggleBtn = document.getElementById('toggleBtn');
 
     if (this.isRunning) {
       toggleBtn.textContent = '暂停弹幕';
-      if (!this.socket || !this.socket.connected) {
-        this.socket.connect();
-      }
     } else {
       toggleBtn.textContent = '恢复弹幕';
-      if (this.socket) {
-        this.socket.disconnect();
-      }
     }
   }
 
@@ -498,22 +502,6 @@ class DanmakuSystem {
       document.body.classList.remove('transparent-mode');
       document.body.style.background = '';
       document.body.style.pointerEvents = 'auto';
-    }
-
-    if (this.isElectronMode && window.electronAPI) {
-      window.electronAPI.updateDanmakuStyle({ transparent: isTransparent });
-    }
-  }
-
-  setAlwaysOnTop(isTopMost) {
-    if (this.isElectronMode && window.electronAPI) {
-      window.electronAPI.setAlwaysOnTop(isTopMost);
-    }
-  }
-
-  createExternalWindow() {
-    if (this.isElectronMode && window.electronAPI) {
-      window.electronAPI.createExternalWindow();
     }
   }
 
@@ -847,13 +835,6 @@ class DanmakuSystem {
     }
   }
 
-  updateSocketUrlDisplay() {
-    const el = document.getElementById('apiUrlDisplay');
-    if (el) {
-      el.textContent = this.socketUrl;
-    }
-  }
-
   updateClassParamDisplay() {
     const el = document.getElementById('classParamDisplay');
     if (el) {
@@ -870,7 +851,8 @@ class DanmakuSystem {
         if (typeof command.value === 'boolean') {
           this.isRunning = command.value;
           if (this.isRunning) {
-            this.socket.connect();
+            if (!this.socket) this.startConnection();
+            else this.socket.connect();
           } else if (this.socket) {
             this.socket.disconnect();
           }
@@ -927,54 +909,7 @@ class DanmakuSystem {
   }
 }
 
-class ElectronBridge {
-  constructor() {
-    this.isElectron = isElectron();
-
-    if (this.isElectron && window.electronAPI) {
-      console.log('Electron API 可用');
-    } else {
-      console.log('非Electron环境或API不可用');
-    }
-  }
-
-  setAlwaysOnTop(value) {
-    if (this.isElectron && window.electronAPI && window.electronAPI.setAlwaysOnTop) {
-      window.electronAPI.setAlwaysOnTop(value);
-    } else {
-      console.log('模拟设置始终置顶:', value);
-    }
-  }
-
-  createExternalWindow() {
-    if (this.isElectron && window.electronAPI && window.electronAPI.createExternalWindow) {
-      window.electronAPI.createExternalWindow();
-    } else {
-      alert('此功能仅在Electron环境中可用');
-    }
-  }
-
-  updateDanmakuStyle(style) {
-    if (this.isElectron && window.electronAPI && window.electronAPI.updateDanmakuStyle) {
-      window.electronAPI.updateDanmakuStyle(style);
-    } else {
-      console.log('模拟更新弹幕样式:', style);
-    }
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  window.electronBridge = new ElectronBridge();
   window.danmakuSystem = new DanmakuSystem();
 });
-
-if (typeof window.electronAPI === 'undefined' && isElectron()) {
-  window.electronAPI = {
-    setAlwaysOnTop: (value) => console.log('需要实现 setAlwaysOnTop:', value),
-    createExternalWindow: () => console.log('需要实现 createExternalWindow'),
-    updateDanmakuStyle: (style) => console.log('需要实现 updateDanmakuStyle:', style),
-    showMainWindow: () => console.log('需要实现 showMainWindow'),
-    setApiUrl: (url) => console.log('需要实现 setApiUrl:', url)
-  };
-}
  

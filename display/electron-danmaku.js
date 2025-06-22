@@ -2,11 +2,11 @@ const { app, BrowserWindow, ipcMain, screen, Tray, Menu, shell } = require('elec
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const url = require('url');
-const { exec } = require('child_process');
 const package = require('./package.json')
 const version = 'v' + package.version
 const serverUrl = package.serverUrl
 const connectUrl = package.connectUrl
+const { exec } = require('child_process');
 
 const gotTheLock = app.requestSingleInstanceLock();
 let isFocusCycling = false
@@ -30,10 +30,31 @@ let tray = null;
 
 function enableProcessProtection() {
   if (process.platform === 'win32') {
+
+    process.on('SIGTERM', handleProcessTermination);
+    process.on('SIGINT', handleProcessTermination);
+    process.on('SIGQUIT', handleProcessTermination);
+
     process.on('uncaughtException', handleUncaughtException);
     process.on('unhandledRejection', handleUnhandledRejection);
 
     startProcessMonitor();
+  }
+}
+
+function handleProcessTermination(signal) {
+  console.log(`收到终止信号: ${signal}`);
+  if (!isShuttingDown && processProtectionEnabled) {
+    console.log('检测到非法终止尝试，阻止退出...');
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+    if (passwordWindow) {
+      passwordWindow.show();
+      passwordWindow.focus();
+    }
+    return false;
   }
 }
 
@@ -145,6 +166,10 @@ if (!gotTheLock) {
 
     createTray();
 
+    mainWindow.once('ready-to-show', () => {
+      mainWindow.hide();
+    });
+
     mainWindow.on('minimize', (event) => {
       event.preventDefault();
       mainWindow.hide();
@@ -154,6 +179,7 @@ if (!gotTheLock) {
       if (!app.isQuiting) {
         event.preventDefault();
         mainWindow.hide();
+        return false;
       }
     });
 
@@ -200,10 +226,7 @@ if (!gotTheLock) {
       {
         label: '显示主窗口',
         click: () => {
-          if (mainWindow) {
-            mainWindow.show();
-            mainWindow.focus();
-          }
+          if (mainWindow) mainWindow.show();
         }
       },
       {
@@ -212,7 +235,8 @@ if (!gotTheLock) {
       {
         label: '退出',
         click: () => {
-          createPasswordWindow('verify');
+          app.isQuiting = true;
+          app.quit();
         }
       }
     ]);
@@ -221,10 +245,7 @@ if (!gotTheLock) {
     tray.setContextMenu(contextMenu);
 
     tray.on('double-click', () => {
-      if (mainWindow) {
-        mainWindow.show();
-        mainWindow.focus();
-      }
+      if (mainWindow) mainWindow.show();
     });
   }
 
@@ -279,18 +300,15 @@ if (!gotTheLock) {
     danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
 
     danmakuWindow.on('close', (event) => {
-      if (!app.isQuiting) {
+      if (processProtectionEnabled) {
         event.preventDefault();
-        console.log('检测到弹幕窗口关闭尝试');
+        console.log('检测到弹幕窗口非法关闭尝试，阻止退出...');
+        danmakuWindow.hide();
 
         setTimeout(() => {
-          if (mainWindow) {
-            mainWindow.show();
-            mainWindow.focus();
-          }
-          if (passwordWindow) {
-            passwordWindow.show();
-            passwordWindow.focus();
+          if (danmakuWindow) {
+            danmakuWindow.show();
+            danmakuWindow.focus();
           }
         }, 100);
         
@@ -538,31 +556,32 @@ if (!gotTheLock) {
   });
 
   ipcMain.on('quit', () => {
-    console.log('收到退出请求...');
-    app.isQuiting = true;
-    processProtectionEnabled = false;
-    isShuttingDown = true;
-    stopProcessMonitor();
-    
-    if (mainWindow) {
-      mainWindow.destroy();
+    if (processProtectionEnabled) {
+      console.log('收到合法退出请求，关闭进程保护...');
+      processProtectionEnabled = false;
+      isShuttingDown = true;
+      stopProcessMonitor();
+
+      if (mainWindow) {
+        mainWindow.destroy();
+      }
+      if (passwordWindow) {
+        passwordWindow.destroy();
+      }
+      if (danmakuWindow) {
+        danmakuWindow.destroy();
+      }
+      if (classWindow) {
+        classWindow.destroy();
+      }
+      if (historyWindow) {
+        historyWindow.destroy();
+      }
+
+      setTimeout(() => {
+        app.quit();
+      }, 500);
     }
-    if (passwordWindow) {
-      passwordWindow.destroy();
-    }
-    if (danmakuWindow) {
-      danmakuWindow.destroy();
-    }
-    if (classWindow) {
-      classWindow.destroy();
-    }
-    if (historyWindow) {
-      historyWindow.destroy();
-    }
-    
-    setTimeout(() => {
-      app.quit();
-    }, 500);
   });
 
   ipcMain.on('toggle-process-protection', (event, enabled) => {
@@ -628,35 +647,14 @@ if (!gotTheLock) {
     autoUpdater.checkForUpdates();
   }
 
-  function registerService() {
-    if (process.platform !== 'win32') {
-      return;
+  app.on('ready', () => {
+    // 自动启动守护服务（仅主进程直接运行时执行，防止递归）
+    if (!process.env.__daemon && process.argv[1] && !process.argv[1].includes('process-protection.js')) {
+      exec('node process-protection.js --run', { cwd: __dirname });
     }
 
-    const scriptPath = path.join(__dirname, 'install-service.ps1');
-    const command = `powershell -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "${scriptPath}" -Install`;
-
-    console.log('正在尝试自动注册/更新系统服务...');
-    exec(command, (error, stdout, stderr) => {
-      if (stdout) {
-        console.log(`服务安装脚本输出: ${stdout}`);
-      }
-      if (stderr) {
-        console.warn(`服务安装脚本提示(可能需要管理员权限): ${stderr}`);
-      }
-      if (error) {
-        console.error(`执行服务安装脚本时出错: ${error}`);
-      }
-    });
-  }
-
-  app.on('ready', () => {
-    registerService();
     setAutoLaunch(true);
     createWindow();
-    if (mainWindow) {
-      mainWindow.hide();
-    }
     autoUpdater.allowInsecure = true;
     autoUpdater.checkForUpdatesAndNotify();
     autoUpdater.disableWebInstaller = false;
@@ -837,14 +835,6 @@ if (!gotTheLock) {
     }
   });
 
-  app.on('before-quit', (event) => {
-    if (!app.isQuiting && processProtectionEnabled) {
-      console.log('检测到应用退出尝试，需要密码验证...');
-      event.preventDefault();
-      createPasswordWindow('verify');
-    }
-  });
-
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
       app.quit();
@@ -856,4 +846,31 @@ if (!gotTheLock) {
       createWindow();
     }
   });
+
+  function shutdown() {
+    isShuttingDown = true;
+    stopProcessMonitor();
+    if (mainWindow) {
+      mainWindow.hide();
+    }
+    if (passwordWindow) {
+      passwordWindow.hide();
+    }
+    if (danmakuWindow) {
+      danmakuWindow.hide();
+    }
+    if (classWindow) {
+      classWindow.hide();
+    }
+    if (historyWindow) {
+      historyWindow.hide();
+    }
+    setTimeout(() => {
+      app.quit();
+    }, 1000);
+  }
+
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+  process.on('SIGQUIT', shutdown);
 }

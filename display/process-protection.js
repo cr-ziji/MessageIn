@@ -1,115 +1,50 @@
-const { spawn, exec } = require('child_process');
 const path = require('path');
-const fs = require('fs');
+const { Service } = require('node-windows');
+const { spawn } = require('child_process');
 
-class ProcessProtector {
-  constructor() {
-    this.appPath = path.join(__dirname, 'electron-danmaku.js');
-    this.process = null;
-    this.restartCount = 0;
-    this.maxRestarts = 10;
-    this.restartDelay = 3000;
-    this.isShuttingDown = false;
-  }
+const svc = new Service({
+  name: 'MessageInProtector',
+  description: 'MessageIn应用进程守护服务',
+  script: path.join(__dirname, 'process-protection.js'),
+  nodeOptions: [
+    '--harmony',
+    '--max_old_space_size=4096'
+  ]
+});
 
-  start() {
-    console.log('启动进程保护器...');
-    this.spawnProcess();
-  }
+svc.on('install', () => {
+  svc.start();
+  console.log('服务已安装并启动');
+});
+svc.on('alreadyinstalled', () => {
+  svc.start();
+  console.log('服务已存在，已启动');
+});
+svc.on('start', () => {
+  console.log('服务已启动');
+});
+svc.on('error', (err) => {
+  console.error('服务错误:', err);
+});
 
-  spawnProcess() {
-    if (this.isShuttingDown) return;
-
-    console.log(`启动应用进程 (尝试 ${this.restartCount + 1}/${this.maxRestarts})`);
-    
-    this.process = spawn('electron', [this.appPath], {
-      stdio: ['pipe', 'pipe', 'pipe'],
-      detached: false
-    });
-
-    this.process.stdout.on('data', (data) => {
-      console.log(`应用输出: ${data}`);
-    });
-
-    this.process.stderr.on('data', (data) => {
-      console.error(`应用错误: ${data}`);
-    });
-
-    this.process.on('close', (code) => {
-      console.log(`应用进程退出，代码: ${code}`);
-      
-      if (!this.isShuttingDown && this.restartCount < this.maxRestarts) {
-        this.restartCount++;
-        console.log(`等待 ${this.restartDelay}ms 后重启应用...`);
-        setTimeout(() => {
-          this.spawnProcess();
-        }, this.restartDelay);
-      } else if (this.restartCount >= this.maxRestarts) {
-        console.log('达到最大重启次数，停止保护');
-        this.shutdown();
-      }
-    });
-
-    this.process.on('error', (error) => {
-      console.error(`进程启动错误: ${error}`);
-      
-      if (!this.isShuttingDown && this.restartCount < this.maxRestarts) {
-        this.restartCount++;
-        setTimeout(() => {
-          this.spawnProcess();
-        }, this.restartDelay);
-      }
-    });
-
-    process.on('SIGINT', () => {
-      console.log('收到SIGINT信号，关闭保护器...');
-      this.shutdown();
-    });
-
-    process.on('SIGTERM', () => {
-      console.log('收到SIGTERM信号，关闭保护器...');
-      this.shutdown();
-    });
-
-    process.on('SIGQUIT', () => {
-      console.log('收到SIGQUIT信号，关闭保护器...');
-      this.shutdown();
-    });
-  }
-
-  shutdown() {
-    console.log('正在关闭进程保护器...');
-    this.isShuttingDown = true;
-    
-    if (this.process) {
-      this.process.kill('SIGTERM');
-
-      setTimeout(() => {
-        if (this.process) {
-          this.process.kill('SIGKILL');
-        }
-        process.exit(0);
-      }, 5000);
-    } else {
-      process.exit(0);
-    }
-  }
-
-  restart() {
-    console.log('手动重启应用...');
-    this.restartCount = 0;
-    
-    if (this.process) {
-      this.process.kill('SIGTERM');
-    }
-    
-    setTimeout(() => {
-      this.spawnProcess();
-    }, 1000);
-  }
+// 检查并注册服务
+if (!svc.exists) {
+  svc.install();
+} else {
+  svc.start();
 }
 
-const protector = new ProcessProtector();
-protector.start();
-
-module.exports = ProcessProtector; 
+// 仅在服务模式或直接运行时守护主进程
+if (process.argv[2] === '--run' || process.env.__daemon) {
+  function startApp() {
+    const child = spawn('electron', [path.join(__dirname, 'electron-danmaku.js')], {
+      stdio: 'inherit',
+      detached: false
+    });
+    child.on('exit', (code) => {
+      console.log('主应用退出，2秒后重启，退出码:', code);
+      setTimeout(startApp, 2000);
+    });
+  }
+  startApp();
+} 

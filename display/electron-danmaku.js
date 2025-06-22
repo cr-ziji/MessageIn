@@ -232,20 +232,6 @@ if (!gotTheLock) {
     });
   }
 
-  ipcMain.on('set-always-on-top', (event, value) => {
-    if (mainWindow) {
-      mainWindow.setAlwaysOnTop(value);
-    }
-  });
-
-  ipcMain.on('create-external-window', () => {
-    if (!danmakuWindow) {
-      createDanmakuWindow();
-    } else {
-      danmakuWindow.show();
-    }
-  });
-
   ipcMain.on('create-class-window', () => {
     if (classWindow){
       classWindow.show()
@@ -391,31 +377,6 @@ if (!gotTheLock) {
         createDanmakuWindow();
       }
     }, 500);
-  });
-
-  ipcMain.on('update-danmaku-style', (event, style) => {
-    if (danmakuWindow) {
-      if (style.transparent !== undefined) {
-        const opacity = style.transparent ? 1.0 : 1.0;
-        danmakuWindow.setOpacity(opacity);
-        console.log('设置弹幕窗口透明度:', opacity);
-      }
-
-      if (style.height !== undefined) {
-        const { width } = screen.getPrimaryDisplay().workAreaSize;
-        danmakuWindow.setBounds({
-          width: width,
-          height: style.height,
-          x: 0,
-          y: 0
-        });
-
-        danmakuWindow.setAlwaysOnTop(true, 'screen-saver', 1);
-        danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
-
-        danmakuWindow.setBackgroundColor('#00000000');
-      }
-    }
   });
 
   ipcMain.on('set-api-url', (event, url) => {

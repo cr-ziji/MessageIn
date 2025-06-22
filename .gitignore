@@ -3,6 +3,7 @@
 **/dist/
 **/dist-ssr/
 **/build/
+**/daemon/
 
 # 日志文件
 logs

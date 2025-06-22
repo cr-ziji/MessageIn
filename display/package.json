@@ -10,9 +10,7 @@
     "start": "node process-protection.js",
     "start-protected": "node process-protection.js",
     "build": "electron-builder build --win --publish never",
-    "dist": "electron-builder",
-    "install-service": "powershell -ExecutionPolicy Bypass -File install-service.ps1 -Install",
-    "uninstall-service": "powershell -ExecutionPolicy Bypass -File install-service.ps1 -Uninstall"
+    "dist": "electron-builder"
   },
   "license": "GNUV3",
   "dependencies": {
@@ -31,6 +29,12 @@
         "provider": "generic",
         "url": "http://www.cyupeng.com/download/"
       }
-    ]
+    ],
+    "nsis" : {
+      "oneClick": true,
+      "perMachine": true,
+      "allowElevation": true,
+      "include": "installer.nsh"
+    }
   }
 }

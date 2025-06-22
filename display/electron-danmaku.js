@@ -235,8 +235,7 @@ if (!gotTheLock) {
       {
         label: '退出',
         click: () => {
-          app.isQuiting = true;
-          app.quit();
+          createPasswordWindow('quit');
         }
       }
     ]);

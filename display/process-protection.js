@@ -1,12 +1,12 @@
 const path = require('path');
 const { Service } = require('node-windows');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 
 const isService = process.argv.includes('--run-service');
 const serviceName = 'MessageInProtector';
 const serviceScript = path.join(__dirname, 'process-protection.js');
-const electronMain = path.join(__dirname, 'electron-danmaku.js');
+const electronMain = path.resolve(__dirname, 'electron-danmaku.js');
 const electronBin = path.join(__dirname, 'node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
 
 if (!isService) {
@@ -48,12 +48,27 @@ if (!isService) {
   return;
 }
 
+function isElectronRunning() {
+  try {
+    const result = execSync('tasklist | findstr electron', { encoding: 'utf8' });
+    return result && result.includes('electron');
+  } catch (e) {
+    return false;
+  }
+}
+
 function startApp() {
+  if (isElectronRunning()) {
+    console.log('检测到 electron 进程已存在，跳过本轮重启');
+    setTimeout(startApp, 2000);
+    return;
+  }
   console.log('准备启动 electron 主进程:', electronBin, electronMain);
   const child = spawn(electronBin, [electronMain], {
     stdio: 'inherit',
     detached: false,
-    shell: true // 关键：让 .cmd 能被正确执行
+    shell: true,
+    cwd: path.dirname(electronMain)
   });
   child.on('exit', (code) => {
     console.log('主应用退出，2秒后重启，退出码:', code);

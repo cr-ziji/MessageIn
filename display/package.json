@@ -7,7 +7,7 @@
   "author": "CyrilGuo",
   "main": "electron-danmaku.js",
   "scripts": {
-    "start": "electron .",
+    "start": "node process-protection.js",
     "start-protected": "node process-protection.js",
     "build": "electron-builder build --win --publish never",
     "dist": "electron-builder",

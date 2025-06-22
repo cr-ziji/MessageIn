@@ -1,14 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
-  setAlwaysOnTop: (value) => {
-    ipcRenderer.send('set-always-on-top', value);
-  },
-
-  createExternalWindow: () => {
-    ipcRenderer.send('create-external-window');
-  },
-
   createClassWindow: () => {
     ipcRenderer.send('create-class-window');
   },
@@ -36,10 +28,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   testTransparentWindow: () => {
     console.log('调用测试透明背景API');
     ipcRenderer.send('test-transparent-window');
-  },
-
-  updateDanmakuStyle: (style) => {
-    ipcRenderer.send('update-danmaku-style', style);
   },
 
   setApiUrl: (url) => {

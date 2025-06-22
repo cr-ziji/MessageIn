@@ -108,4 +108,23 @@ contextBridge.exposeInMainWorld('electronAPI', {
       callback(sid);
     });
   },
+
+  toggleProcessProtection: (enabled) => {
+    ipcRenderer.send('toggle-process-protection', enabled);
+  },
+
+  getProcessProtectionStatus: () => {
+    ipcRenderer.send('get-process-protection-status');
+  },
+
+  onProcessProtectionStatus: (callback) => {
+    ipcRenderer.removeAllListeners('process-protection-status');
+    ipcRenderer.on('process-protection-status', (event, status) => {
+      callback(status);
+    });
+  },
+
+  forceQuit: () => {
+    ipcRenderer.send('quit');
+  },
 }); 

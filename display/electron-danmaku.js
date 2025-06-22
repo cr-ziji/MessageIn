@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, screen, Tray, Menu, shell } = require('elec
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const url = require('url');
+const { exec } = require('child_process');
 const package = require('./package.json')
 const version = 'v' + package.version
 const serverUrl = package.serverUrl
@@ -14,6 +15,91 @@ const MAX_CYCLES = 6
 let isUsingBackupSource = false;
 let updateCheckInterval = null;
 
+let processProtectionEnabled = true;
+let restartAttempts = 0;
+const MAX_RESTART_ATTEMPTS = 10;
+let processMonitorInterval = null;
+let isShuttingDown = false;
+
+let mainWindow;
+let passwordWindow;
+let classWindow;
+let danmakuWindow;
+let historyWindow;
+let tray = null;
+
+function enableProcessProtection() {
+  if (process.platform === 'win32') {
+    process.on('uncaughtException', handleUncaughtException);
+    process.on('unhandledRejection', handleUnhandledRejection);
+
+    startProcessMonitor();
+  }
+}
+
+function handleUncaughtException(error) {
+  console.error('未捕获的异常:', error);
+  if (processProtectionEnabled && restartAttempts < MAX_RESTART_ATTEMPTS) {
+    console.log('应用崩溃，尝试重启...');
+    restartAttempts++;
+    setTimeout(() => {
+      app.relaunch();
+      app.exit(0);
+    }, 1000);
+  }
+}
+
+function handleUnhandledRejection(reason, promise) {
+  console.error('未处理的Promise拒绝:', reason);
+  if (processProtectionEnabled && restartAttempts < MAX_RESTART_ATTEMPTS) {
+    console.log('Promise错误，尝试重启...');
+    restartAttempts++;
+    setTimeout(() => {
+      app.relaunch();
+      app.exit(0);
+    }, 1000);
+  }
+}
+
+function startProcessMonitor() {
+  if (processMonitorInterval) {
+    clearInterval(processMonitorInterval);
+  }
+  
+  processMonitorInterval = setInterval(() => {
+    if (!processProtectionEnabled || isShuttingDown) {
+      return;
+    }
+
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      console.log('检测到主窗口异常，尝试恢复...');
+      if (restartAttempts < MAX_RESTART_ATTEMPTS) {
+        restartAttempts++;
+        setTimeout(() => {
+          createWindow();
+        }, 1000);
+      }
+    }
+
+    if (!danmakuWindow || danmakuWindow.isDestroyed()) {
+      console.log('检测到弹幕窗口异常，尝试恢复...');
+      if (restartAttempts < MAX_RESTART_ATTEMPTS) {
+        restartAttempts++;
+        setTimeout(() => {
+          createDanmakuWindow();
+        }, 1000);
+      }
+    }
+  }, 5000);
+}
+
+function stopProcessMonitor() {
+  if (processMonitorInterval) {
+    clearInterval(processMonitorInterval);
+    processMonitorInterval = null;
+  }
+}
+
 if (!gotTheLock) {
   app.quit();
 } else {
@@ -24,13 +110,6 @@ if (!gotTheLock) {
       mainWindow.focus();
     }
   });
-
-  let mainWindow;
-  let passwordWindow;
-  let classWindow;
-  let danmakuWindow;
-  let historyWindow;
-  let tray = null;
 
   function setAutoLaunch(enable) {
     if (process.platform === 'win32') {
@@ -76,7 +155,6 @@ if (!gotTheLock) {
         event.preventDefault();
         mainWindow.hide();
       }
-      return false;
     });
 
     mainWindow.webContents.on('did-finish-load', () => {
@@ -122,7 +200,10 @@ if (!gotTheLock) {
       {
         label: '显示主窗口',
         click: () => {
-          mainWindow.show();
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          }
         }
       },
       {
@@ -140,7 +221,10 @@ if (!gotTheLock) {
     tray.setContextMenu(contextMenu);
 
     tray.on('double-click', () => {
-      mainWindow.show();
+      if (mainWindow) {
+        mainWindow.show();
+        mainWindow.focus();
+      }
     });
   }
 
@@ -193,6 +277,46 @@ if (!gotTheLock) {
     }));
 
     danmakuWindow.setIgnoreMouseEvents(true, { forward: true });
+
+    danmakuWindow.on('close', (event) => {
+      if (!app.isQuiting) {
+        event.preventDefault();
+        console.log('检测到弹幕窗口关闭尝试');
+
+        setTimeout(() => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          }
+          if (passwordWindow) {
+            passwordWindow.show();
+            passwordWindow.focus();
+          }
+        }, 100);
+        
+        return false;
+      }
+    });
+
+    danmakuWindow.on('crashed', () => {
+      console.log('弹幕窗口崩溃，尝试恢复...');
+      if (processProtectionEnabled && restartAttempts < MAX_RESTART_ATTEMPTS) {
+        restartAttempts++;
+        setTimeout(() => {
+          createDanmakuWindow();
+        }, 1000);
+      }
+    });
+
+    danmakuWindow.webContents.on('render-process-gone', () => {
+      console.log('弹幕窗口渲染进程异常，尝试恢复...');
+      if (processProtectionEnabled && restartAttempts < MAX_RESTART_ATTEMPTS) {
+        restartAttempts++;
+        setTimeout(() => {
+          createDanmakuWindow();
+        }, 1000);
+      }
+    });
 
     ipcMain.on('danmaku-mouse-event', (event, { type, isOverDanmaku }) => {
       if (danmakuWindow) {
@@ -414,9 +538,51 @@ if (!gotTheLock) {
   });
 
   ipcMain.on('quit', () => {
+    console.log('收到退出请求...');
     app.isQuiting = true;
-    app.quit();
-  })
+    processProtectionEnabled = false;
+    isShuttingDown = true;
+    stopProcessMonitor();
+    
+    if (mainWindow) {
+      mainWindow.destroy();
+    }
+    if (passwordWindow) {
+      passwordWindow.destroy();
+    }
+    if (danmakuWindow) {
+      danmakuWindow.destroy();
+    }
+    if (classWindow) {
+      classWindow.destroy();
+    }
+    if (historyWindow) {
+      historyWindow.destroy();
+    }
+    
+    setTimeout(() => {
+      app.quit();
+    }, 500);
+  });
+
+  ipcMain.on('toggle-process-protection', (event, enabled) => {
+    processProtectionEnabled = enabled;
+    console.log(`进程保护已${enabled ? '启用' : '禁用'}`);
+    
+    if (enabled) {
+      startProcessMonitor();
+    } else {
+      stopProcessMonitor();
+    }
+  });
+
+  ipcMain.on('get-process-protection-status', (event) => {
+    event.reply('process-protection-status', {
+      enabled: processProtectionEnabled,
+      restartAttempts: restartAttempts,
+      maxRestartAttempts: MAX_RESTART_ATTEMPTS
+    });
+  });
 
   function startUpdateCheck() {
     if (updateCheckInterval) {
@@ -462,7 +628,30 @@ if (!gotTheLock) {
     autoUpdater.checkForUpdates();
   }
 
+  function registerService() {
+    if (process.platform !== 'win32') {
+      return;
+    }
+
+    const scriptPath = path.join(__dirname, 'install-service.ps1');
+    const command = `powershell -ExecutionPolicy Bypass -NoProfile -NonInteractive -File "${scriptPath}" -Install`;
+
+    console.log('正在尝试自动注册/更新系统服务...');
+    exec(command, (error, stdout, stderr) => {
+      if (stdout) {
+        console.log(`服务安装脚本输出: ${stdout}`);
+      }
+      if (stderr) {
+        console.warn(`服务安装脚本提示(可能需要管理员权限): ${stderr}`);
+      }
+      if (error) {
+        console.error(`执行服务安装脚本时出错: ${error}`);
+      }
+    });
+  }
+
   app.on('ready', () => {
+    registerService();
     setAutoLaunch(true);
     createWindow();
     if (mainWindow) {
@@ -480,6 +669,7 @@ if (!gotTheLock) {
     }
     autoUpdater.checkForUpdates();
     startUpdateCheck();
+    enableProcessProtection();
   });
 
   function downloadUpdate() {
@@ -644,6 +834,14 @@ if (!gotTheLock) {
         message: message,
         percent: progressObj.percent
       });
+    }
+  });
+
+  app.on('before-quit', (event) => {
+    if (!app.isQuiting && processProtectionEnabled) {
+      console.log('检测到应用退出尝试，需要密码验证...');
+      event.preventDefault();
+      createPasswordWindow('verify');
     }
   });
 

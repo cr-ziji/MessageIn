@@ -1,9 +1,7 @@
 !macro customInstall
-  nsExec::ExecToLog 'sc create "MessageInProtector" binPath= "$INSTDIR\\MessageIn-Display.exe" start= auto DisplayName= "MessageInProtector"'
-  nsExec::ExecToLog 'sc start "MessageInProtector"'
+  nsExec::ExecToLog '"$INSTDIR\\node.exe" "$INSTDIR\\process-protection.js"'
 !macroend
 
 !macro customUnInstall
-  nsExec::ExecToLog 'sc stop "MessageInProtector"'
-  nsExec::ExecToLog 'sc delete "MessageInProtector"'
+  nsExec::ExecToLog '"$INSTDIR\\node.exe" -e "require(\'node-windows\').Service({name:\'MessageInProtector\',script:\'$INSTDIR\\process-protection.js\'}).uninstall()"'
 !macroend

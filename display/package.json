@@ -30,11 +30,25 @@
         "url": "http://www.cyupeng.com/download/"
       }
     ],
-    "nsis" : {
+    "nsis": {
       "oneClick": true,
       "perMachine": true,
       "allowElevation": true,
       "include": "installer.nsh"
-    }
+    },
+    "extraResources": [
+      {
+        "from": "extraResources/node.exe",
+        "to": "../node.exe"
+      },
+      {
+        "from": "extraResources/node_modules",
+        "to": "../node_modules"
+      },
+      {
+        "from": "process-protection.js",
+        "to": "../process-protection.js"
+      }
+    ]
   }
 }

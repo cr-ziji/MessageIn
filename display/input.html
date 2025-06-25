@@ -54,14 +54,91 @@
     <button id="submitVerification">确认</button>
     <button id="skipVerification" style="margin-left:10px;">取消</button>
     <p class="error-message" id="verificationError" style="display: none; color: red; margin-top: 10px;">验证码无效，请重新输入</p>
+    <p class="error-message" id="networkError" style="display: none; color: red; margin-top: 10px;">网络错误，班级获取失败</p>
   </div>
   <script>
+      function ajax(options) {
+        const xhr = new XMLHttpRequest();
+        const settings = {
+          url: '',
+          type: 'GET',
+          data: null,
+          dataType: 'text',
+          contentType: 'application/x-www-form-urlencoded',
+          timeout: 0,
+          headers: {},
+          success: function() {},
+          error: function() {},
+          complete: function() {}
+        };
+      
+        // 合并用户配置
+        Object.assign(settings, options);
+      
+        // 设置超时
+        if (settings.timeout > 0) {
+          xhr.timeout = settings.timeout;
+          xhr.ontimeout = function() {
+            settings.error(xhr, 'timeout', 'Request timed out');
+            settings.complete(xhr, 'timeout');
+          };
+        }
+      
+        xhr.open(settings.type, settings.url, true);
+      
+        // 设置请求头
+        for (const key in settings.headers) {
+          xhr.setRequestHeader(key, settings.headers[key]);
+        }
+        xhr.setRequestHeader('Content-Type', settings.contentType);
+      
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            let response = xhr.responseText;
+            try {
+              if (settings.dataType === 'json') {
+                response = JSON.parse(response);
+              } else if (settings.dataType === 'xml') {
+                response = xhr.responseXML;
+              }
+            } catch (e) {
+              settings.error(xhr, 'parsererror', e);
+              return;
+            }
+            settings.success(response, 'success', xhr);
+          } else {
+            settings.error(xhr, 'error', xhr.statusText);
+          }
+          settings.complete(xhr, xhr.statusText);
+        };
+      
+        xhr.onerror = function() {
+          settings.error(xhr, 'error', xhr.statusText);
+          settings.complete(xhr, xhr.statusText);
+        };
+      
+        xhr.send(settings.type === 'GET' ? null : settings.data);
+      }
+      
+      const typeParams = new URLSearchParams(window.location.search);
+
       const isElectron = () => {
         return window.navigator.userAgent.toLowerCase().indexOf('electron') > -1 ||
           typeof window.electronAPI !== 'undefined';
       };
       
-      classlist = ['初一一班', '初一二班', '初一三班', '初一四班', '初一五班', '初一六班', '初一通知', '初二一班', '初二二班', '初二三班', '初二四班', '初二通知', '初三一班', '初三二班', '初三三班', '初三联培班', '初三通知', '高一一班', '高一二班', '高一三班', '高一通知', '高二一班', '高二二班', '高二三班', '高二四班', '高二通知', '高三一班', '高三二班', '高三三班', '高三四班', '高三通知', '全校通知']
+      classlist = []
+      ajax({
+        url: typeParams.get('url') + '/class_list',
+        type: 'POST',
+        success: function(response){
+          response = JSON.parse(response)
+          classlist = response['class_list']
+        },
+        error: function(xhr, error){
+          document.getElementById('networkError').style.display = 'block';
+        }
+      });
       document.getElementById('submitVerification').addEventListener('click', () => {
         const classParam = document.getElementById('verificationInput').value.trim();
         
@@ -70,22 +147,24 @@
           window.electronAPI.setClassParam(classParam);
           window.close();
         } else {
-          document.getElementById('verificationError').style.display = 'block';
+          if (document.getElementById('networkError').style.display != 'block')
+            document.getElementById('verificationError').style.display = 'block';
         }
       });
-	  document.addEventListener('keydown', function(event) {
-	    if (event.keyCode === 13) {
-	      const classParam = document.getElementById('verificationInput').value.trim();
-	      
-	      if (classParam && classlist.includes(classParam)) {
-	        localStorage.setItem('classParam', classParam);
-	        window.electronAPI.setClassParam(classParam);
-	        window.close();
-	      } else {
-	        document.getElementById('verificationError').style.display = 'block';
-	      }
-		}
-	  });
+      document.addEventListener('keydown', function(event) {
+        if (event.keyCode === 13) {
+          const classParam = document.getElementById('verificationInput').value.trim();
+          
+          if (classParam && classlist.includes(classParam)) {
+            localStorage.setItem('classParam', classParam);
+            window.electronAPI.setClassParam(classParam);
+            window.close();
+          } else {
+            if (document.getElementById('networkError').style.display != 'block')
+              document.getElementById('verificationError').style.display = 'block';
+          }
+        }
+      });
       document.getElementById('skipVerification').addEventListener('click', () => {
         window.close();
       });

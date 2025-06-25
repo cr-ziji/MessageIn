@@ -1,13 +1,13 @@
 {
   "name": "MessageIn-Display",
-  "version": "1.7.9",
+  "version": "1.8.1",
   "serverUrl": "https://www.cyupeng.com",
   "connectUrl": "wss://www.cyupeng.com",
   "description": "MessageIn显示端 - 实时消息展示系统",
   "author": "CyrilGuo",
   "main": "electron-danmaku.js",
   "scripts": {
-    "start": "node process-protection.js",
+    "start": "electron .",
     "start-protected": "node process-protection.js",
     "build": "electron-builder build --win --publish never",
     "dist": "electron-builder"

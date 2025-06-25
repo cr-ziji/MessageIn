@@ -293,7 +293,7 @@ if (!gotTheLock) {
       pathname: path.join(__dirname, 'index.html'),
       protocol: 'file:',
       slashes: true,
-      search: '?mode=overlay&version=' + version
+      search: '?mode=overlay&version=' + version+'&serverUrl='+serverUrl+'&connectUrl='+connectUrl
     }));
 
     danmakuWindow.setIgnoreMouseEvents(true, { forward: true });

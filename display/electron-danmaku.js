@@ -395,8 +395,7 @@ if (!gotTheLock) {
     classWindow.loadURL(url.format({
       pathname: path.join(__dirname, 'input.html'),
       protocol: 'file:',
-      slashes: true,
-      search: '?url='+serverUrl
+      slashes: true
     }));
 
 

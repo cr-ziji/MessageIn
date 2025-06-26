@@ -33,7 +33,8 @@
     "nsis": {
       "oneClick": true,
       "perMachine": true,
-      "allowElevation": true
+      "allowElevation": true,
+      "include": "installer.nsh"
     },
     "extraResources": [
       {
@@ -43,6 +44,10 @@
       {
         "from": "psexec.exe",
         "to": "../psexec.exe"
+      },
+      {
+        "from": "process-protection.ps1",
+        "to": "../process-protection.ps1"        
       }
     ]
   }
